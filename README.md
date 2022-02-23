@@ -2,10 +2,6 @@
 
 This project aims to implement neural network architecture, described in [Text Style Brush Paper](https://arxiv.org/pdf/2106.08385.pdf).
 
-## File storage
-
-We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
-
 ## How to run ?
 
 - Choose config file
@@ -55,25 +51,21 @@ We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
 
 ## Classes design
 
-
-### CustomDataset
+### Config
 ```python
-class SimpleDataset(Dataset):
-    def __init__(remote, local):
-        if not local: 
-            self.download(remote, local)
-        
-    def preprocess():
-        ...
+class Config():
+    def __init__(): 
+        model = Model()             # model from src/models
+        criterion = Loss()          # loss func from from src/losses
+        optimizer = ...             # some non-custom optimizer 
+        storage = Storage()         # storage class func from from src/logger/storage
+        logger = Logger()           # logger class func from from src/logger
+        train_dataloader = DataLoader(SimpleDataset('path/to/train'))
+        val_dataloader = DataLoader(SimpleDataset('path/to/val'))
 
-    def download():
-        ...
-
-    def __getitem__():
-        ...
-
-    def __len__():
-        ...
+        self.trainer = SimpleTrainer(<"pass all args from above">) 
+    def run():
+        self.trainer.run()
 ```
 
 ### Trainer
@@ -97,17 +89,24 @@ class SimpleTrainer():
         # validation actions per epoch
 ```
 
-### Config
+### CustomDataset
 ```python
-class Config():
-    def __init__():
-        self.model = ...
-        self.criterion = ...
-        self.optimizer = ...
-        self.dataset = Dataset(local)
-        self.trainer = SimpleTrainer()
-    def run():
-        self.trainer.run()
+class SimpleDataset(Dataset):
+    def __init__(remote, local):
+        if not local: 
+            self.download(remote, local)
+        
+    def preprocess():
+        ...
+
+    def download():
+        ...
+
+    def __getitem__():
+        ...
+
+    def __len__():
+        ...
 ```
 
 ### Losses
@@ -137,8 +136,11 @@ class Model():
         ...
 ```
 
+## File storage
 
-## Requirements
+We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
+
+## Requirements & restrictions
 - PyTorch framework
 - Python 3.9
 - Type Annotations
