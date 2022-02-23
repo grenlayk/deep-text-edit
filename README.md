@@ -49,7 +49,7 @@ We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
 │   ├── logger
 │   │   ├── storage             <- [models' checkpoints, etc]
 │   │   ├── wandb
-│   │
+│   │ 
 │   ├── ...
 ```
 
@@ -80,14 +80,21 @@ class SimpleDataset(Dataset):
 ```python
 class SimpleTrainer():
     def __init__():
-        self.model = ...
-        self.criterion = ...
-        self.optimizer = ...
-        self.dataloader = Dataloader(dataset)
+        self.model = ...            # model from src/models
+        self.criterion = ...        # loss func from from src/losses
+        self.optimizer = ...         
+        self.storage = storage      # storage class func from from src/logger/storage
+        self.logger = logger        # logger class func from from src/logger
+        self.train_dataloader = ... # dataloader based on custom dataset from src/data
+        self.val_dataloader = ...   # dataloader based on custom dataset from src/data
     def run():
-        # train steps
-        # eval steps
-```
+        for _ in range(max_epoch):
+            self.train()            # train steps
+            self.validate()         # validation steps
+    def train():
+        # train actions per epoch
+    def validate():
+        # validation actions per epoch
 
 ### Config
 ```python
