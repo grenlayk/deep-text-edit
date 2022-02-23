@@ -18,37 +18,39 @@ We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
 │
 ├── requirements.txt        <- [necessary requirements]
 │
-├── training
-│   ├── simple.py           <- [Template Trainer]
-│   ├── gan.py
+├── src                     <- [project source code]
+│   ├── training
+│   │   ├── simple.py           <- [Template Trainer]
+│   │   ├── gan.py
+│   │   ├── ...
+│   │
+│   ├── config 
+│   │   ├── simple.py           <- [Template Config]
+│   │   ├── gan.py
+│   │   ├── ...
+│   │
+│   ├── losses
+│   │   ├── simple.py           <- [Template Loss]
+│   │   ├── perceptual.py
+│   │   ├── ...
+│   │
+│   ├── metrics
+│   │   ├── simple.py           <- [Template Metric]
+│   │   ├── ...
+│   │
+│   ├── models
+│   │   ├── simple.py           <- [Template Model]
+│   │   ├── ...
+│   │
+│   ├── data
+│   │   ├── simple.py           <- [Template CustomDataset]
+│   │   ├── ...
+│   │
+│   ├── logger
+│   │   ├── storage             <- [models' checkpoints, etc]
+│   │   ├── wandb
+│   │
 │   ├── ...
-│
-├── config 
-│   ├── simple.py           <- [Template Config]
-│   ├── gan.py
-│   ├── ...
-│
-├── losses
-│   ├── simple.py           <- [Template Loss]
-│   ├── perceptual.py
-│   ├── ...
-│
-├── metrics
-│   ├── simple.py           <- [Template Metric]
-│   ├── ...
-│
-├── models
-│   ├── simple.py           <- [Template Model]
-│   ├── ...
-│
-├── data
-│   ├── simple.py           <- [Template CustomDataset]
-│   ├── ...
-│
-├── logger
-│   ├── storage             <- [models' checkpoints, etc]
-│   ├── wandb
-│
 ```
 
 ## Classes design
