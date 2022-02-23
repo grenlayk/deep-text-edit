@@ -1,9 +1,9 @@
 import time
 from torch import Tensor
 from loguru import logger
+from __future__ import annotations
 
 class Logger():
-    
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, val_size: int = None, tb_path: str = None):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
