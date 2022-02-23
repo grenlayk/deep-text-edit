@@ -5,11 +5,13 @@ from torch import optim
 from src.models.simple import Model
 from src.logger.storage import Storage
 from src.logger.simple import Logger
+from torch.utils.data import DataLoader
 
 
 class SimpleTrainer():
     def __init__(self, model: nn.Module, criterion: nn.Module, optimizer: optim, 
-                 storage: Storage, logger: Logger, train_dataloader: any, val_dataloader: any):
+                 storage: Storage, logger: Logger, train_dataloader: DataLoader, 
+                 val_dataloader: DataLoader):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
