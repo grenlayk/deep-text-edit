@@ -4,7 +4,7 @@ from __future__ import annotations
 import torch
 
 class Storage:
-    def __init__(self, save_folder: str, save_freq: int):
+    def __init__(self, save_folder: str, save_freq: int = 1):
         self.save_folder = Path(save_folder) / datetime.datetime.utcnow().strftime('%Y-%m-%d %H-%M-%S')
         self.save_folder.mkdir()
         self.save_freq = save_freq

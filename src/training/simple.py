@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from torch import optim
 from src.models.simple import Model
-from src.logger.storage import Storage
+from src.logger.storage.storage import Storage
 from src.logger.simple import Logger
 from torch.utils.data import DataLoader
 
