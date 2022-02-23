@@ -95,6 +95,7 @@ class SimpleTrainer():
         # train actions per epoch
     def validate():
         # validation actions per epoch
+```
 
 ### Config
 ```python
