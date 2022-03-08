@@ -3,5 +3,6 @@ importlib
 pathlib
 torch
 datetime
-cv2
+opencv-python
 torchvision
+loguru
