@@ -3,15 +3,15 @@ from pathlib import Path
 
 import torch
 from src.data.color import CustomDataset
-from src.models.color import Colorization
+from src.models.color import Model
 from src.training.color import ColorizationTrainer
 
 
 class Config:
     def __init__(self):
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-        total_epochs = 20
-        model = Colorization(256)
+        total_epochs = 1 #20
+        model = Model(256)
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -22,7 +22,7 @@ class Config:
 
         batch_size = 10
 
-        train_dataset = CustomDataset(Path('data/raw/Coco/train'))
+        train_dataset = CustomDataset(Path('./data/raw/AlsoCoco/train2017'))
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -30,7 +30,7 @@ class Config:
             num_workers=8
         )
 
-        val_dataset = CustomDataset(Path('data/raw/Coco/val'))
+        val_dataset = CustomDataset(Path('./data/raw/AlsoCoco/val2017'))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=batch_size,
@@ -38,7 +38,7 @@ class Config:
             num_workers=8
         )
 
-        test_dataset = CustomDataset(Path('data/raw/Coco/test'))
+        test_dataset = CustomDataset(Path('./data/raw/AlsoCoco/test2017'))
         test_dataloader = torch.utils.data.DataLoader(
             test_dataset,
             batch_size=1,
@@ -61,7 +61,8 @@ class Config:
             test_dataloader,
             total_epochs,
             batch_size,
-            point_batches
+            point_batches,
+            model_save_path
         )
 
     def run(self):

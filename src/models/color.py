@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+import torch.nn as nn 
 
 
 class Encoder(nn.Module):
@@ -76,7 +76,7 @@ class Decoder(nn.Module):
         return self.model(x)
 
 
-class Colorization(nn.Module):
+class Model(nn.Module):
     def __init__(self, depth_after_fusion):
         super().__init__()
         self.encoder = Encoder()
