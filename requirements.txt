@@ -6,3 +6,4 @@ datetime
 opencv-python
 torchvision
 loguru
+yadisk
