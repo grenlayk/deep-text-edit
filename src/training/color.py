@@ -30,6 +30,7 @@ class ColorizationTrainer:
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.train_dataloader = train_dataloader
+        self.test_dataloader = test_dataloader
         self.val_dataloader = val_dataloader
         self.total_epochs = total_epochs
         self.batch_size = batch_size
@@ -48,7 +49,7 @@ class ColorizationTrainer:
         return color_im
 
     def run(self):
-        for epoch in range(20):
+        for epoch in range(self.total_epochs):
             logger.info(f'Starting epoch #{epoch + 1}')
 
             # *** Training step ***
@@ -175,7 +176,7 @@ class ColorizationTrainer:
             output_ab = self.model(img_l_encoder, img_embs)
 
             # *** Adding l channel to ab channels ***
-            color_img = self.concatente_and_colorize(torch.stack([img_l_encoder[:, 0, :, :]], dim=1), output_ab)
+            color_img = self.concatenate_and_colorize(torch.stack([img_l_encoder[:, 0, :, :]], dim=1), output_ab)
 
             save_path = Path('outputs')
             save_path.mkdir(exist_ok=True)

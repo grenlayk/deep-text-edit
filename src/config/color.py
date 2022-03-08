@@ -11,7 +11,7 @@ class Config:
     def __init__(self):
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         total_epochs = 1 #20
-        model = Model(256)
+        model = Model(256).cuda()
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
