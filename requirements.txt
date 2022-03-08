@@ -1,3 +1,7 @@
 click
 importlib
 pathlib
+torch
+datetime
+cv2
+torchvision
