@@ -7,7 +7,7 @@ import click
 @click.command()
 @click.argument('config_file',
                 type=click.Path(exists=True, dir_okay=False, readable=True),
-                default='src/configs/simple.py')
+                default='./src/config/color.py')
 def run(config_file):
     config_file = Path(config_file)
     config_file = str(config_file.parent / config_file.stem).replace('/', '.')
