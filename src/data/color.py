@@ -28,6 +28,13 @@ class CustomDataset(Dataset):
             rgb_img = rgb_img.astype(np.float32)
             rgb_img /= 255.0
 
+            lab_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2Lab)
+            l_img = torchvision.transforms.ToTensor()(lab_img[:, :, 0]).expand(3, -1, -1)
+            l_img = l_img / 50.0 - 1.0
+            lab_img[:, :, 1] = lab_img[:, :, 1] / 128.0
+            lab_img[:, :, 2] = lab_img[:, :, 2] / 128.0
+            return l_img, lab_img
+
             # Resize the color image to pass to encoder
             rgb_encoder_img = cv2.resize(rgb_img, (224, 224))
 
