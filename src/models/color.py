@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+from torchvision.models.resnet import resnet50
+from torchvision import transforms as T
 
 
 class Encoder(nn.Module):
@@ -33,8 +35,7 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x):
-        self.model = self.model.float()
-        return self.model(x.float())
+        return self.model(x)
 
 
 class FusionLayer(nn.Module):
@@ -89,9 +90,14 @@ class Model(nn.Module):
             padding=0)
         self.bnorm = nn.BatchNorm2d(256)
         self.decoder = Decoder(depth_after_fusion)
+        self.resnet = resnet50(pretrained=True, progress=True).to(self.device).eval()
 
-    def forward(self, img_l, img_emb):
-        img_enc = self.encoder(img_l)
+        self._resnet_resize = T.Resize(300)
+        self._encoder_resize = T.Resize(224)
+
+    def forward(self, img_l):
+        img_emb = self.resnet(self._resnet_resize(img_l))
+        img_enc = self.encoder(self._encoder_resize(img_l))
         fusion = self.fusion([img_enc, img_emb])
         fusion = self.after_fusion(fusion)
         fusion = self.bnorm(fusion)
