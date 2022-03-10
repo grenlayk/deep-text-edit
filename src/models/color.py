@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn 
+from torch import nn
 
 
 class Encoder(nn.Module):
@@ -41,7 +41,7 @@ class FusionLayer(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, inputs, mask=None):
+    def forward(self, inputs):
         ip, emb = inputs
         emb = torch.stack([torch.stack([emb], dim=2)], dim=3)
         emb = emb.repeat(1, 1, ip.shape[2], ip.shape[3])
@@ -99,5 +99,5 @@ class Model(nn.Module):
 
 
 def init_weights(m):
-    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+    if isinstance(m, nn.Conv2d, nn.Linear):
         torch.nn.init.xavier_normal_(m.weight.data)

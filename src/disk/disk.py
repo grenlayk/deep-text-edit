@@ -6,10 +6,10 @@ import yadisk
 
 
 class Disk:
-    """
+    '''
     Disk is a class for working with the folder in YandexDisk. To use an instance
     of this class, you must first perform the login (`Disk.login`).
-    """
+    '''
 
     def __init__(self):
         self._logged_in = False
@@ -21,22 +21,22 @@ class Disk:
         self._cred_cache_path.parent.mkdir(parents=True, exist_ok=True)
 
     def login(self, use_cache=True, cache_credentials=True):
-        """
+        '''
         Login to Yandex Disk. You must call this method before you can use other functions.
-        """
+        '''
 
         if use_cache and self._cred_cache_path.exists():
             config = configparser.ConfigParser()
-            config.read(self._cred_cache_path)
+            config.read(self._cred_cache_path, encoding='utf-8')
             secret = config['YaDiskCreds']['secret']
             token = config['YaDiskCreds']['token']
         else:
-            secret = input("Enter YaDisk app secret: ")
-            token = input("Enter YaDisk app token: ")
+            secret = input('Enter YaDisk app secret: ')
+            token = input('Enter YaDisk app token: ')
 
-        y = yadisk.YaDisk(id="6cbaceb74e684cfab2f28d77cdc120e0", secret=secret, token=token)
+        y = yadisk.YaDisk(id='6cbaceb74e684cfab2f28d77cdc120e0', secret=secret, token=token)
 
-        assert y.check_token(), "Invalid token."
+        assert y.check_token(), 'Invalid token.'
 
         if cache_credentials:
             config = configparser.ConfigParser()
@@ -44,29 +44,29 @@ class Disk:
                 'secret': secret,
                 'token': token
             }
-            config.write(self._cred_cache_path.open('w'))
+            config.write(self._cred_cache_path.open('w', encoding='utf-8'))
 
         self._y = y
         self._logged_in = True
 
     def download(self, remote_path: Union[str, Path], local_path: Union[str, Path]):
-        """Download an object from remote_path to local_path
+        '''Download an object from remote_path to local_path
 
         Args:
             remote_path (Union[str, Path]): Path to the object in the cloud
             local_path (Union[str, Path]): Path to the object on the machine
-        """
+        '''
 
-        assert self._logged_in, "You must log in first"
+        assert self._logged_in, 'You must log in first'
         self._y.download(f'app:/{remote_path}', local_path)
 
     def upload(self, local_path: Union[str, Path], remote_path: Union[str, Path]):
-        """Upload an object from local_path to remote_path
+        '''Upload an object from local_path to remote_path
 
         Args:
             local_path (Union[str, Path]): Path to the object on the machine
             remote_path (Union[str, Path]): Path to the object in the cloud
-        """
+        '''
 
-        assert self._logged_in, "You must log in first"
+        assert self._logged_in, 'You must log in first'
         self._y.upload(local_path, f'app:/{remote_path}')
