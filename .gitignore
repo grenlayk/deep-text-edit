@@ -1,7 +1,7 @@
 # Repository-specific
 .yadisk_cache
-models
-outputs
+models/**/*
+outputs/**/*
 
 
 # Byte-compiled / optimized / DLL files
