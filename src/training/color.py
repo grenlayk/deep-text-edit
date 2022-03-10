@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torchvision
 from loguru import logger
-from torchvision.models.resnet import resnet50
 from torchvision.utils import save_image
 
 
@@ -23,9 +22,8 @@ class ColorizationTrainer:
                  batch_size,
                  point_batches,
                  model_save_path):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
-        self.resnet = resnet50(pretrained=True, progress=True).to(device).eval()
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -59,16 +57,16 @@ class ColorizationTrainer:
             main_start = time.time()
             self.model.train()
 
-            for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, _,
-                      file_name) in enumerate(self.train_dataloader):
+            # for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, _,
+            #           file_name) in enumerate(self.train_dataloader):
+            # x: l_img x3
+            # y: lab_img
+            for idx, (x, y) in enumerate(self.train_dataloader):
                 # Skip bad data
                 if not img_l_encoder.ndim:
                     continue
 
-                # Move data to GPU if available
-                img_l_encoder = img_l_encoder.cuda()
-                img_ab_encoder = img_ab_encoder.cuda()
-                img_l_resnet = img_l_resnet.cuda()
+                x = x.to(self.device)
 
                 # Initialize Optimizer
                 self.optimizer.zero_grad()
