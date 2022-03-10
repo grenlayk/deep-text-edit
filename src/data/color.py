@@ -19,7 +19,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         try:
-            # *** Read the image from file ***
+            # Read the image from file
             rgb_img = cv2.imread(str(self.files[index]))
 
             if rgb_img is None:
@@ -28,29 +28,28 @@ class CustomDataset(Dataset):
             rgb_img = rgb_img.astype(np.float32)
             rgb_img /= 255.0
 
-            # *** Resize the color image to pass to encoder ***
+            # Resize the color image to pass to encoder
             rgb_encoder_img = cv2.resize(rgb_img, (224, 224))
 
-            # *** Resize the color image to pass to decoder ***
+            # Resize the color image to pass to decoder
             rgb_resnet_img = cv2.resize(rgb_img, (300, 300))
 
-            ''' Encoder Images '''
-            # *** Convert the encoder color image to normalized lab space ***
+            # Convert the encoder color image to normalized lab space
             lab_encoder_img = cv2.cvtColor(rgb_encoder_img, cv2.COLOR_BGR2Lab)
 
-            # *** Splitting the lab images into l-channel, a-channel, b-channel ***
+            # Splitting the lab images into l-channel, a-channel, b-channel
             l_encoder_img = lab_encoder_img[:, :, 0]
             a_encoder_img = lab_encoder_img[:, :, 1]
             b_encoder_img = lab_encoder_img[:, :, 2]
 
-            # *** Normalizing l-channel between [-1,1] ***
+            # Normalizing l-channel between [-1,1]
             l_encoder_img = l_encoder_img / 50.0 - 1.0
 
-            # *** Repeat the l-channel to 3 dimensions ***
+            # Repeat the l-channel to 3 dimensions
             l_encoder_img = torchvision.transforms.ToTensor()(l_encoder_img)
             l_encoder_img = l_encoder_img.expand(3, -1, -1)
 
-            # *** Normalize a and b channels and concatenate ***
+            # Normalize a and b channels and concatenate
             a_encoder_img = (a_encoder_img / 128.0)
             b_encoder_img = (b_encoder_img / 128.0)
             a_encoder_img = torch.stack([torch.Tensor(a_encoder_img)])

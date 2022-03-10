@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -7,7 +8,6 @@ import torchvision
 from loguru import logger
 from torchvision.models.resnet import resnet50
 from torchvision.utils import save_image
-from pathlib import Path
 
 
 class ColorizationTrainer:
@@ -52,46 +52,46 @@ class ColorizationTrainer:
         for epoch in range(self.total_epochs):
             logger.info(f'Starting epoch #{epoch + 1}')
 
-            # *** Training step ***
+            # Training step
             loop_start = time.time()
             avg_loss = 0.0
             batch_loss = 0.0
             main_start = time.time()
             self.model.train()
 
-            for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb,
+            for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, _,
                       file_name) in enumerate(self.train_dataloader):
-                # *** Skip bad data ***
+                # Skip bad data
                 if not img_l_encoder.ndim:
                     continue
 
-                # *** Move data to GPU if available ***
+                # Move data to GPU if available
                 img_l_encoder = img_l_encoder.cuda()
                 img_ab_encoder = img_ab_encoder.cuda()
                 img_l_resnet = img_l_resnet.cuda()
 
-                # *** Initialize Optimizer ***
+                # Initialize Optimizer
                 self.optimizer.zero_grad()
 
-                # *** Forward Propagation ***
+                # Forward Propagation
                 img_embs = self.resnet(img_l_resnet.float())
                 output_ab = self.model(img_l_encoder, img_embs)
 
-                # *** Back propogation ***
+                # Back propogation
                 loss = self.criterion(output_ab, img_ab_encoder.float())
                 loss.backward()
 
-                # *** Weight Update ****
+                # Weight Update*
                 self.optimizer.step()
 
-                # *** Reduce Learning Rate ***
+                # Reduce Learning Rate
                 self.scheduler.step()
 
-                # *** Loss Calculation ***
+                # Loss Calculation
                 avg_loss += loss.item()
                 batch_loss += loss.item()
 
-                # *** Print stats after every point_batches ***
+                # Print stats after every point_batches
                 if (idx + 1) % self.point_batches == 0:
                     loop_end = time.time()
                     logger.info(
@@ -102,31 +102,31 @@ class ColorizationTrainer:
                     loop_start = time.time()
                     batch_loss = 0.0
 
-            # *** Print Training Data Stats ***
+            # Print Training Data Stats
             train_loss = avg_loss / len(self.train_dataloader) * self.batch_size
             logger.info(f'Training Loss: {train_loss}, Processed in {time.time() - main_start:.3f}s')
 
-            # *** Validation Step ***
+            # Validation Step
             avg_loss = 0.0
             loop_start = time.time()
-            # *** Intialize Model to Eval Mode for validation ***
+            # Intialize Model to Eval Mode for validation
             self.model.eval()
-            for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb,
+            for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, _,
                       file_name) in enumerate(self.val_dataloader):
-                # *** Skip bad data ***
+                # Skip bad data
                 if not img_l_encoder.ndim:
                     continue
 
-                # *** Move data to GPU if available ***
+                # Move data to GPU if available
                 img_l_encoder = img_l_encoder.cuda()
                 img_ab_encoder = img_ab_encoder.cuda()
                 img_l_resnet = img_l_resnet.cuda()
 
-                # *** Forward Propagation ***
+                # Forward Propagation
                 img_embs = self.resnet(img_l_resnet.float())
                 output_ab = self.model(img_l_encoder, img_embs)
 
-                # *** Loss Calculation ***
+                # Loss Calculation
                 loss = self.criterion(output_ab, img_ab_encoder.float())
                 avg_loss += loss.item()
 
@@ -140,7 +140,7 @@ class ColorizationTrainer:
             # if config.wb_enabled:
             #    wandb.log({"Validation loss": val_loss, "Train loss": train_loss}, step=epoch)
 
-            # *** Save the Model to disk ***
+            # Save the Model to disk
             checkpoint = {'model_state_dict': self.model.state_dict(),
                           'optimizer_state_dict': self.optimizer.state_dict(),
                           'scheduler_state_dict': self.scheduler.state_dict(),
@@ -152,30 +152,30 @@ class ColorizationTrainer:
 
         # logger.info(f'Test: {len(test_dataloader)} Total Image: {len(test_dataloader)}')
 
-        # *** Inference Step ***
+        # Inference Step
         avg_loss = 0.0
         loop_start = time.time()
         batch_start = time.time()
         batch_loss = 0.0
 
-        for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, img_rgb, file_name) in enumerate(self.test_dataloader):
-            # *** Skip bad data ***
+        for idx, (img_l_encoder, img_ab_encoder, img_l_resnet, _, file_name) in enumerate(self.test_dataloader):
+            # Skip bad data
             if not img_l_encoder.ndim:
                 continue
 
-            # *** Move data to GPU if available ***
+            # Move data to GPU if available
             img_l_encoder = img_l_encoder.cuda()
             img_ab_encoder = img_ab_encoder.cuda()
             img_l_resnet = img_l_resnet.cuda()
 
-            # *** Intialize Model to Eval Mode ***
+            # Intialize Model to Eval Mode
             self.model.eval()
 
-            # *** Forward Propagation ***
+            # Forward Propagation
             img_embs = self.resnet(img_l_resnet.float())
             output_ab = self.model(img_l_encoder, img_embs)
 
-            # *** Adding l channel to ab channels ***
+            # Adding l channel to ab channels
             color_img = self.concatenate_and_colorize(torch.stack([img_l_encoder[:, 0, :, :]], dim=1), output_ab)
 
             save_path = Path('outputs')
@@ -183,11 +183,11 @@ class ColorizationTrainer:
             save_path /= file_name[0]
             save_image(color_img[0], save_path)
 
-            # *** Printing to Tensor Board ***
+            # Printing to Tensor Board
             # grid = torchvision.utils.make_grid(color_img)
             # writer.add_image('Output Lab Images', grid, 0)
 
-            # *** Loss Calculation ***
+            # Loss Calculation
             loss = self.criterion(output_ab, img_ab_encoder.float())
             avg_loss += loss.item()
             batch_loss += loss.item()
@@ -204,4 +204,3 @@ class ColorizationTrainer:
 
         test_loss = avg_loss / len(self.test_dataloader)
         logger.info(f'Test Loss: {test_loss} Processed in {time.time() - loop_start:.3f}s')
-        pass
