@@ -1,0 +1,23 @@
+output-format: grouped
+strictness: medium
+test-warnings: false
+doc-warnings: false
+max-line-length: 120
+
+pycodestyle:
+  full: true
+
+pylint:
+  disable:
+    - too-many-arguments
+    - too-many-locals
+    - too-many-statements
+    - useless-super-delegation
+
+mccabe:
+  run: false
+
+mypy:
+  run: true
+  options:
+    ignore-missing-imports: true
