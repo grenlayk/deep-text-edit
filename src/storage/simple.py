@@ -30,9 +30,5 @@ class Storage:
         self.epoch_count += 1
         if self.epoch_count == self.save_freq:
             self.epoch_count = 0
-            # FIXME: We can only save nn.Module, but we need to save metrics too.
-            # Should we transform the metric or change the typing?
-            #
-            # modules['metric'] = metric
             for module_name, module in modules.items():
-                torch.save(module, self.save_path / module_name / str(epoch))
+                torch.save(module.state_dict(), self.save_path / module_name / str(epoch))
