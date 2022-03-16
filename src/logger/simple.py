@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Optional
+from typing import Optional, Dict
 
 class Logger():
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, tb_path: str = None):
@@ -21,7 +21,7 @@ class Logger():
         self.train_iter = 1
         self.val_iter = 1
 
-    def log_train(self, losses: Optional[dict[str, float]] = None, images: Optional[dict[str, Tensor]] = None):
+    def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
             self.start_time = time.time()
             logger.info(
@@ -50,7 +50,7 @@ class Logger():
 
         self.train_iter += 1
 
-    def log_val(self, losses: Optional[dict[str, float]] = None, images: Optional[dict[str, Tensor]] = None, metrics: Optional[dict[str, float]] = None):
+    def log_val(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None, metrics: Optional[Dict[str, float]] = None):
 
         if self.val_iter == 1:
             self.loss_buff['values'].clear()
@@ -100,7 +100,11 @@ class Logger():
             for metric_name in self.metrics_buff['sum']:
                 logger.info(
                     f'Average {metric_name} over validation: {self.metrics_buff["sum"][metric_name] / (self.val_iter - 1)}')
-        self.loss_buff.clear()
-        self.metrics_buff.clear()
+        
+        for dict_name in self.loss_buff:
+            self.loss_buff[dict_name].clear
+        
+        for dict_name in self.metrics_buff:
+            self.metrics_buff[dict_name].clear()
         self.val_iter = 1
         self.train_iter = 1
