@@ -78,8 +78,9 @@ class Decoder(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, depth_after_fusion):
+    def __init__(self, depth_after_fusion, device='cpu'):
         super().__init__()
+        self.device = device
         self.encoder = Encoder()
         self.fusion = FusionLayer()
         self.after_fusion = nn.Conv2d(
