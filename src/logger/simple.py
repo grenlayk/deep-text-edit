@@ -50,7 +50,7 @@ class Logger():
 
         self.train_iter += 1
 
-    def log_val(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None, metrics: Optional[Dict[str, float]] = None):
+    def log_val(self, losses: Optional[Dict[str, float]] = None, metrics: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
 
         if self.val_iter == 1:
             self.loss_buff['values'].clear()
@@ -92,15 +92,19 @@ class Logger():
         self.val_iter += 1
 
     def end_val(self):
+        avg_metrics = {}
+        avg_losses = {}
         if self.loss_buff:
             for loss_name in self.loss_buff['sum']:
                 logger.info(
                     f'Average {loss_name} over validation: {self.loss_buff["sum"][loss_name] / (self.val_iter - 1)}')
+                avg_losses[loss_name] = self.loss_buff["sum"][loss_name] / (self.val_iter - 1)
         if self.metrics_buff:
             for metric_name in self.metrics_buff['sum']:
                 logger.info(
                     f'Average {metric_name} over validation: {self.metrics_buff["sum"][metric_name] / (self.val_iter - 1)}')
-        
+                avg_metrics[metric_name] = self.metrics_buff["sum"][metric_name] / (self.val_iter - 1)
+
         for dict_name in self.loss_buff:
             self.loss_buff[dict_name].clear
         
@@ -108,3 +112,5 @@ class Logger():
             self.metrics_buff[dict_name].clear()
         self.val_iter = 1
         self.train_iter = 1
+
+        return losses, metrics
