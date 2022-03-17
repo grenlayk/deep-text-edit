@@ -113,4 +113,4 @@ class Logger():
         self.val_iter = 1
         self.train_iter = 1
 
-        return losses, metrics
+        return avg_losses, avg_metrics
