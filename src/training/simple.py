@@ -51,14 +51,11 @@ class SimpleTrainer():
             pred = self.model(input)
             loss = self.criterion(pred, target)
             metric = metric(pred, target)
-            metrics += metric
-            losses += loss
+            self.logger.log_val({'loss':loss}, {'metric':metric}, {'input': input})
 
-        avg_loss = losses / len(self.val_dataloder())
-        avg_metric = metric / len(self.val_dataloder())
+        avg_losses, avg_metrics = self.logger.end_val()
 
-        self.logger.log_val({'avg_loss': avg_loss}, {'avg_metric': avg_metric}, {'input': input})  # 1 print
-        self.storage.save(epoch, {}, avg_metric)
+        self.storage.save(epoch, {}, avg_metrics['metric'])
 
     def run(self):
         for epoch in range(self.max_epoch):
