@@ -7,3 +7,4 @@ torchvision
 loguru
 yadisk
 prospector[with_mypy]
+wandb

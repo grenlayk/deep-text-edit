@@ -4,6 +4,7 @@ from collections import defaultdict
 from loguru import logger
 from torch import Tensor
 from typing import Optional, Dict
+import wandb
 
 class Logger():
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, tb_path: str = None):
@@ -20,6 +21,7 @@ class Logger():
         self.tb_path: str = tb_path
         self.train_iter = 1
         self.val_iter = 1
+        self.wandb = wandb.init(project="colorization", entity="text-deep-fake")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
@@ -39,6 +41,7 @@ class Logger():
             for loss_name in self.loss_buff["sumlast"]:
                 logger.info(
                     f'Average {loss_name} over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
+                self.wandb.log({f"{loss_name}": self.loss_buff["sumlast"][loss_name] / self.print_freq})
             logger.info('------------')
             self.start_time = self.end_time
             self.loss_buff['values'].clear()

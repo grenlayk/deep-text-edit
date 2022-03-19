@@ -104,13 +104,9 @@ class ColorizationTrainer:
                 
             self.logger.end_val()
 
-
-            # if config.wb_enabled:
-            #    wandb.log({"Validation loss": val_loss, "Train loss": train_loss}, step=epoch)
-
             # Save the Model to disk
             self.storage.save(epoch, {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, None)
-            logger.info(f'Model saved at: {self.model_save_path / str(epoch + 1)}')
+            logger.info(f'Model saved')
 
         # ### Inference
 
