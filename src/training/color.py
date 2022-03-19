@@ -21,8 +21,8 @@ class ColorizationTrainer:
                  total_epochs,
                  batch_size,
                  point_batches,
-                 model_save_path,
-                 logger):
+                 logger,
+                 storage):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = model
         self.criterion = criterion
@@ -34,8 +34,8 @@ class ColorizationTrainer:
         self.total_epochs = total_epochs
         self.batch_size = batch_size
         self.point_batches = point_batches
-        self.model_save_path = model_save_path
         self.logger = logger
+        self.storage = storage
 
     def concatenate_and_colorize(self, im_lab, img_ab):
         # Assumption is that im_lab is of size [1,3,224,224]
@@ -109,11 +109,7 @@ class ColorizationTrainer:
             #    wandb.log({"Validation loss": val_loss, "Train loss": train_loss}, step=epoch)
 
             # Save the Model to disk
-            checkpoint = {'model_state_dict': self.model.state_dict(),
-                          'optimizer_state_dict': self.optimizer.state_dict(),
-                          'scheduler_state_dict': self.scheduler.state_dict()}
-                          # 'train_loss': train_loss, 'val_loss': val_loss}
-            torch.save(checkpoint, self.model_save_path / str(epoch + 1))
+            self.storage.save(epoch, {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, None)
             logger.info(f'Model saved at: {self.model_save_path / str(epoch + 1)}')
 
         # ### Inference

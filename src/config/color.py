@@ -6,6 +6,7 @@ from src.data.color import CustomDataset
 from src.models.color import Model
 from src.training.color import ColorizationTrainer
 from src.logger.simple import Logger
+from src.storage.simple import Storage
 
 
 class Config:
@@ -49,10 +50,8 @@ class Config:
 
         point_batches = 500
 
-        model_save_path = Path('models') / datetime.datetime.utcnow().strftime('%Y-%m-%d %H-%M-%S')
-        model_save_path.mkdir(parents=True)
-
         logger = Logger(print_freq=2)
+        storage = Storage('./models/colorization')
 
         self.trainer = ColorizationTrainer(
             model,
@@ -65,8 +64,8 @@ class Config:
             total_epochs,
             batch_size,
             point_batches,
-            model_save_path,
-            logger
+            logger,
+            storage
         )
 
     def run(self):
