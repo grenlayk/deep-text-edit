@@ -2,7 +2,8 @@
 .yadisk_cache
 models/**/*
 outputs/**/*
-
+data/**/*
+checkpoints/**/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

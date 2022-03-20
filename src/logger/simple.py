@@ -6,6 +6,7 @@ from torch import Tensor
 from typing import Optional, Dict
 import wandb
 
+
 class Logger():
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, tb_path: str = None):
         self.print_freq: int = print_freq
@@ -21,7 +22,7 @@ class Logger():
         self.tb_path: str = tb_path
         self.train_iter = 1
         self.val_iter = 1
-        self.wandb = wandb.init(project="colorization", entity="text-deep-fake")
+        self.wandb = wandb.init(project="TextDeepFake", entity="sphericalpotatoinvacuum")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
@@ -40,8 +41,8 @@ class Logger():
             logger.info(f'Processing time for last {self.print_freq} batches: {self.end_time - self.end_time:.3f}s')
             for loss_name in self.loss_buff["sumlast"]:
                 logger.info(
-                    f'Average {loss_name} over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
-                self.wandb.log({f"{loss_name}": self.loss_buff["sumlast"][loss_name] / self.print_freq})
+                    f'Average {loss_name} loss over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
+                self.wandb.log({f"{loss_name} loss": self.loss_buff["sumlast"][loss_name] / self.print_freq})
             logger.info('------------')
             self.start_time = self.end_time
             self.loss_buff['values'].clear()
@@ -53,7 +54,8 @@ class Logger():
 
         self.train_iter += 1
 
-    def log_val(self, losses: Optional[Dict[str, float]] = None, metrics: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
+    def log_val(self, losses: Optional[Dict[str, float]] = None,
+                metrics: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
 
         if self.val_iter == 1:
             self.loss_buff['values'].clear()
@@ -77,13 +79,13 @@ class Logger():
             logger.info(f'Batch: {self.val_iter}')
             for loss_name in self.loss_buff["sumlast"]:
                 logger.info(
-                    f'Average {loss_name} over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
+                    f'Average {loss_name} loss over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
             self.loss_buff['values'].clear()
             self.loss_buff['sumlast'].clear()
 
             for metric_name in self.metrics_buff["sumlast"]:
                 logger.info(
-                    f'Average {metric_name} over last {self.print_freq} batches: {self.metrics_buff["sumlast"][metric_name] / self.print_freq}')
+                    f'Average {metric_name} metric over last {self.print_freq} batches: {self.metrics_buff["sumlast"][metric_name] / self.print_freq}')
             self.metrics_buff['values'].clear()
             self.metrics_buff['sumlast'].clear()
             logger.info('------------')
@@ -110,7 +112,7 @@ class Logger():
 
         for dict_name in self.loss_buff:
             self.loss_buff[dict_name].clear
-        
+
         for dict_name in self.metrics_buff:
             self.metrics_buff[dict_name].clear()
         self.val_iter = 1
