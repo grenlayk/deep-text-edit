@@ -16,7 +16,6 @@ class Storage:
 
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.save_freq = save_freq
-        self.epoch_count = 0
 
     def save(self, epoch: int, modules: Dict[str, nn.Module], metric: float):
         '''
@@ -28,9 +27,7 @@ class Storage:
             'scheduler': scheduler
         }
         '''
-        self.epoch_count += 1
-        if self.epoch_count == self.save_freq:
-            self.epoch_count = 0
+        if epoch % self.save_freq == 0:
             epoch_path = self.save_path / str(epoch)
             epoch_path.mkdir(parents=True, exist_ok=True)
             for module_name, module in modules.items():

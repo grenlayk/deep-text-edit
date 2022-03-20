@@ -8,7 +8,7 @@ import wandb
 
 
 class Logger():
-    def __init__(self, print_freq: int = 100, image_freq: int = 1000, tb_path: str = None):
+    def __init__(self, print_freq: int = 100, image_freq: int = 1000, tb_path: str = None, project_name: str = None):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
         self.loss_buff: dict[str, dict[str, list]] = defaultdict()
@@ -22,7 +22,7 @@ class Logger():
         self.tb_path: str = tb_path
         self.train_iter = 1
         self.val_iter = 1
-        self.wandb = wandb.init(project="TextDeepFake", entity="sphericalpotatoinvacuum")
+        self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
@@ -34,6 +34,7 @@ class Logger():
             for loss_name, loss_value in losses.items():
                 self.loss_buff['values'][loss_name] += [loss_value]
                 self.loss_buff['sumlast'][loss_name] += loss_value
+                self.wandb.log({f"{loss_name} loss": loss_value})
 
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
@@ -42,7 +43,6 @@ class Logger():
             for loss_name in self.loss_buff["sumlast"]:
                 logger.info(
                     f'Average {loss_name} loss over last {self.print_freq} batches: {self.loss_buff["sumlast"][loss_name] / self.print_freq}')
-                self.wandb.log({f"{loss_name} loss": self.loss_buff["sumlast"][loss_name] / self.print_freq})
             logger.info('------------')
             self.start_time = self.end_time
             self.loss_buff['values'].clear()
