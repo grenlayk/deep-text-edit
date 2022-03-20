@@ -77,4 +77,7 @@ class Disk:
         '''
 
         assert self._logged_in, 'You must log in first'
+        if isinstance(remote_path, str):
+            remote_path = Path(remote_path)
+        self._ensure_folder(remote_path)
         self._y.upload(str(local_path), f'app:/{remote_path}')

@@ -35,4 +35,4 @@ class Storage:
             epoch_path.mkdir(parents=True, exist_ok=True)
             for module_name, module in modules.items():
                 torch.save(module.state_dict(), epoch_path / module_name)
-        disk.upload(epoch_path, epoch_path)
+                disk.upload(epoch_path / module_name, epoch_path / module_name)
