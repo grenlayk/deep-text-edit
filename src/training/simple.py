@@ -18,7 +18,8 @@ class SimpleTrainer():
             val_dataloader: DataLoader,
             storage: Storage,
             logger: Logger,
-            max_epoch: int):
+            max_epoch: int, 
+            device: str):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
@@ -28,6 +29,7 @@ class SimpleTrainer():
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.max_epoch = max_epoch
+        self.device = device
 
     def train(self):
         self.model.train()
