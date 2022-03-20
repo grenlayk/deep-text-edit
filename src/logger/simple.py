@@ -49,8 +49,8 @@ class Logger():
             self.loss_buff['sumlast'].clear()
 
         if self.train_iter % self.image_freq == 0 and images:
-            # TensorBoard magic
-            pass
+            for image_name, image in images.items():
+                self.wandb.log({f'{image_name}': wandb.Image(image)})
 
         self.train_iter += 1
 
@@ -91,8 +91,8 @@ class Logger():
             logger.info('------------')
 
         if self.val_iter % self.image_freq == 0:
-            # TensorBoard magic
-            pass
+            for image_name, image in images.items():
+                self.wandb.log({f'{image_name}': wandb.Image(image)})
 
         self.val_iter += 1
 

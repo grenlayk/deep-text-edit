@@ -46,7 +46,7 @@ class SimpleTrainer():
             self.optimizer.step()
             self.scheduler.step()
 
-            self.logger.log_train(losses={'main': loss.item()}, images={'input': input})
+            self.logger.log_train(losses={'main': loss.item()}, images={'input': input, 'output': pred, 'target': target})
 
         
     def validate(self, epoch):
@@ -59,7 +59,8 @@ class SimpleTrainer():
             pred = self.model(input)
             loss = self.criterion(pred, target)
             metric = metric(pred, target)
-            self.logger.log_val(losses={'main': loss.item()}, metrics={'metric': metric}, images={'input': input})
+            self.logger.log_val(losses={'main': loss.item()}, metrics={'metric': metric}, 
+                                images={'input': input, 'output': pred, 'target': target})
 
         avg_losses, avg_metrics = self.logger.end_val()
         self.storage.save(epoch, {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, avg_metrics['metric'])

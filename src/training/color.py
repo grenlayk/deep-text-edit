@@ -34,8 +34,8 @@ class ColorizationTrainer:
         self.storage = storage
 
     def concatenate_and_colorize(self, im_lab, img_ab):
-        # Assumption is that im_lab is of size [1,3,224,224]
         # print(im_lab.size(),img_ab.size())
+        im_lab = torchvision.transforms.Resize(224)(im_lab)
         np_img = im_lab[0].cpu().detach().numpy().transpose(1, 2, 0)
         lab = np.empty([*np_img.shape[0:2], 3], dtype=np.float32)
         lab[:, :, 0] = np.squeeze(((np_img + 1) * 50))
@@ -96,7 +96,11 @@ class ColorizationTrainer:
                 # Loss Calculation
                 loss = self.criterion(output_ab, ab_img.float())
 
-                self.logger.log_val(losses={'main': loss.item()}, images={'input': l_img})
+                output_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), output_ab)
+                target_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), ab_img)
+
+                self.logger.log_val(losses={'main': loss.item()}, 
+                                    images={'input': l_img, 'output': output_img, 'target': target_img})
                 
             self.logger.end_val()
 
@@ -122,9 +126,6 @@ class ColorizationTrainer:
 
             # Forward Propagation
             output_ab = self.model(l_img)
-
-            # resize l_img
-            l_img = torchvision.transforms.Resize(224)(l_img)
 
             # Adding l channel to ab channels
             color_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), output_ab)
