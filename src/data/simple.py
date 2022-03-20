@@ -16,7 +16,7 @@ class SimpleDataset(Dataset):
             local_path = Path(local)
 
         if not local_path.exists():
-            self.download(remote_path, local_path)
+            self._download(remote_path, local_path)
 
     def _preprocess(self):
         raise NotImplementedError

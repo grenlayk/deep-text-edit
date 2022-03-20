@@ -1,12 +1,11 @@
-import datetime
 from pathlib import Path
 
 import torch
 from src.data.color import CustomDataset
-from src.models.color import Model
-from src.training.color import ColorizationTrainer
 from src.logger.simple import Logger
+from src.models.color import Model
 from src.storage.simple import Storage
+from src.training.color import ColorizationTrainer
 
 
 class Config:

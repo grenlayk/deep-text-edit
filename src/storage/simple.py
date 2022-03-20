@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Union
-from typing import Optional, Dict
 
 import torch
 from src.disk import disk
@@ -17,7 +16,7 @@ class Storage:
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.save_freq = save_freq
 
-    def save(self, epoch: int, modules: Dict[str, nn.Module], metric: float):
+    def save(self, epoch: int, modules: dict[str, nn.Module], metric: float):
         '''
         modules dict example:
 

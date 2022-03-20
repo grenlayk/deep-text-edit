@@ -1,4 +1,3 @@
-import time
 from pathlib import Path
 
 import cv2
@@ -105,13 +104,15 @@ class ColorizationTrainer:
             self.logger.end_val()
 
             # Save the Model to disk
-            self.storage.save(epoch, {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, None)
-            logger.info(f'Model saved')
-
-        # ### Inference
+            self.storage.save(
+                epoch, 
+                {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, 
+                None
+            )
+            logger.info('Model saved')
 
         # Inference Step
-        logger.info(f'-------------- Test dataset validation --------------')
+        logger.info('-------------- Test dataset validation --------------')
 
         for idx, (l_img, ab_img) in enumerate(self.test_dataloader):
             # Skip bad data
