@@ -17,7 +17,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int = None):
         try:
             rgb_img = cv2.imread(str(self.files[index]))
             if rgb_img is None:

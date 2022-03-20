@@ -50,8 +50,8 @@ class Config:
 
         point_batches = 500
 
-        logger = Logger(print_freq=2)
-        storage = Storage('./models/colorization')
+        logger = Logger(print_freq=2, project_name='colorization')
+        storage = Storage('./checkpoints/colorization')
 
         self.trainer = ColorizationTrainer(
             model,

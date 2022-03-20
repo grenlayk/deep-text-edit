@@ -19,8 +19,6 @@ class ColorizationTrainer:
                  val_dataloader,
                  test_dataloader,
                  total_epochs,
-                 batch_size,
-                 point_batches,
                  logger,
                  storage):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -32,8 +30,6 @@ class ColorizationTrainer:
         self.test_dataloader = test_dataloader
         self.val_dataloader = val_dataloader
         self.total_epochs = total_epochs
-        self.batch_size = batch_size
-        self.point_batches = point_batches
         self.logger = logger
         self.storage = storage
 
@@ -137,10 +133,6 @@ class ColorizationTrainer:
             save_path.mkdir(exist_ok=True)
             save_path /= f'img{idx}.jpg'
             save_image(color_img[0], save_path)
-
-            # Printing to Tensor Board
-            # grid = torchvision.utils.make_grid(color_img)
-            # writer.add_image('Output Lab Images', grid, 0)
 
             # Loss Calculation
             loss = self.criterion(output_ab, ab_img.float())
