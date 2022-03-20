@@ -3,6 +3,7 @@ from typing import Union
 from typing import Optional, Dict
 
 import torch
+from src.disk import disk
 from torch import nn
 
 
@@ -27,11 +28,11 @@ class Storage:
             'scheduler': scheduler
         }
         '''
-
         self.epoch_count += 1
         if self.epoch_count == self.save_freq:
             self.epoch_count = 0
             epoch_path = self.save_path / str(epoch)
             epoch_path.mkdir(parents=True, exist_ok=True)
             for module_name, module in modules.items():
-                torch.save(module.state_dict(), epoch_path / module_name )
+                torch.save(module.state_dict(), epoch_path / module_name)
+                disk.upload(epoch_path / module_name, epoch_path / module_name)

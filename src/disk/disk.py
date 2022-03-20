@@ -1,6 +1,7 @@
 import configparser
 from pathlib import Path
 from typing import Union
+from loguru import logger
 
 import yadisk
 
@@ -49,6 +50,13 @@ class Disk:
         self._y = y
         self._logged_in = True
 
+        logger.info('Logged in to YandexDisk')
+
+    def _ensure_folder(self, folder: Path):
+        if not self._y.exists(folder):
+            self._ensure_folder(f'app:/{folder.parent}')
+            self._y.mkdir(f'app:/{folder}')
+
     def download(self, remote_path: Union[str, Path], local_path: Union[str, Path]):
         '''Download an object from remote_path to local_path
 
@@ -58,7 +66,7 @@ class Disk:
         '''
 
         assert self._logged_in, 'You must log in first'
-        self._y.download(f'app:/{remote_path}', local_path)
+        self._y.download(f'app:/{remote_path}', str(local_path))
 
     def upload(self, local_path: Union[str, Path], remote_path: Union[str, Path]):
         '''Upload an object from local_path to remote_path
@@ -69,4 +77,7 @@ class Disk:
         '''
 
         assert self._logged_in, 'You must log in first'
-        self._y.upload(local_path, f'app:/{remote_path}')
+        if isinstance(remote_path, str):
+            remote_path = Path(remote_path)
+        self._ensure_folder(remote_path)
+        self._y.upload(str(local_path), f'app:/{remote_path}')
