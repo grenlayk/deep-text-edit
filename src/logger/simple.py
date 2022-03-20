@@ -111,7 +111,7 @@ class Logger():
                 avg_metrics[metric_name] = self.metrics_buff["sum"][metric_name] / (self.val_iter - 1)
 
         for dict_name in self.loss_buff:
-            self.loss_buff[dict_name].clear
+            self.loss_buff[dict_name].clear()
 
         for dict_name in self.metrics_buff:
             self.metrics_buff[dict_name].clear()
