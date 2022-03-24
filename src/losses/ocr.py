@@ -5,7 +5,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from models import ocr
 from PIL import Image
-
+from disk import disk
 
 class resizeNormalize(object):
     def __init__(self, size, interpolation=Image.BILINEAR):
@@ -94,10 +94,12 @@ class strLabelConverter(object):
 
 
 class OCRLoss(nn.Module):
-    def __init__(self, model_path = 'crnn.pth', alp = '0123456789abcdefghijklmnopqrstuvwxyz', hidden_state_size = 256, imH = 32, imW = 100):
+    def __init__(self, model_remote_path = 'ocr.pth', model_local_path = 'ocr.pth', alp = '0123456789abcdefghijklmnopqrstuvwxyz', hidden_state_size = 256, imH = 32, imW = 100):
         super().__init__()
+        disk.login()
+        disk.download(model_remote_path, model_local_path)
         self.transform = resizeNormalize((imH, imW))
-        self.ocr = ocr.crnn_pretrained(model_path, alp, hidden_state_size, imH)
+        self.ocr = ocr.crnn_pretrained(model_local_path, alp, hidden_state_size, imH)
         self.alp = alp
         self.converter = strLabelConverter(alp)
         self.criterion = torch.nn.CTCLoss()
