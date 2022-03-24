@@ -1,0 +1,9 @@
+click
+pathlib
+torch
+datetime
+opencv-python
+torchvision
+loguru
+yadisk
+prospector[with_mypy]
