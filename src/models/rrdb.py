@@ -78,9 +78,10 @@ class RRDBNet(nn.Module):
         return out
 
 class RRDB_pretrained(nn.Module):
-    def __init__(self, model_path = 'rrdb_esrgan.pth'):
+    def __init__(self, model_path = None):
         super().__init__()
-        self.model = RRDBNet(3, 3, 64, 23, gc=32)
-        self.model.load_state_dict(torch.load(model_path), strict=True)
+        self.model = RRDBNet(6, 3, 64, 23, gc=32)
+        if model_path:
+            self.model.load_state_dict(torch.load(model_path), strict=True)
     def forward(self, x):
         return self.model(x)
