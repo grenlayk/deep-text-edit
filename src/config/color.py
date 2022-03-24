@@ -1,16 +1,17 @@
-import datetime
 from pathlib import Path
 
 import torch
 from src.data.color import CustomDataset
+from src.logger.simple import Logger
 from src.models.color import Model
+from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
 
 
 class Config:
     def __init__(self):
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-        total_epochs = 1 #20
+        total_epochs = 3 #20
         model = Model(256, device).to(device)
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
@@ -20,7 +21,7 @@ class Config:
             gamma=0.2
         )
 
-        batch_size = 10
+        batch_size = 6
 
         train_dataset = CustomDataset(Path('./data/raw/AlsoCoco/train2017'))
         train_dataloader = torch.utils.data.DataLoader(
@@ -48,8 +49,8 @@ class Config:
 
         point_batches = 500
 
-        model_save_path = Path('models') / datetime.datetime.utcnow().strftime('%Y-%m-%d %H-%M-%S')
-        model_save_path.mkdir(parents=True)
+        logger = Logger(print_freq=2, project_name='colorization')
+        storage = Storage('./checkpoints/colorization')
 
         self.trainer = ColorizationTrainer(
             model,
@@ -62,7 +63,8 @@ class Config:
             total_epochs,
             batch_size,
             point_batches,
-            model_save_path
+            logger,
+            storage
         )
 
     def run(self):
