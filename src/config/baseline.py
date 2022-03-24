@@ -1,10 +1,14 @@
 
 import torch
-from loguru import logger
-from disk import disk
+import sys
+from loguru import logger as info_logger
+origin_path = sys.path
+sys.path.append("..")
+sys.path = origin_path
+from src.disk import disk
 from pathlib import Path
 from src.logger import Logger
-from src.data.baseline import  download_data, setup_data
+from src.data.baseline import  download_data, setup_dataset
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
@@ -15,18 +19,16 @@ class Config:
         disk.login()
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-        logger.info(f'Using device: {device}')
-        data_dir = Path("data/imgur5k")
+        info_logger.info(f'Using device: {device}')
+        data_dir = Path("/home/nikita/Huawei_Project/text-deep-fake/data/imgur")
+        style_dir = data_dir / 'IMGUR5K_small'
+        content_dir = data_dir / 'content'
         if not data_dir.exists():
             data_dir.mkdir()
-            style_dir = data_dir / 'style'
-            content_dir = data_dir / 'content'
-            style_dir.mkdir()
-            content_dir.mkdir()
-            download_data(Path("data/IMGUR5k.tar.lz4"), style_dir)
+            download_data(Path("data/IMGUR5K_small.tar"), data_dir)
     
-        train_dataloader = DataLoader(setup_data(style_dir / 'train', content_dir / 'train'))
-        val_dataloader = DataLoader(setup_data(style_dir / 'val', content_dir / 'val'))
+        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'))
+        val_dataloader = DataLoader(setup_dataset(style_dir / 'val', content_dir / 'val'))
 
         total_epochs = 1 #20
         model = RRDB_pretrained().to(device)
@@ -55,3 +57,6 @@ class Config:
 
     def run(self):
         self.trainer.run()
+
+
+config = Config().run()

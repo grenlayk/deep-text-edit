@@ -3,19 +3,22 @@ import numpy as np
 import torch
 import json
 import subprocess
+import os
+import numpy as np
+import tarfile
 
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 from torch.utils.data import Dataset
-from disk import  disk
+from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text, dataset_folder: Path):
     img = Image.new('RGB', (256, 64), color = (255, 255, 255))
-    fnt = ImageFont.truetype('../utils/VerilySerifMono.otf', 40)
+    fnt = ImageFont.truetype('/home/nikita/Huawei_Project/text-deep-fake/src/utils/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
     d.text((60, 10), text, font=fnt, fill=(0, 0, 0))
-    img.save(dataset_folder / '{}.png'.format(text))
+    img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
 
 
 def download_data(remote_archieve_path: Path, local_dir: Path):
@@ -24,15 +27,11 @@ def download_data(remote_archieve_path: Path, local_dir: Path):
     '''
     logger.info('Downloading data')
     local_path = local_dir / remote_archieve_path.name
-    disk.download(remote_archieve_path, local_path)
+    disk.download(str(remote_archieve_path), str(local_path))
+    logger.info('Download finished, starting unarchivation')
+    tarfile.open(local_path, 'r').extractall(local_dir)
+    logger.info('Unarchieved')
 
-    if len(local_path.suffixes) > 0:
-        tool = local_path.suffix[1:]
-        p = subprocess.run(
-            ['bash', '-c', f'tar -I {tool} -xvf {local_path} -C {local_dir}'],
-            capture_output=True
-        )
-        p.check_returncode()
 
 def setup_dataset(style_dir: Path, content_dir: Path):
     '''
@@ -44,11 +43,22 @@ def setup_dataset(style_dir: Path, content_dir: Path):
     json_path = style_dir / 'words.json'
     with open(json_path) as json_file:
         words = json.load(json_file)
-
-    if not content_dir.exists:
+    dataset_size = len(os.listdir(style_dir))
+    if not content_dir.exists():
+        logger.info("Drawing content pictures")
+        idx = np.sort(np.random.choice(len(words), dataset_size, replace=False)) #Generate different words each time
         content_dir.mkdir()
-        for _, text in words:
-            draw_one(text, content_dir)
+        i = 0
+        cur_idx = 0
+        for _, text in words.items():
+            if cur_idx >= dataset_size:
+                break
+            if i == idx[cur_idx]:
+                if '/' in text:
+                    continue
+                draw_one(text, content_dir)
+                cur_idx += 1
+            i += 1
     
     return BaselineDataset(style_dir, content_dir)
         
@@ -86,7 +96,7 @@ class BaselineDataset(Dataset):
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
-            return img_style, img_content, str(self.content_files[index].name.split('.', 1)[0])
+            return img_style, img_content, str(self.content_files[index].name.split('.', 1)[0][1:-1])
 
         except Exception as e:
             logger.error(f'Exception at {self.style_files[index]}, {e}')

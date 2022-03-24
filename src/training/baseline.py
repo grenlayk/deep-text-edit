@@ -1,10 +1,10 @@
 import torch
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from losses import ocr, perceptual
+from src.losses import ocr, perceptual
 from torch import nn, optim
 from torch.utils.data import DataLoader
-
+from loguru import logger
 class Trainer:
     def __init__(self,
                  model: nn.Module,
@@ -42,15 +42,18 @@ class Trainer:
 
     
     def train(self):
+        logger.info('Start training')
         #self.setup_data_one_image()
         self.model.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
+            print('We gucci')
             concat_batches = (self.concat_batches(style_batch, content_batch))
 
             self.optimizer.zero_grad()
-            #norm_bathces = self.normalize(concat_batches)
+
             res = self.model(concat_batches)
+            print('We gucci 3')
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
             loss = ocr_loss + perceptual_loss

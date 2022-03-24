@@ -3,9 +3,9 @@ import collections
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from models import ocr
+from src.models import ocr
 from PIL import Image
-from disk import disk
+from src.disk import disk
 
 class resizeNormalize(object):
     def __init__(self, size, interpolation=Image.BILINEAR):
