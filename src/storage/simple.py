@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict
 
 import torch
 from torch import nn
@@ -16,7 +16,7 @@ class Storage:
         self.save_freq = save_freq
         self.epoch_count = 0
 
-    def save(self, epoch: int, modules: dict[str, nn.Module], metric: float):
+    def save(self, epoch: int, modules: Dict[str, nn.Module], metric: float):
         '''
         modules dict example:
 
