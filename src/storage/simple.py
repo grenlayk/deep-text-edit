@@ -16,7 +16,7 @@ class Storage:
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.save_freq = save_freq
 
-    def save(self, epoch: int, modules: dict[str, nn.Module], metric: float):
+    def save(self, epoch: int, modules: dict[str, nn.Module], metric: dict[str, float]):
         '''
         modules dict example:
 

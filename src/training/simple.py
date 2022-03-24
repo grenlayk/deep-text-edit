@@ -36,7 +36,7 @@ class SimpleTrainer():
     def train(self):
         self.model.train()
 
-        for inputs, target in self.train_dataloader():
+        for inputs, target in self.train_dataloader:
             inputs = inputs.to(self.device)
             target = target.to(self.device)
 
@@ -48,17 +48,17 @@ class SimpleTrainer():
             self.optimizer.step()
 
             if self.scheduler is not None:
-                self.scheduler.step()
+                self.scheduler.step(loss.item())
 
             self.logger.log_train(
                 losses={'main': loss.item()},
-                images={'input': inputs, 'output': pred, 'target': target}
+                images={'input': inputs}
             )
 
     def validate(self, epoch):
         self.model.eval()
 
-        for inputs, target in self.val_dataloader():
+        for inputs, target in self.val_dataloader:
             inputs = inputs.to(self.device)
             target = target.to(self.device)
 
@@ -68,14 +68,14 @@ class SimpleTrainer():
             self.logger.log_val(
                 losses={'main': loss.item()},
                 metrics=metric,
-                images={'input': inputs, 'output': pred, 'target': target}
+                images={'input': inputs}
             )
 
         _, avg_metrics = self.logger.end_val()
         self.storage.save(
             epoch,
             {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
-            avg_metrics['metric']
+            avg_metrics
         )
 
     def run(self):

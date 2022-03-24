@@ -12,8 +12,9 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from torchvision.models.vgg import vgg19
+from torchvision.models.vgg import vgg11
 from torchvision import transforms as T
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 class Config:
@@ -26,11 +27,12 @@ class Config:
             disk.download('data/Typefaces.tar', 'data/Typefaces.tar')
             tarfile.open('data/Typefaces.tar', 'r').extractall('data/Typefaces')
 
-        model = vgg19(pretrained=True)
+        model = vgg11(pretrained=True)
         model.classifier[-1] = torch.nn.Linear(4096, 2500)
         model = model.to(device)
         criterion = CrossEntropyLoss()
         optimizer = Adam(model.parameters(), lr=1e-4, weight_decay=5e-4)
+        scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=200)
         storage = Storage('checkpoints/typeface')
         metric_logger = Logger()
 
@@ -41,20 +43,20 @@ class Config:
         ])
         train_dataset = ImageFolder('data/Typefaces/train', transform)
         val_dataset = ImageFolder('data/Typefaces/val', transform)
-        train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
-        val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=True, num_workers=4)
+        train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4)
+        val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=4)
 
         self.trainer = SimpleTrainer(
             model=model,
             criterion=criterion,
             metric=Top1Accuracy(),
             optimizer=optimizer,
-            scheduler=None,
+            scheduler=scheduler,
             storage=storage,
             logger=metric_logger,
             train_dataloader=train_dataloader,
             val_dataloader=val_dataloader,
-            max_epoch=5,
+            max_epoch=10,
             device=device
         )
 
