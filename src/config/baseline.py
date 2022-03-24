@@ -7,7 +7,7 @@ sys.path.append("..")
 sys.path = origin_path
 from src.disk import disk
 from pathlib import Path
-from src.logger import Logger
+from src.logger.simple import Logger
 from src.data.baseline import  download_data, setup_dataset
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer

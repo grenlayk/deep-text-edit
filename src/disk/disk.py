@@ -1,6 +1,6 @@
 import configparser
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import yadisk
 from loguru import logger
@@ -60,7 +60,7 @@ class Disk:
             logger.debug(f'Creating folder {folder} on remote')
             self._y.mkdir(folder.as_posix())
     
-    def _traverse_remote(self, remote_path: Path) -> list[Path]:
+    def _traverse_remote(self, remote_path: Path) -> List[Path]:
         logger.debug(f'Traversing remote folder {remote_path}')
         files = []
         for item in self._y.listdir(remote_path):
