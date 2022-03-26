@@ -20,7 +20,7 @@ class Config:
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
-        data_dir = Path("/home/nikita/Huawei_Project/text-deep-fake/data/imgur")
+        data_dir = Path("data")
         style_dir = data_dir / 'IMGUR5K_small'
         content_dir = data_dir / 'content'
         if not data_dir.exists():

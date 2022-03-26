@@ -47,13 +47,11 @@ class Trainer:
         self.model.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
-            print('We gucci')
-            concat_batches = (self.concat_batches(style_batch, content_batch))
+            concat_batches = (self.concat_batches(style_batch, content_batch)).to(self.device)
 
             self.optimizer.zero_grad()
 
             res = self.model(concat_batches)
-            print('We gucci 3')
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
             loss = ocr_loss + perceptual_loss
@@ -78,8 +76,8 @@ class Trainer:
         self.model.eval()
 
         for style_batch, content_batch, label_batch in self.val_dataloader:
-            concat_batches = (self.concat_batches(style_batch, content_batch))
-            res = self.model(concat_batches)
+            concat_batches = (self.concat_batches(style_batch, content_batch)).to(self.device)
+            res = (self.model(concat_batches).cpu())
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
             loss = ocr_loss + perceptual_loss
