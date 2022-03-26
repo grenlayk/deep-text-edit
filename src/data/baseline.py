@@ -56,8 +56,9 @@ def setup_dataset(style_dir: Path, content_dir: Path):
             for _, text in words.items():
                 if i >= dataset_size:
                     break
-                text = ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz']) + \
-                    ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(2)])
+                text = ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(2)]) \
+                    + ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz']) + \
+                    ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(3)])
                 draw_one(text, content_dir)
                 i += 1
     
