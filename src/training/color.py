@@ -43,45 +43,43 @@ class ColorizationTrainer:
         color_im = torch.stack([torchvision.transforms.ToTensor()(np_img)], dim=0)
         return color_im
 
-    def run(self):
-        for epoch in range(self.total_epochs):
-            # Training step
-            self.model.train()
+    def train(self):
+        self.model.train()
 
-            # x: l_img x3
-            # y: ab_img
-            for idx, (l_img, ab_img) in enumerate(self.train_dataloader):
-                # Skip bad data
-                if not l_img.ndim:
-                    continue
+        # x: l_img x3
+        # y: ab_img
+        for l_img, ab_img in self.train_dataloader:
+            # Skip bad data
+            if not l_img.ndim:
+                continue
 
-                l_img = l_img.to(self.device)
-                ab_img = ab_img.to(self.device)
+            l_img = l_img.to(self.device)
+            ab_img = ab_img.to(self.device)
 
-                # Initialize Optimizer
-                self.optimizer.zero_grad()
+            # Initialize Optimizer
+            self.optimizer.zero_grad()
 
-                # Forward Propagation
-                output_ab = self.model(l_img)
+            # Forward Propagation
+            output_ab = self.model(l_img)
 
-                # Back propogation
-                loss = self.criterion(output_ab, ab_img.float())
-                loss.backward()
+            # Back propogation
+            loss = self.criterion(output_ab, ab_img.float())
+            loss.backward()
 
-                # Weight Update
-                self.optimizer.step()
+            # Weight Update
+            self.optimizer.step()
 
-                # Reduce Learning Rate
-                self.scheduler.step()
+            # Reduce Learning Rate
+            self.scheduler.step()
 
-                # Print stats after every point_batches
-                self.logger.log_train(losses={'main': loss.item()}, images={'input': l_img})
+            # Print stats after every point_batches
+            self.logger.log_train(losses={'main': loss.item()}, images={'input': l_img})
 
-
-            # Validation Step
+    def validate(self, epoch: int):
+        # Validation Step
             # Intialize Model to Eval Mode for validation
             self.model.eval()
-            for idx, (l_img, ab_img) in enumerate(self.val_dataloader):
+            for l_img, ab_img in self.val_dataloader:
                 # Skip bad data
                 if not l_img.ndim:
                     continue
@@ -102,6 +100,13 @@ class ColorizationTrainer:
                                     images={'input': l_img, 'output': output_img, 'target': target_img})
                 
             self.logger.end_val()
+
+
+    def run(self):
+        for epoch in range(self.total_epochs):
+            self.train()
+            with torch.no_grad():
+                self.validate(epoch)
 
             # Save the Model to disk
             self.storage.save(

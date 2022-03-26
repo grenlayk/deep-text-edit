@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import tarfile
+import zipfile
 import torch
 from loguru import logger
 from src.data.color import CustomDataset
@@ -19,7 +19,8 @@ class Config:
 
         if not Path('data/miniCoco').exists():
             disk.download('data/miniCoco.zip', 'data/miniCoco.zip')
-            tarfile.open('data/miniCoco.zip', 'r:gz').extractall('data/miniCoco')
+            with zipfile.ZipFile('data/miniCoco.zip', 'r') as zip_ref:
+                zip_ref.extractall('data/')
 
         total_epochs = 3 #20
         model = Model(256, device).to(device)
@@ -56,9 +57,7 @@ class Config:
             num_workers=8
         )
 
-        point_batches = 500
-
-        metric_logger = Logger(print_freq=2, project_name='colorization')
+        metric_logger = Logger(print_freq=2, image_freq=3, project_name='colorization')
         storage = Storage('./checkpoints/colorization')
 
         self.trainer = ColorizationTrainer(
@@ -70,8 +69,6 @@ class Config:
             val_dataloader,
             test_dataloader,
             total_epochs,
-            batch_size,
-            point_batches,
             metric_logger,
             storage
         )
