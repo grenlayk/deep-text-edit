@@ -27,9 +27,9 @@ class Config:
         if not data_dir.exists():
             data_dir.mkdir()
             download_data(Path("data/IMGUR5K_small.tar"), data_dir)
-    
-        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'), shuffle=True)
-        val_dataloader = DataLoader(setup_dataset(style_dir / 'val', content_dir / 'val'))
+        batch_size = 4
+        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'), shuffle=True, batch_size = batch_size)
+        val_dataloader = DataLoader(setup_dataset(style_dir / 'val', content_dir / 'val'), batch_size = batch_size)
 
         total_epochs = 1 #20
         model = RRDB_pretrained().to(device)
