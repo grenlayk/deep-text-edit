@@ -14,11 +14,14 @@ from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text, dataset_folder: Path):
-    img = Image.new('RGB', (256, 64), color = (255, 255, 255))
+    img = Image.new('RGB', (300, 64), color = (255, 255, 255))
     fnt = ImageFont.truetype('../utils/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
-    d.text((128, 32), text, font=fnt, fill=(0, 0, 0), anchor="mm")
-    img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
+    text_width, text_height = d.textsize(text, fnt)
+    position = ((300-text_width)/2,(64-text_height)/2)
+
+    d.text(position, text, font=fnt, fill=(0, 0, 0))
+    img.save(dataset_folder / '{}.png'.format(text))
 
 
 def download_data(remote_archieve_path: Path, local_dir: Path):
