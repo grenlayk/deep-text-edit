@@ -56,7 +56,7 @@ class Trainer:
             res = self.model(concat_batches).cpu()
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
-            loss = ocr_loss + self.coef * perceptual_loss
+            loss = self.coef * ocr_loss +  perceptual_loss
             loss.backward()
             self.optimizer.step()
 
@@ -82,7 +82,7 @@ class Trainer:
             res = (self.model(concat_batches).cpu())
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
-            loss = ocr_loss + self.coef * perceptual_loss
+            loss = self.coef * ocr_loss +  perceptual_loss
             
             self.logger.log_val(
                 losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
