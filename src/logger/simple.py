@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Optional
+from typing import Optional, Dict
 import wandb
 
 
@@ -24,7 +24,7 @@ class Logger():
         self.val_iter = 1
         self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
 
-    def log_train(self, losses: Optional[dict[str, float]] = None, images: Optional[dict[str, Tensor]] = None):
+    def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
             self.start_time = time.time()
             logger.info(
@@ -55,9 +55,9 @@ class Logger():
         self.train_iter += 1
 
     def log_val(self,
-                losses: Optional[dict[str, float]] = None,
-                metrics: Optional[dict[str, float]] = None,
-                images: Optional[dict[str, Tensor]] = None):
+                losses: Optional[Dict[str, float]] = None,
+                metrics: Optional[Dict[str, float]] = None,
+                images: Optional[Dict[str, Tensor]] = None):
 
         if self.val_iter == 1:
             self.loss_buff['values'].clear()
