@@ -7,8 +7,8 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 
 
-class SimpleTrainer:
-    """Base Trainer class. Intended for training an image-to-image model.
+class ImgClassifierTrainer:
+    """Class intended for training an image classification model.
     """
 
     def __init__(
@@ -55,7 +55,7 @@ class SimpleTrainer:
 
             self.logger.log_train(
                 losses={'main': loss.item()},
-                images={'input': inputs, 'output': pred, 'target': target}
+                images={'input': inputs}
             )
 
     def validate(self, epoch):
@@ -71,7 +71,7 @@ class SimpleTrainer:
             self.logger.log_val(
                 losses={'main': loss.item()},
                 metrics=metric,
-                images={'input': inputs, 'output': pred, 'target': target}
+                images={'input': inputs}
             )
 
         _, avg_metrics = self.logger.end_val()

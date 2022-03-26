@@ -7,7 +7,7 @@ from src.disk import disk
 from src.logger.simple import Logger
 from src.metrics.accuracy import Top1Accuracy
 from src.storage.simple import Storage
-from src.training.simple import SimpleTrainer
+from src.training.img_classifier import ImgClassifierTrainer
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -46,7 +46,7 @@ class Config:
         train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4)
         val_dataloader = DataLoader(val_dataset, batch_size=64, shuffle=True, num_workers=4)
 
-        self.trainer = SimpleTrainer(
+        self.trainer = ImgClassifierTrainer(
             model=model,
             criterion=criterion,
             metric=Top1Accuracy(),
