@@ -1,4 +1,5 @@
 
+from random import shuffle
 import torch
 import sys
 from loguru import logger as info_logger
@@ -27,7 +28,7 @@ class Config:
             data_dir.mkdir()
             download_data(Path("data/IMGUR5K_small.tar"), data_dir)
     
-        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'))
+        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'), shuffle=True)
         val_dataloader = DataLoader(setup_dataset(style_dir / 'val', content_dir / 'val'))
 
         total_epochs = 1 #20
