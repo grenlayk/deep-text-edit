@@ -70,7 +70,7 @@ class Disk:
                 files.append(remote_path / item.name)
         return files
     
-    def _traverse_local(self, local_path: Path) -> list[Path]:
+    def _traverse_local(self, local_path: Path) -> List[Path]:
         logger.debug(f'Traversing local folder {local_path}')
         return [item for item in local_path.rglob('*') if item.is_file()]
 
