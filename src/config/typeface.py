@@ -5,7 +5,7 @@ import torch
 from loguru import logger
 from src.disk import disk
 from src.logger.simple import Logger
-from src.metrics.accuracy import Top1Accuracy
+from src.metrics.accuracy import TopKAccuracy
 from src.storage.simple import Storage
 from src.training.img_classifier import ImgClassifierTrainer
 from torch.nn import CrossEntropyLoss
@@ -32,7 +32,7 @@ class Config:
         model = model.to(device)
         criterion = CrossEntropyLoss()
         optimizer = Adam(model.parameters(), lr=1e-4, weight_decay=5e-4)
-        scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=200)
+        scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=1, verbose=True)
         storage = Storage('checkpoints/typeface')
         metric_logger = Logger()
 
@@ -49,14 +49,14 @@ class Config:
         self.trainer = ImgClassifierTrainer(
             model=model,
             criterion=criterion,
-            metric=Top1Accuracy(),
+            metric=TopKAccuracy((1, 5, 10)),
             optimizer=optimizer,
             scheduler=scheduler,
             storage=storage,
             logger=metric_logger,
             train_dataloader=train_dataloader,
             val_dataloader=val_dataloader,
-            max_epoch=10,
+            max_epoch=3,
             device=device
         )
 
