@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import torch
 import json
-import re
+import random
+import string
 import os
 import numpy as np
 import tarfile
@@ -55,7 +56,8 @@ def setup_dataset(style_dir: Path, content_dir: Path):
             for _, text in words.items():
                 if i >= dataset_size:
                     break
-                text = ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
+                text = ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz']) + \
+                    ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(2)])
                 draw_one(text, content_dir)
                 i += 1
     
@@ -73,8 +75,8 @@ class BaselineDataset(Dataset):
         self.content_dir = content_dir 
         self.style_files = list(self.style_dir.iterdir())
         self.content_files = list(self.content_dir.iterdir())
-
-        logger.info(f'File[0]: {self.style_files[0]}, Total Files: {len(self.style_files) + len(self.content_files)}')
+        assert len(self.style_files) == len(self.content_files), 'Number of style and content images doesnt match'
+        logger.info(f'Total Files: {len(self.style_files) + len(self.content_files)}')
 
     def __len__(self):
         return len(self.style_files)
