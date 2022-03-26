@@ -1,6 +1,8 @@
+import shutil
 from pathlib import Path
 from typing import Union
 
+import click
 import torch
 from src.disk import disk
 from torch import nn
@@ -8,12 +10,16 @@ from torch import nn
 
 class Storage:
     def __init__(self, save_folder: Union[str, Path], save_freq: int = 1):
-        if isinstance(save_folder, str):
-            self.save_path = Path(save_folder)
-        else:
-            self.save_path = save_folder
+        self.save_path = Path(save_folder)
 
-        self.save_path.mkdir(parents=True, exist_ok=True)
+        if self.save_path.exists():
+            click.confirm(f'Path {self.save_path} already exists. Discard its contents?', abort=True)
+            if self.save_path.is_dir():
+                shutil.rmtree(self.save_path)
+            else:
+                self.save_path.unlink()
+
+        self.save_path.mkdir(parents=True)
         self.save_freq = save_freq
 
     def save(self, epoch: int, modules: dict[str, nn.Module], metric: dict[str, float]):
