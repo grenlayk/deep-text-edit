@@ -50,9 +50,6 @@ class ImgClassifierTrainer:
 
             self.optimizer.step()
 
-            if self.scheduler is not None:
-                self.scheduler.step(loss.item())
-
             self.logger.log_train(
                 losses={'main': loss.item()},
                 images={'input': inputs}
@@ -74,15 +71,19 @@ class ImgClassifierTrainer:
                 images={'input': inputs}
             )
 
-        _, avg_metrics = self.logger.end_val()
+        avg_losses, avg_metrics = self.logger.end_val()
         self.storage.save(
             epoch,
             {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
             avg_metrics
         )
+        return avg_losses, avg_metrics
 
     def run(self):
         for epoch in range(self.max_epoch):
             self.train()
             with torch.no_grad():
-                self.validate(epoch)
+                avg_losses, avg_metrics = self.validate(epoch)
+
+            if self.scheduler is not None:
+                self.scheduler.step(avg_losses['main'])
