@@ -21,7 +21,7 @@ def draw_one(text, dataset_folder: Path):
     position = ((300-text_width)/2,(64-text_height)/2)
 
     d.text(position, text, font=fnt, fill=(0, 0, 0))
-    img.save(dataset_folder / '{}.png'.format(text))
+    img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
 
 
 def download_data(remote_archieve_path: Path, local_dir: Path):
