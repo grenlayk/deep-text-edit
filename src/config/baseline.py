@@ -39,6 +39,8 @@ class Config:
             gamma=0.2
         )
 
+        ocr_coef = 0.5
+
         storage = Storage('checkpoints/baseline')
 
         logger = Logger()
@@ -52,7 +54,8 @@ class Config:
             storage,
             logger,
             total_epochs,
-            device=device
+            device,
+            ocr_coef
         )
 
     def run(self):

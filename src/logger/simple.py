@@ -39,7 +39,7 @@ class Logger():
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
             logger.info(f'Batch: {self.train_iter}')
-            logger.info(f'Processing time for last {self.print_freq} batches: {self.end_time - self.end_time:.3f}s')
+            logger.info(f'Processing time for last {self.print_freq} batches: {self.end_time - self.start_time:.3f}s')
             for loss_name in self.loss_buff["sumlast"]:
                 avg_loss = self.loss_buff["sumlast"][loss_name] / self.print_freq
                 logger.info(f'Average {loss_name} loss over last {self.print_freq} batches: {avg_loss}')

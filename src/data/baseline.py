@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import torch
 import json
-import subprocess
+import re
 import os
 import numpy as np
 import tarfile
@@ -15,9 +15,9 @@ from pathlib import Path
 
 def draw_one(text, dataset_folder: Path):
     img = Image.new('RGB', (256, 64), color = (255, 255, 255))
-    fnt = ImageFont.truetype('/home/nikita/Huawei_Project/text-deep-fake/src/utils/VerilySerifMono.otf', 40)
+    fnt = ImageFont.truetype('../utils/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
-    d.text((60, 10), text, font=fnt, fill=(0, 0, 0))
+    d.text((128, 32), text, font=fnt, fill=(0, 0, 0), anchor="mm")
     img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
 
 
@@ -46,19 +46,15 @@ def setup_dataset(style_dir: Path, content_dir: Path):
     dataset_size = len(os.listdir(style_dir))
     if not content_dir.exists():
         logger.info("Drawing content pictures")
-        idx = np.sort(np.random.choice(len(words), dataset_size, replace=False)) #Generate different words each time
-        content_dir.mkdir()
+        content_dir.mkdir(parents=True)
         i = 0
-        cur_idx = 0
-        for _, text in words.items():
-            if cur_idx >= dataset_size:
-                break
-            if i == idx[cur_idx]:
-                if '/' in text:
-                    continue
+        while i < dataset_size:
+            for _, text in words.items():
+                if i >= dataset_size:
+                    break
+                text = ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
                 draw_one(text, content_dir)
-                cur_idx += 1
-            i += 1
+                i += 1
     
     return BaselineDataset(style_dir, content_dir)
         
@@ -85,14 +81,14 @@ class BaselineDataset(Dataset):
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
+            img_style = cv2.resize(img_style, (256, 256))
             img_style = img_style * 1.0 / 255
-            h, w, _ = img_style.shape
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
             img_content = cv2.imread(str(self.content_files[index]), cv2.IMREAD_COLOR)
             if img_content is None:
                 raise Exception
-            img_content = cv2.resize(img_content, (w, h))
+            img_content = cv2.resize(img_content, (256, 256))
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 

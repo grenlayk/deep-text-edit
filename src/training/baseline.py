@@ -15,7 +15,8 @@ class Trainer:
                  storage: Storage,
                  logger: Logger,
                  total_epochs: int,
-                 device: str):
+                 device: str,
+                 coef_ocr_loss: float):
         
         self.device = device
         self.model = model
@@ -28,6 +29,7 @@ class Trainer:
         self.storage = storage
         self.ocr_loss = ocr.OCRLoss()
         self.perceptual_loss = perceptual.VGGPerceptualLoss()
+        self.coef = coef_ocr_loss
 
     # def normalize(self, batch):
     #     mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
@@ -51,10 +53,10 @@ class Trainer:
 
             self.optimizer.zero_grad()
 
-            res = self.model(concat_batches)
+            res = self.model(concat_batches).cpu()
             ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = ocr_loss + perceptual_loss
+            perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
+            loss = ocr_loss + self.coef * perceptual_loss
             loss.backward()
             self.optimizer.step()
 
@@ -79,8 +81,8 @@ class Trainer:
             concat_batches = (self.concat_batches(style_batch, content_batch)).to(self.device)
             res = (self.model(concat_batches).cpu())
             ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = ocr_loss + perceptual_loss
+            perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
+            loss = ocr_loss + self.coef * perceptual_loss
             
             self.logger.log_val(
                 losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
