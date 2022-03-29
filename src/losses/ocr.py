@@ -102,7 +102,7 @@ class OCRLoss(nn.Module):
         self.ocr = ocr.crnn_pretrained(model_local_path, alp, hidden_state_size, imH)
         self.alp = alp
         self.converter = strLabelConverter(alp)
-        self.criterion = torch.nn.CTCLoss()
+        self.criterion = torch.nn.CTCLoss(zero_infinity = True)
 
     def print_pred(self, res):
         _, preds = res.max(2)
