@@ -41,6 +41,7 @@ class Config:
         )
 
         ocr_coef = 0.5
+        perceptual_coef = 0.5
 
         storage = Storage('checkpoints/baseline')
 
@@ -56,7 +57,8 @@ class Config:
             logger,
             total_epochs,
             device,
-            ocr_coef
+            ocr_coef,
+            perceptual_coef
         )
 
     def run(self):
