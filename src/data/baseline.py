@@ -1,3 +1,4 @@
+from ast import Str
 import cv2
 import numpy as np
 import torch
@@ -14,7 +15,7 @@ from torch.utils.data import Dataset
 from src.disk import  disk
 from pathlib import Path
 
-def draw_one(text, dataset_folder: Path):
+def draw_one(text: str, dataset_folder: Path):
     img = Image.new('RGB', (300, 64), color = (255, 255, 255))
     fnt = ImageFont.truetype('../utils/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
