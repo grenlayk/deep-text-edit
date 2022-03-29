@@ -87,14 +87,14 @@ class BaselineDataset(Dataset):
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-            img_style = cv2.resize(img_style, (256, 256))
+            img_style = cv2.resize(img_style, (128, 128))
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
             img_content = cv2.imread(str(self.content_files[index]), cv2.IMREAD_COLOR)
             if img_content is None:
                 raise Exception
-            img_content = cv2.resize(img_content, (256, 256))
+            img_content = cv2.resize(img_content, (128, 128))
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
