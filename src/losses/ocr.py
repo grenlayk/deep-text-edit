@@ -120,4 +120,4 @@ class OCRLoss(nn.Module):
         texts, lengths = self.converter.encode(labels)
         res = self.ocr(gray_batch)
         #self.print_pred(res)
-        return self.criterion(res, texts, torch.tensor(res.size(0)), torch.tensor(lengths))       
+        return self.criterion(res, texts, torch.tensor(res.size(0)).repeat(res.size(1)), torch.tensor(lengths))       
