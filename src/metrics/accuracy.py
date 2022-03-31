@@ -1,17 +1,18 @@
 import torch
-from typing import Tuple, Union
+from typing import Dict, Tuple, Union
 
 
 # source:
 # https://gist.github.com/weiaicunzai/2a5ae6eac6712c70bde0630f3e76b77b?permalink_comment_id=3662283#gistcomment-3662283
 class TopKAccuracy:
     def __init__(self, k: Union[int, Tuple]):
+        self.k: Tuple
         if isinstance(k, int):
             self.k = (k,)
         else:
-            self.k = k
+            self.k = tuple(k)
 
-    def __call__(self, pred: torch.Tensor, target: torch.Tensor) -> dict[str, torch.Tensor]:
+    def __call__(self, pred: torch.Tensor, target: torch.Tensor) -> Dict[str, float]:
         with torch.no_grad():
             maxk = max(self.k)
             batch_size = target.size(0)

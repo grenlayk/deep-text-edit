@@ -83,7 +83,7 @@ class ImgClassifierTrainer:
         for epoch in range(self.max_epoch):
             self.train()
             with torch.no_grad():
-                avg_losses, avg_metrics = self.validate(epoch)
+                avg_losses, _ = self.validate(epoch)
 
             if self.scheduler is not None:
                 self.scheduler.step(avg_losses['main'])

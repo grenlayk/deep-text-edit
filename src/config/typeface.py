@@ -25,7 +25,8 @@ class Config:
 
         if not Path('data/Typefaces').exists():
             disk.download('data/Typefaces.tar', 'data/Typefaces.tar')
-            tarfile.open('data/Typefaces.tar', 'r').extractall('data/Typefaces')
+            with tarfile.open('data/Typefaces.tar', 'r') as tar:
+                tar.extractall('data/Typefaces')
 
         model = vgg11(pretrained=True)
         model.classifier[-1] = torch.nn.Linear(4096, 2500)

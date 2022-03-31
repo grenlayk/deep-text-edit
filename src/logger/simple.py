@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Optional, Dict
+from typing import Dict, Optional
 import wandb
 
 
@@ -11,11 +11,11 @@ class Logger():
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
-        self.loss_buff: dict[str, dict] = defaultdict()
+        self.loss_buff: Dict[str, dict] = defaultdict()
         self.loss_buff['values'] = defaultdict(list)
         self.loss_buff['sumlast'] = defaultdict(float)  # type: ignore
         self.loss_buff['sum'] = defaultdict(float)  # type: ignore
-        self.metrics_buff: dict[str, dict] = defaultdict()
+        self.metrics_buff: Dict[str, dict] = defaultdict()
         self.metrics_buff['values'] = defaultdict(list)
         self.metrics_buff['sumlast'] = defaultdict(float)  # type: ignore
         self.metrics_buff['sum'] = defaultdict(float)  # type: ignore
@@ -23,6 +23,7 @@ class Logger():
         self.train_iter = 1
         self.val_iter = 1
         self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
+        assert self.wandb is not None
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
@@ -34,7 +35,7 @@ class Logger():
             for loss_name, loss_value in losses.items():
                 self.loss_buff['values'][loss_name] += [loss_value]
                 self.loss_buff['sumlast'][loss_name] += loss_value
-                self.wandb.log({f"{loss_name} loss": loss_value})
+                self.wandb.log({f"{loss_name} loss": loss_value})  # type: ignore
 
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
@@ -50,7 +51,7 @@ class Logger():
 
         if self.train_iter % self.image_freq == 0 and images:
             for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})
+                self.wandb.log({f'{image_name}': wandb.Image(image)})  # type: ignore
 
         self.train_iter += 1
 
@@ -94,7 +95,7 @@ class Logger():
 
         if images is not None and self.val_iter % self.image_freq == 0:
             for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})
+                self.wandb.log({f'{image_name}': wandb.Image(image)})  # type: ignore
 
         self.val_iter += 1
 
