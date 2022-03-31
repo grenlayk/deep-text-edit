@@ -18,8 +18,8 @@ class Config:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         max_epoch = 20
 
-        self.trainer = SimpleTrainer(model, criterion, optimizer, train_dataloader, val_dataloader, 
-                                    storage,logger, max_epoch, device)
+        self.trainer = SimpleTrainer(model, criterion, None, optimizer, None, train_dataloader, val_dataloader,
+                                     storage, logger, max_epoch, device)
 
     def run(self):
         self.trainer.run()

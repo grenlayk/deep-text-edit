@@ -154,13 +154,10 @@ We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
 
 ## Requirements & restrictions
 - PyTorch framework
-- Python 3.7
+- Python 3.7.13
 - Type Annotations
 
 ## Future plans
 
 ### Tests
 - CI tests 
-
-
-
