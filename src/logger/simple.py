@@ -22,8 +22,12 @@ class Logger():
         self.wb_path: str = wb_path or "./wandb"
         self.train_iter = 1
         self.val_iter = 1
-        self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
-        assert self.wandb is not None
+
+        run = wandb.init(project=project_name, entity="text-deep-fake")
+        if run is not None:
+            self.wandb = run
+        else:
+            raise AssertionError("wandb.init is None")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
@@ -35,7 +39,7 @@ class Logger():
             for loss_name, loss_value in losses.items():
                 self.loss_buff['values'][loss_name] += [loss_value]
                 self.loss_buff['sumlast'][loss_name] += loss_value
-                self.wandb.log({f"{loss_name} loss": loss_value})  # type: ignore
+                self.wandb.log({f"{loss_name} loss": loss_value})
 
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
@@ -51,7 +55,7 @@ class Logger():
 
         if self.train_iter % self.image_freq == 0 and images:
             for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})  # type: ignore
+                self.wandb.log({f'{image_name}': wandb.Image(image)})
 
         self.train_iter += 1
 
@@ -95,7 +99,7 @@ class Logger():
 
         if images is not None and self.val_iter % self.image_freq == 0:
             for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})  # type: ignore
+                self.wandb.log({f'{image_name}': wandb.Image(image)})
 
         self.val_iter += 1
 
