@@ -3,9 +3,6 @@ from random import shuffle
 import torch
 import sys
 from loguru import logger as info_logger
-origin_path = sys.path
-sys.path.append("..")
-sys.path = origin_path
 from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
