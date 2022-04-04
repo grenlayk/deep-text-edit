@@ -102,7 +102,7 @@ class BaselineDataset(Dataset):
             img_content = np.array(pil_content)
             img_content = cv2.resize(img_content, (128, 128))
             img_content = img_content * 1.0 / 255
-            img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
+            img_content = torch.from_numpy(img_content).float()
 
             return img_style, img_content, content
 
