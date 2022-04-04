@@ -15,7 +15,7 @@ from torch.utils.data import Dataset
 from src.disk import  disk
 from pathlib import Path
 
-def draw_one(text: str, dataset_folder: Path):
+def draw_one(text: str):
     img = Image.new('L', (300, 64), color = 255)
     fnt = ImageFont.truetype('utils/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
@@ -23,8 +23,8 @@ def draw_one(text: str, dataset_folder: Path):
     position = ((300-text_width)/2,(64-text_height)/2)
 
     d.text(position, text, font=fnt, fill = 0)
-    img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
-
+    #img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
+    return img
 
 
 def download_data(remote_archieve_path: Path, local_dir: Path):
@@ -68,18 +68,18 @@ def setup_dataset(style_dir: Path, content_dir: Path):
         
 
 class BaselineDataset(Dataset):
-    def __init__(self, style_dir: Path, content_dir: Path):
+    def __init__(self, style_dir: Path):
         '''
             root_dir - directory with 2 subdirectories - root_dir/style, root_dir/content
             Images in root_dir/content(hard-coded): 64x256
             Images in root_dir/style: arbitrary - need to be resized to 256x256?
         '''
         self.style_dir = style_dir
-        self.content_dir = content_dir 
         self.style_files = list(self.style_dir.iterdir())
-        self.content_files = list(self.content_dir.iterdir())
-        assert len(self.style_files) == len(self.content_files), 'Number of style and content images doesnt match'
-        logger.info(f'Total Files: {len(self.style_files) + len(self.content_files)}')
+        json_path = style_dir / 'words.json'
+        with open(json_path) as json_file:
+            self.words = json.load(json_file)
+        logger.info(f'Total Files: {len(self.style_files) }')
 
     def __len__(self):
         return len(self.style_files)
@@ -93,14 +93,18 @@ class BaselineDataset(Dataset):
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
-            img_content = cv2.imread(str(self.content_files[index]), cv2.IMREAD_COLOR)
-            if img_content is None:
-                raise Exception
+            content = random.choice(list(self.words.values()))
+            content = ''.join([i for i in content if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
+            while not content:
+                content = random.choice(list(self.words.values()))
+                content = ''.join([i for i in content if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
+            pil_content = draw_one(content)
+            img_content = np.array(pil_content)
             img_content = cv2.resize(img_content, (128, 128))
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
-            return img_style, img_content, str(self.content_files[index].name.split('.', 1)[0][1:-1])
+            return img_style, img_content, content
 
         except Exception as e:
             logger.error(f'Exception at {self.style_files[index]}, {e}')
