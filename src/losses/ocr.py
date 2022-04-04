@@ -123,7 +123,7 @@ class OCRLoss(nn.Module):
         res = self.ocr(gray_batch)
         #self.print_pred(res)
         sz = torch.tensor(res.size(0)).repeat(res.size(1)),
-        if batch.is_cuda():
+        if batch.is_cuda:
             texts = texts.to('cuda')
             lengths = lengths.to('cuda')
             sz = sz.to('cuda')
