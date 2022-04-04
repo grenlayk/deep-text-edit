@@ -94,12 +94,14 @@ class strLabelConverter(object):
 
 
 class OCRLoss(nn.Module):
-    def __init__(self, model_remote_path = 'ocr.pth', model_local_path = 'ocr.pth', alp = '0123456789abcdefghijklmnopqrstuvwxyz', hidden_state_size = 256, imH = 32, imW = 100):
+    def __init__(self, model_remote_path = 'ocr.pth', model_local_path = 'ocr.pth', alp = '0123456789abcdefghijklmnopqrstuvwxyz', hidden_state_size = 256, imH = 32, imW = 100, use_cuda = True):
         super().__init__()
         disk.login()
         disk.download(model_remote_path, model_local_path)
         self.transform = resizeNormalize((imH, imW))
         self.ocr = ocr.crnn_pretrained(model_local_path, alp, hidden_state_size, imH)
+        if use_cuda:
+            self.ocr = self.ocr.to('cuda')
         self.alp = alp
         self.converter = strLabelConverter(alp)
         self.criterion = torch.nn.CTCLoss(zero_infinity = True)
@@ -120,4 +122,9 @@ class OCRLoss(nn.Module):
         texts, lengths = self.converter.encode(labels)
         res = self.ocr(gray_batch)
         #self.print_pred(res)
-        return self.criterion(res, texts, torch.tensor(res.size(0)).repeat(res.size(1)), torch.tensor(lengths))       
+        sz = torch.tensor(res.size(0)).repeat(res.size(1)),
+        if batch.is_cuda():
+            texts = texts.to('cuda')
+            lengths = lengths.to('cuda')
+            sz = sz.to('cuda')
+        return self.criterion(res, texts, sz, lengths)       

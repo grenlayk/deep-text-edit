@@ -52,12 +52,12 @@ class Trainer:
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
             concat_batches = (self.concat_batches(style_batch, content_batch)).to(self.device)
-
+            style_batch = style_batch.to(self.device)
             self.optimizer.zero_grad()
 
-            res = self.model(concat_batches).cpu()
+            res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
+            perceptual_loss = self.perceptual_loss(style_batch, res)
             loss = self.coef * ocr_loss +  self.coef_perceptual * perceptual_loss
             loss.backward()
             self.optimizer.step()
@@ -81,9 +81,10 @@ class Trainer:
 
         for style_batch, content_batch, label_batch in self.val_dataloader:
             concat_batches = (self.concat_batches(style_batch, content_batch)).to(self.device)
-            res = (self.model(concat_batches).cpu())
+            style_batch = style_batch.to(self.device)
+            res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch.cpu(), res)
+            perceptual_loss = self.perceptual_loss(style_batch, res)
             loss = self.coef_ocr * ocr_loss +  perceptual_loss
             
             self.logger.log_val(
