@@ -6,7 +6,7 @@ from loguru import logger as info_logger
 from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
-from src.data.baseline import  download_data, setup_dataset
+from src.data.baseline import  BaselineDataset, download_data, setup_dataset
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
@@ -20,13 +20,12 @@ class Config:
         info_logger.info(f'Using device: {device}')
         data_dir = Path("data")
         style_dir = data_dir / 'IMGUR5K_small'
-        content_dir = data_dir / 'content'
         if not data_dir.exists():
             data_dir.mkdir()
             download_data(Path("data/IMGUR5K_small.tar"), data_dir)
         batch_size = 4
-        train_dataloader = DataLoader(setup_dataset(style_dir / 'train', content_dir / 'train'), shuffle=True, batch_size = batch_size)
-        val_dataloader = DataLoader(setup_dataset(style_dir / 'val', content_dir / 'val'), batch_size = batch_size)
+        train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
+        val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size = batch_size)
 
         total_epochs = 1 #20
         model = RRDB_pretrained().to(device)
