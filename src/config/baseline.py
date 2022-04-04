@@ -42,7 +42,7 @@ class Config:
 
         storage = Storage('checkpoints/baseline')
 
-        logger = Logger()
+        logger = Logger(image_freq=100, project_name='Baseline')
 
         self.trainer = Trainer(
             model,
