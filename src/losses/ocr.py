@@ -100,8 +100,6 @@ class OCRLoss(nn.Module):
         disk.download(model_remote_path, model_local_path)
         self.transform = resizeNormalize((imH, imW))
         self.ocr = ocr.crnn_pretrained(model_local_path, alp, hidden_state_size, imH)
-        if use_cuda:
-            self.ocr = self.ocr.to('cuda')
         self.alp = alp
         self.converter = strLabelConverter(alp)
         self.criterion = torch.nn.CTCLoss(zero_infinity = True)
@@ -122,9 +120,5 @@ class OCRLoss(nn.Module):
         texts, lengths = self.converter.encode(labels)
         res = self.ocr(gray_batch)
         #self.print_pred(res)
-        sz = torch.tensor(res.size(0)).repeat(res.size(1)),
-        if batch.is_cuda:
-            texts = texts.to('cuda')
-            lengths = lengths.to('cuda')
-            sz = sz.to('cuda')
+        sz = torch.tensor(res.size(0)).repeat(res.size(1))
         return self.criterion(res, texts, sz, lengths)       

@@ -28,8 +28,8 @@ class Trainer:
         self.total_epochs = total_epochs
         self.logger = logger
         self.storage = storage
-        self.ocr_loss = ocr.OCRLoss()
-        self.perceptual_loss = perceptual.VGGPerceptualLoss()
+        self.ocr_loss = ocr.OCRLoss().to(device)
+        self.perceptual_loss = perceptual.VGGPerceptualLoss().to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
 
