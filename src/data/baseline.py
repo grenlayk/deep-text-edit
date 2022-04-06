@@ -13,10 +13,10 @@ from pathlib import Path
 
 def draw_one(text: str):
     img = Image.new('L', (300, 64), color = 255)
-    fnt = ImageFont.truetype('./data/utils/VerilySerifMono.otf', 40)
+    fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
-    position = ((300-text_width)/2,(64-text_height)/2)
+    position = ((300 - text_width) / 2, (64 - text_height) / 2)
 
     d.text(position, text, font=fnt, fill = 0)
     return img        
