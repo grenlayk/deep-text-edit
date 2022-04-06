@@ -17,7 +17,8 @@ class Trainer:
                  total_epochs: int,
                  device: str,
                  coef_ocr_loss: float,
-                 coef_perceptual_loss: float):
+                 coef_perceptual_loss: float,
+                 perceptual_loss: nn.Module):
         
         self.device = device
         self.model = model
@@ -29,7 +30,7 @@ class Trainer:
         self.logger = logger
         self.storage = storage
         self.ocr_loss = ocr.OCRLoss().to(device)
-        self.perceptual_loss = perceptual.VGGPerceptualLoss().to(device)
+        self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
 

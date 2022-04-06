@@ -8,8 +8,8 @@ from src.utils.download import download_data, unarchieve
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
+from src.losses.typeface_perceptual import TypefacePerceptualLoss
 from torch.utils.data import DataLoader
-from src.losses.perceptual import VGGPerceptualLoss
 
 class Config:
     def __init__(self):
@@ -55,7 +55,7 @@ class Config:
             device,
             ocr_coef,
             perceptual_coef,
-            VGGPerceptualLoss()
+            TypefacePerceptualLoss()
         )
 
     def run(self):
