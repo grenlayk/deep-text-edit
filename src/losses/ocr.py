@@ -9,7 +9,7 @@ from src.models import ocr
 from PIL import Image
 from src.disk import disk
 
-class resizeNormalize(object):
+class resizeNormalize():
     def __init__(self, size, interpolation=Image.BILINEAR):
         self.size = size
         self.interpolation = interpolation
@@ -21,7 +21,7 @@ class resizeNormalize(object):
             batch[n].sub_(0.5).div_(0.5)
         return batch
 
-class strLabelConverter(object):
+class strLabelConverter():
     """Convert between str and label.
     NOTE:
         Insert `blank` to the alphabet for CTC.
