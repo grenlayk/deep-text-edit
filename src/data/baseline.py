@@ -1,13 +1,9 @@
-from ast import Str
 import cv2
 import numpy as np
 import torch
 import json
 import random
-import string
-import os
 import numpy as np
-import tarfile
 
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
@@ -24,21 +20,9 @@ def draw_one(text: str):
 
     d.text(position, text, font=fnt, fill = 0)
     #img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
-    return img
+    return img        
 
 
-def download_data(remote_archieve_path: Path, local_dir: Path):
-    '''
-    Donwloads and unarchive  archive from disk(with remote_archieve_path path) to local_dir
-    '''
-    logger.info('Downloading data')
-    local_path = local_dir / remote_archieve_path.name
-    disk.download(str(remote_archieve_path), str(local_path))
-    logger.info('Download finished, starting unarchivation')
-    tarfile.open(local_path, 'r').extractall(local_dir)
-    logger.info('Unarchieved')
-        
-        
 class BaselineDataset(Dataset):
     def __init__(self, style_dir: Path):
         '''

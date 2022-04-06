@@ -1,12 +1,12 @@
 
 from random import shuffle
 import torch
-import sys
 from loguru import logger as info_logger
 from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
-from src.data.baseline import  BaselineDataset, download_data, setup_dataset
+from src.data.baseline import  BaselineDataset
+from src.utils.download import download_data, unarchieve 
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
@@ -22,7 +22,8 @@ class Config:
         style_dir = data_dir / 'IMGUR5K_small'
         if not data_dir.exists():
             data_dir.mkdir()
-            download_data(Path("data/IMGUR5K_small.tar"), data_dir)
+            local_path = download_data(Path("data/IMGUR5K_small.tar"), data_dir)
+            unarchieve(local_path)
         batch_size = 4
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size = batch_size)

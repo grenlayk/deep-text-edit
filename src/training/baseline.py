@@ -33,10 +33,6 @@ class Trainer:
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
 
-    # def normalize(self, batch):
-    #     mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
-    #     std =  torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
-    #     return (batch - mean) / std
 
     def concat_batches(self, batch_1, batch_2):
         '''
@@ -47,7 +43,6 @@ class Trainer:
     
     def train(self):
         logger.info('Start training')
-        #self.setup_data_one_image()
         self.model.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
@@ -69,11 +64,6 @@ class Trainer:
                 losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
                 images={'style': style_batch, 'content': content_batch, 'result': res}
             )
-
-            # res = res.clamp_(0, 1).squeeze(0).detach()
-            # output = res.permute(1,2,0).numpy()
-            # output = (output * 255.0).round()
-            # cv2.imwrite('1.jpg', output)
 
 
     def validate(self, epoch):
