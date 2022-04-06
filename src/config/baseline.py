@@ -1,5 +1,3 @@
-
-from random import shuffle
 import torch
 from loguru import logger as info_logger
 from src.disk import disk

@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import json
 import random
-import numpy as np
+import string
 
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
@@ -19,7 +19,6 @@ def draw_one(text: str):
     position = ((300-text_width)/2,(64-text_height)/2)
 
     d.text(position, text, font=fnt, fill = 0)
-    #img.save(dataset_folder / '{}.png'.format('(' + text + ')'))
     return img        
 
 
@@ -50,10 +49,11 @@ class BaselineDataset(Dataset):
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
             content = random.choice(list(self.words.values()))
-            content = ''.join([i for i in content if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
+            allowed_symbols = string.ascii_lowercase + string.digits
+            content = ''.join([i for i in content if i in allowed_symbols])
             while not content:
                 content = random.choice(list(self.words.values()))
-                content = ''.join([i for i in content if i in '0123456789abcdefghijklmnopqrstuvwxyz'])
+                content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
             img_content = cv2.resize(img_content, (128, 128))
