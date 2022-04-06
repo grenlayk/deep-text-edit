@@ -99,7 +99,6 @@ class OCRLoss(nn.Module):
     def __init__(self, model_remote_path = 'ocr.pth', model_local_path = 'ocr.pth', alp = '0123456789abcdefghijklmnopqrstuvwxyz', hidden_state_size = 256, imH = 32, imW = 100):
         super().__init__()
         if not Path(model_local_path).exists():
-            disk.login()
             disk.download(model_remote_path, model_local_path)
         self.transform = resizeNormalize((imH, imW))
         self.ocr = ocr.crnn_pretrained(model_local_path, alp, hidden_state_size, imH)
