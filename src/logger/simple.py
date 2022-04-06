@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Optional
+from typing import Optional, Dict
 import wandb
 
 
@@ -24,7 +24,7 @@ class Logger():
         self.val_iter = 1
         self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
 
-    def log_train(self, losses: Optional[dict[str, float]] = None, images: Optional[dict[str, Tensor]] = None):
+    def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
             self.start_time = time.time()
             logger.info(
@@ -39,7 +39,7 @@ class Logger():
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
             logger.info(f'Batch: {self.train_iter}')
-            logger.info(f'Processing time for last {self.print_freq} batches: {self.end_time - self.end_time:.3f}s')
+            logger.info(f'Processing time for last {self.print_freq} batches: {self.end_time - self.start_time:.3f}s')
             for loss_name in self.loss_buff["sumlast"]:
                 avg_loss = self.loss_buff["sumlast"][loss_name] / self.print_freq
                 logger.info(f'Average {loss_name} loss over last {self.print_freq} batches: {avg_loss}')
@@ -55,9 +55,9 @@ class Logger():
         self.train_iter += 1
 
     def log_val(self,
-                losses: Optional[dict[str, float]] = None,
-                metrics: Optional[dict[str, float]] = None,
-                images: Optional[dict[str, Tensor]] = None):
+                losses: Optional[Dict[str, float]] = None,
+                metrics: Optional[Dict[str, float]] = None,
+                images: Optional[Dict[str, Tensor]] = None):
 
         if self.val_iter == 1:
             self.loss_buff['values'].clear()
