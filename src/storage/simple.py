@@ -22,11 +22,7 @@ class Storage:
         self.save_path.mkdir(parents=True)
         self.save_freq = save_freq
 
-<<<<<<< HEAD
-    def save(self, epoch: int, modules: Dict[str, nn.Module], metric: float):
-=======
-    def save(self, epoch: int, modules: dict[str, nn.Module], metric: dict[str, float]):
->>>>>>> main
+    def save(self, epoch: int, modules: Dict[str, nn.Module], metric: Dict[str, float]):
         '''
         modules dict example:
 

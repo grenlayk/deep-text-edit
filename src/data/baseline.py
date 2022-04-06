@@ -37,36 +37,8 @@ def download_data(remote_archieve_path: Path, local_dir: Path):
     logger.info('Download finished, starting unarchivation')
     tarfile.open(local_path, 'r').extractall(local_dir)
     logger.info('Unarchieved')
-
-
-def setup_dataset(style_dir: Path, content_dir: Path):
-    '''
-    Setup dataloader from BaselineDataset with style images from style_dir, and content images are drawn with text from json_path and saved to content_dir.
-    Json's schema "image_path":"image_label"
-    dataset_type must be either of ['train', 'test', 'val']
-    '''
-
-    json_path = style_dir / 'words.json'
-    with open(json_path) as json_file:
-        words = json.load(json_file)
-    dataset_size = len(os.listdir(style_dir))
-    if not content_dir.exists():
-        logger.info("Drawing content pictures")
-        content_dir.mkdir(parents=True)
-        i = 0
-        while i < dataset_size:
-            for _, text in words.items():
-                if i >= dataset_size:
-                    break
-                text = ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(2)]) \
-                    + ''.join([i for i in text if i in '0123456789abcdefghijklmnopqrstuvwxyz']) + \
-                    ''.join([random.choice(string.ascii_lowercase + string.digits ) for n in range(3)])
-                draw_one(text, content_dir)
-                i += 1
-    
-    return BaselineDataset(style_dir, content_dir)
         
-
+        
 class BaselineDataset(Dataset):
     def __init__(self, style_dir: Path):
         '''
