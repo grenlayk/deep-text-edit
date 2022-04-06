@@ -1,7 +1,7 @@
 import torch
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from src.losses import ocr, perceptual
+from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
@@ -17,7 +17,8 @@ class Trainer:
                  total_epochs: int,
                  device: str,
                  coef_ocr_loss: float,
-                 coef_perceptual_loss: float):
+                 coef_perceptual_loss: float,
+                 perceptual_loss: nn.Module):
         
         self.device = device
         self.model = model
@@ -29,7 +30,7 @@ class Trainer:
         self.logger = logger
         self.storage = storage
         self.ocr_loss = ocr.OCRLoss().to(device)
-        self.perceptual_loss = perceptual.VGGPerceptualLoss().to(device)
+        self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
 
@@ -53,7 +54,7 @@ class Trainer:
             res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef * ocr_loss +  self.coef_perceptual * perceptual_loss
+            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
             loss.backward()
             self.optimizer.step()
 
