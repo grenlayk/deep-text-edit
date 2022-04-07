@@ -46,72 +46,73 @@ class ColorizationTrainer:
     def train(self):
         self.model.train()
 
-        # x: l_img x3
-        # y: ab_img
-        for l_img, ab_img in self.train_dataloader:
+        # inputs: l_img x3
+        # target: rgb_img
+        for inputs, targets in self.train_dataloader:
+
             # Skip bad data
-            if not l_img.ndim:
+            if not inputs.ndim:
                 continue
 
-            l_img = l_img.to(self.device)
-            ab_img = ab_img.to(self.device)
+            inputs = inputs.to(self.device)
+            targets = targets.to(self.device)
 
             # Initialize Optimizer
             self.optimizer.zero_grad()
 
             # Forward Propagation
-            output_ab = self.model(l_img)
+            preds = self.model(inputs)
 
             # Back propogation
-            loss = self.criterion(output_ab, ab_img.float())
+            loss = self.criterion(preds, targets)
             loss.backward()
 
             # Weight Update
             self.optimizer.step()
 
-            # Reduce Learning Rate
-            self.scheduler.step()
-
             # Print stats after every point_batches
-            self.logger.log_train(losses={'main': loss.item()}, images={'input': l_img})
+            self.logger.log_train(
+                losses={'main': loss.item()},
+                images={'input': inputs, 'pred': preds, 'target': targets},
+            )
 
     def validate(self, epoch: int):
         # Validation Step
-            # Intialize Model to Eval Mode for validation
-            self.model.eval()
-            for l_img, ab_img in self.val_dataloader:
-                # Skip bad data
-                if not l_img.ndim:
-                    continue
+        # Intialize Model to Eval Mode for validation
+        self.model.eval()
+        for inputs, targets in self.val_dataloader:
+            # Skip bad data
+            if not inputs.ndim:
+                continue
 
-                l_img = l_img.to(self.device)
-                ab_img = ab_img.to(self.device)
+            inputs = inputs.to(self.device)
+            targets = targets.to(self.device)
 
-                # Forward Propagation
-                output_ab = self.model(l_img)
+            # Forward Propagation
+            preds = self.model(inputs)
 
-                # Loss Calculation
-                loss = self.criterion(output_ab, ab_img.float())
+            # Loss Calculation
+            loss = self.criterion(preds, targets)
 
-                output_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), output_ab)
-                target_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), ab_img)
+            self.logger.log_val(
+                losses={'main': loss.item()},
+                images={'input': inputs, 'pred': preds, 'target': targets},
+            )
 
-                self.logger.log_val(losses={'main': loss.item()}, 
-                                    images={'input': l_img, 'output': output_img, 'target': target_img})
-                
-            self.logger.end_val()
-
+        return self.logger.end_val()
 
     def run(self):
         for epoch in range(self.total_epochs):
             self.train()
             with torch.no_grad():
-                self.validate(epoch)
+                avg_losses, _ = self.validate(epoch)
+                # Reduce Learning Rate
+                self.scheduler.step(avg_losses['main'])
 
             # Save the Model to disk
             self.storage.save(
-                epoch, 
-                {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler}, 
+                epoch,
+                {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
                 None
             )
             logger.info('Model saved')
@@ -119,31 +120,28 @@ class ColorizationTrainer:
         # Inference Step
         logger.info('-------------- Test dataset validation --------------')
 
-        for idx, (l_img, ab_img) in enumerate(self.test_dataloader):
+        for idx, (inputs, targets) in enumerate(self.test_dataloader):
             # Skip bad data
-            if not l_img.ndim:
+            if not inputs.ndim:
                 continue
 
-            l_img = l_img.to(self.device)
-            ab_img = ab_img.to(self.device)
+            inputs = inputs.to(self.device)
+            targets = targets.to(self.device)
 
             # Intialize Model to Eval Mode
             self.model.eval()
 
             # Forward Propagation
-            output_ab = self.model(l_img)
-
-            # Adding l channel to ab channels
-            color_img = self.concatenate_and_colorize(torch.stack([l_img[:, 0, :, :]], dim=1), output_ab)
+            preds = self.model(inputs)
 
             save_path = Path('outputs')
             save_path.mkdir(exist_ok=True)
             save_path /= f'img{idx}.jpg'
-            save_image(color_img[0], save_path)
+            save_image(preds[0], save_path)
 
             # Loss Calculation
-            loss = self.criterion(output_ab, ab_img.float())
+            loss = self.criterion(preds, targets)
 
-            self.logger.log_val(losses={'main': loss.item()}, images={'input': l_img})
-                
+            self.logger.log_val(losses={'main': loss.item()}, images={'input': inputs})
+
         self.logger.end_val()
