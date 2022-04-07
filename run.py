@@ -1,3 +1,4 @@
+#!/bin/env python3
 # pylint: disable=no-value-for-parameter
 
 from importlib import import_module
