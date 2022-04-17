@@ -8,14 +8,14 @@ class TypefacePerceptualLoss(torch.nn.Module):
         if not Path(model_local_path).exists():
             disk.download(model_remote_path, model_local_path)
         
-        model = torchvision.models.vgg11(pretrained=True)
+        model = torchvision.models.vgg11()
         model.classifier[-1] = torch.nn.Linear(4096, 2500)
         model.load_state_dict(torch.load(model_local_path))
         blocks = []
         blocks.append(model.features[:4].eval())
         blocks.append(model.features[4:9].eval())
         blocks.append(model.features[9:16].eval())
-        blocks.append(model.features[16:23].eval())
+        #blocks.append(model.features[16:23].eval())
         for bl in blocks:
             for p in bl.parameters():
                 p.requires_grad = False
@@ -32,8 +32,8 @@ class TypefacePerceptualLoss(torch.nn.Module):
         input = (input-self.mean) / self.std
         target = (target-self.mean) / self.std
         if self.resize:
-            input = self.transform(input, mode='bilinear', size=(224, 224), align_corners=False)
-            target = self.transform(target, mode='bilinear', size=(224, 224), align_corners=False)
+            input = self.transform(input, mode='bilinear', size=(64, 196), align_corners=False)
+            target = self.transform(target, mode='bilinear', size=(64, 196), align_corners=False)
         loss = 0.0
         x = input
         y = target
