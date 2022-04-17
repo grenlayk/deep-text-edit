@@ -1,7 +1,7 @@
 import torch
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from src.losses import ocr, perceptual
+from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
@@ -54,7 +54,7 @@ class Trainer:
             res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef * ocr_loss +  self.coef_perceptual * perceptual_loss
+            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
             loss.backward()
             self.optimizer.step()
 
@@ -76,7 +76,7 @@ class Trainer:
             res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  perceptual_loss
+            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
             
             self.logger.log_val(
                 losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},

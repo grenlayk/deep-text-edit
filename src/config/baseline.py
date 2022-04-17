@@ -8,6 +8,7 @@ from src.utils.download import download_data, unarchieve
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
+from src.losses.perceptual import VGGPerceptualLoss
 from torch.utils.data import DataLoader
 from src.losses.perceptual import VGGPerceptualLoss
 
