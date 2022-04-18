@@ -12,10 +12,10 @@ class TypefacePerceptualLoss(torch.nn.Module):
         model.classifier[-1] = torch.nn.Linear(4096, 2500)
         model.load_state_dict(torch.load(model_local_path))
         blocks = []
-        blocks.append(model.features[:4].eval())
-        blocks.append(model.features[4:9].eval())
-        blocks.append(model.features[9:16].eval())
-        #blocks.append(model.features[16:23].eval())
+        blocks.append(model.features[:5].eval())
+        blocks.append(model.features[5:10].eval())
+        blocks.append(model.features[10:15].eval())
+        blocks.append(model.features[15:20].eval())
         for bl in blocks:
             for p in bl.parameters():
                 p.requires_grad = False
