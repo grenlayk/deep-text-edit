@@ -9,6 +9,7 @@ from src.logger.simple import Logger
 from src.models.rrdb import RRDBNet
 from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
+from src.utils.warmup import WarmupScheduler
 
 
 class Config:
@@ -27,30 +28,25 @@ class Config:
         total_epochs = 20  # 20
         model = RRDBNet(3, 3, 64, 10, gc=32).to(device)
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-6)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=list(range(0, total_epochs, 5)),
-            gamma=0.2,
-            verbose=True
-        )
 
-        batch_size = 56
-        train_dataset = CustomDataset(data_path / 'train', training=True)
+        batch_size = 32
+        train_dataset = CustomDataset(data_path / 'train', crop_size=32)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
             num_workers=8
         )
+        logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
         val_dataset = CustomDataset(data_path / 'val')
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=batch_size,
+            batch_size=1,
             shuffle=False,
             num_workers=8
         )
+        logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
         test_dataset = CustomDataset(data_path / 'test')
         test_dataloader = torch.utils.data.DataLoader(
@@ -58,6 +54,17 @@ class Config:
             batch_size=1,
             shuffle=False,
             num_workers=8
+        )
+        logger.info(f'Test size: {len(test_dataloader)} x {1}')
+
+        optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
+        scheduler = WarmupScheduler(
+            optimizer=optimizer,
+            warmup_epochs=2 * len(train_dataloader),
+            scheduler=torch.optim.lr_scheduler.ExponentialLR(
+                optimizer=optimizer,
+                gamma=0.9**(1 / len(train_dataloader)),
+            )
         )
 
         metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_rrdb')
