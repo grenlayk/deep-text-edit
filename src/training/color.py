@@ -2,6 +2,7 @@ import time
 import torch
 from loguru import logger
 from torchvision.utils import save_image
+from pathlib import Path
 
 
 class ColorizationTrainer:
@@ -103,3 +104,27 @@ class ColorizationTrainer:
                 None
             )
             logger.info('Model saved')
+
+            # Inference Step
+
+            with torch.no_grad():
+                logger.info('-------------- Test dataset validation --------------')
+
+                for idx, (inputs, targets) in enumerate(self.test_dataloader):
+                    # Skip bad data
+                    if not inputs.ndim:
+                        continue
+
+                    inputs = inputs.to(self.device)
+                    targets = targets.to(self.device)
+
+                    # Intialize Model to Eval Mode
+                    self.model.eval()
+
+                    # Forward Propagation
+                    preds = self.model(inputs)
+
+                    save_path = Path('outputs')
+                    save_path.mkdir(exist_ok=True)
+                    save_path /= f'img{idx}.jpg'
+                    save_image(preds[0], save_path)
