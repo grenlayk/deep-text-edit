@@ -8,7 +8,7 @@ from src.disk import disk
 from src.logger.simple import Logger
 from src.models.rrdb import RRDBNet
 from src.storage.simple import Storage
-from src.training.color import ColorizationTrainer
+from src.training.gan_colorization import GANColorizationTrainer
 from src.utils.warmup import WarmupScheduler
 from src.models.nlayer_discriminator import NLayerDiscriminator
 
@@ -29,7 +29,8 @@ class Config:
         total_epochs = 20  
         model_G = RRDBNet(3, 3, 64, 10, gc=32).to(device)
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=torch.nn.BatchNorm2d)
-        criterion = torch.nn.L1Loss() #torch.nn.MSELoss(reduction='mean').to(device)
+        criterion = torch.nn.L1Loss().to(device) #torch.nn.MSELoss(reduction='mean').to(device)
+        lambda_L1 = 1.
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
 
         batch_size = 32
@@ -72,13 +73,17 @@ class Config:
             )
         )
 
-        metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_rrdb')
-        storage = Storage('./checkpoints/colorization_rrdb')
+        metric_logger = Logger(print_freq=100, image_freq=100, project_name='gan_colorization')
+        storage = Storage('./checkpoints/gan_colorization')
 
-        self.trainer = ColorizationTrainer(
+        self.trainer = GANColorizationTrainer(
             model_G,
+            model_D,
             criterion,
+            criterion_gan,
+            lambda_L1,
             optimizer_G,
+            optimizer_D,
             scheduler,
             train_dataloader,
             val_dataloader,
