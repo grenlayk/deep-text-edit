@@ -32,7 +32,7 @@ class ColorizationTrainer:
     def train(self):
         self.model.train()
 
-        # inputs: l_img x3
+        # inputs: bw_img x3
         # target: rgb_img
         for inputs, targets in self.train_dataloader:
 
