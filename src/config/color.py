@@ -29,8 +29,8 @@ class Config:
         model = RRDBNet(3, 3, 64, 10, gc=32).to(device)
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
 
-        batch_size = 32
-        train_dataset = CustomDataset(data_path / 'train', crop_size=32)
+        batch_size = 8
+        train_dataset = CustomDataset(data_path / 'train', crop_size=64)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -39,7 +39,7 @@ class Config:
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
-        val_dataset = CustomDataset(data_path / 'val')
+        val_dataset = CustomDataset(data_path / 'val', cut=(200 / 5000))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
@@ -57,7 +57,7 @@ class Config:
         )
         logger.info(f'Test size: {len(test_dataloader)} x {1}')
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
         scheduler = WarmupScheduler(
             optimizer=optimizer,
             warmup_epochs=2 * len(train_dataloader),
@@ -68,7 +68,7 @@ class Config:
         )
 
         metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_rrdb')
-        storage = Storage('./checkpoints/colorization_rrdb')
+        storage = Storage('./checkpoints/colorization_rrdb_64')
 
         self.trainer = ColorizationTrainer(
             model,
