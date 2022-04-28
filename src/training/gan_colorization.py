@@ -1,3 +1,4 @@
+# from https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/pix2pix_model.py
 import time
 import torch
 from loguru import logger
@@ -135,7 +136,8 @@ class GANColorizationTrainer:
             # Save the Model to disk
             self.storage.save(
                 epoch,
-                {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
+                {'model_G': self.model_G, 'model_D': self.model_D, 'optimizer_G': self.optimizer_G,
+                'optimizer_D': self.optimizer_D, 'scheduler_G': self.scheduler_G},
                 None
             )
             logger.info('Model saved')
