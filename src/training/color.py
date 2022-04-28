@@ -61,7 +61,7 @@ class ColorizationTrainer:
             # Print stats after every point_batches
             self.logger.log_train(
                 losses={'main': loss.item(), 'lr': self.scheduler.get_last_lr()[0]},
-                images={'input': inputs, 'pred': preds, 'target': targets},
+                images={'input': inputs, 'pred': torch.FloatTensor(preds.cpu().detach()), 'target': targets},
             )
 
     def validate(self, epoch: int):
@@ -83,8 +83,8 @@ class ColorizationTrainer:
             loss = self.criterion(preds, targets)
 
             self.logger.log_val(
-                losses={'val_main': loss.item()},
-                images={'val_input': inputs, 'val_pred': preds, 'val_target': targets},
+                losses={'main': loss.item()},
+                images={'input': inputs, 'pred': torch.FloatTensor(preds.cpu().detach()), 'target': targets},
             )
 
         return self.logger.end_val()
@@ -93,6 +93,7 @@ class ColorizationTrainer:
         for epoch in range(self.total_epochs):
             start = time.time_ns()
             self.train()
+            torch.cuda.empty_cache()
             logger.success(f'Finished training epoch #{epoch} in {(time.time_ns() - start) / 1e9}s')
             with torch.no_grad():
                 _, _ = self.validate(epoch)
@@ -104,27 +105,4 @@ class ColorizationTrainer:
                 None
             )
             logger.info('Model saved')
-
-            # Inference Step
-
-            with torch.no_grad():
-                logger.info('-------------- Test dataset validation --------------')
-
-                for idx, (inputs, targets) in enumerate(self.test_dataloader):
-                    # Skip bad data
-                    if not inputs.ndim:
-                        continue
-
-                    inputs = inputs.to(self.device)
-                    targets = targets.to(self.device)
-
-                    # Intialize Model to Eval Mode
-                    self.model.eval()
-
-                    # Forward Propagation
-                    preds = self.model(inputs)
-
-                    save_path = Path('outputs')
-                    save_path.mkdir(exist_ok=True)
-                    save_path /= f'img{idx}.jpg'
-                    save_image(preds[0], save_path)
+            torch.cuda.empty_cache()
