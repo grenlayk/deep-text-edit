@@ -25,7 +25,7 @@ class GANColorizationTrainer:
         self.model_G = model_G
         self.model_D = model_D
         self.criterion = criterion
-        self.criterion_gan = criterion_gan, 
+        self.criterion_gan = criterion_gan
         self.lambda_L1 = lambda_L1
         self.optimizer_G = optimizer_G
         self.optimizer_D = optimizer_D
@@ -38,17 +38,13 @@ class GANColorizationTrainer:
         self.storage = storage
 
     def set_requires_grad(self, net, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
-        Parameters:
-            net (network)         -- a  networks
-            requires_grad (bool)  -- whether the networks require gradients or not
-        """
         if net is not None:
             for param in net.parameters():
                 param.requires_grad = requires_grad
 
     def train(self):
-        self.model.train()
+        self.model_G.train()
+        self.model_D.train()
 
         # inputs: l_img x3
         # target: rgb_img
@@ -69,14 +65,12 @@ class GANColorizationTrainer:
             self.optimizer_D.zero_grad()
 
             # Fake; stop backprop to the generator by detaching pred_G
-            pred_D_fake = self.netD(preds_G.detach())
-            fake = Variable(torch.Tensor(pred_D_fake.shape[0], pred_D_fake.shape[1]).fill_(0.0), \
-                                                                requires_grad=False).to(self.device)
+            pred_D_fake = self.model_D(preds_G.detach())
+            fake = torch.tensor(0.).expand_as(pred_D_fake).to(self.device)
             loss_D_fake = self.criterion_gan(pred_D_fake, fake)
             # Real
-            pred_D_real = self.netD(targets)
-            valid = Variable(torch.Tensor(pred_D_real.shape[0], pred_D_real.shape[1]).fill_(1.0), \
-                                                                requires_grad=False).to(self.device)
+            pred_D_real = self.model_D(targets)
+            valid = torch.tensor(1.).expand_as(pred_D_real).to(self.device)
             loss_D_real = self.criterion_gan(pred_D_real, valid) 
 
             loss_D = (loss_D_real + loss_D_fake) * 0.5
@@ -107,7 +101,8 @@ class GANColorizationTrainer:
     def validate(self, epoch: int):
         # Validation Step
         # Intialize Model to Eval Mode for validation
-        self.model.eval()
+        self.model_G.eval()
+        self.model_D.eval()
         for inputs, targets in self.val_dataloader:
             # Skip bad data
             if not inputs.ndim:

@@ -28,7 +28,7 @@ class Config:
 
         total_epochs = 20  
         model_G = RRDBNet(3, 3, 64, 10, gc=32).to(device)
-        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=torch.nn.BatchNorm2d)
+        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=torch.nn.BatchNorm2d).to(device)
         criterion = torch.nn.L1Loss().to(device) #torch.nn.MSELoss(reduction='mean').to(device)
         lambda_L1 = 1.
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
