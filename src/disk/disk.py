@@ -59,7 +59,7 @@ class Disk:
             self._ensure_folder(folder.parent)
             logger.debug(f'Creating folder {folder} on remote')
             self._y.mkdir(folder.as_posix())
-    
+
     def _traverse_remote(self, remote_path: Path) -> List[Path]:
         logger.debug(f'Traversing remote folder {remote_path}')
         files = []
@@ -69,7 +69,7 @@ class Disk:
             else:
                 files.append(remote_path / item.name)
         return files
-    
+
     def _traverse_local(self, local_path: Path) -> List[Path]:
         logger.debug(f'Traversing local folder {local_path}')
         return [item for item in local_path.rglob('*') if item.is_file()]
@@ -80,12 +80,12 @@ class Disk:
 
         Args:
             remote_path (Union[str, Path]): Path to the object in the cloud
-            local_path (Optional[Union[str, Path]]): Path to the object on the machine. 
+            local_path (Optional[Union[str, Path]]): Path to the object on the machine.
             Duplicates remote if not present.
         '''
 
         assert self._logged_in, 'You must log in first'
-        
+
         remote_path = Path('app:', remote)
         if local is None:
             local = remote
@@ -118,7 +118,7 @@ class Disk:
         remote_path = Path('app:', remote)
 
         logger.info(f'Uploading {local_path} to {remote_path}')
-        
+
         if local_path.is_dir():
             for item in self._traverse_local(local_path):
                 self.upload(item, (remote_path / item.relative_to(local_path)).relative_to('app:'))
