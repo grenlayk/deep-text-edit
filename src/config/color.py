@@ -1,7 +1,9 @@
+import zipfile
 from pathlib import Path
 
-import zipfile
 import torch
+from fastai.vision.models import resnet18
+from fastai.vision.models.unet import DynamicUnet
 from loguru import logger
 from src.data.color import CustomDataset
 from src.disk import disk
@@ -10,6 +12,7 @@ from src.models.rrdb import RRDBNet
 from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
 from src.utils.warmup import WarmupScheduler
+from torch import nn
 
 
 class Config:
@@ -26,16 +29,19 @@ class Config:
                 zip_ref.extractall('data/')
 
         total_epochs = 20  # 20
-        model = RRDBNet(3, 3, 64, 10, gc=32).to(device)
+
+        m = resnet18(True)
+        m = nn.Sequential(*list(m.children())[:-2])
+        model = DynamicUnet(m, 3, (128, 128)).to(device)
         criterion = torch.nn.MSELoss(reduction='mean').to(device)
 
-        batch_size = 8
-        train_dataset = CustomDataset(data_path / 'train', crop_size=64)
+        batch_size = 32
+        train_dataset = CustomDataset(data_path / 'train', crop_size=128)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=8
+            num_workers=2
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
@@ -43,8 +49,7 @@ class Config:
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
-            shuffle=False,
-            num_workers=8
+            shuffle=False
         )
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
@@ -52,8 +57,7 @@ class Config:
         test_dataloader = torch.utils.data.DataLoader(
             test_dataset,
             batch_size=1,
-            shuffle=False,
-            num_workers=8
+            shuffle=False
         )
         logger.info(f'Test size: {len(test_dataloader)} x {1}')
 
@@ -67,8 +71,8 @@ class Config:
             )
         )
 
-        metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_rrdb')
-        storage = Storage('./checkpoints/colorization_rrdb_64')
+        metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_unet')
+        storage = Storage('./checkpoints/colorization_unet')
 
         self.trainer = ColorizationTrainer(
             model,

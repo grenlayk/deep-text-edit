@@ -14,7 +14,6 @@ class CustomDataset(Dataset):
     def __init__(self, root_dir: Path, crop_size: Optional[Union[Tuple, int]] = None, cut: float = 1.0):
         self.root_dir = root_dir
         self.files = list(root_dir.iterdir())
-        shuffle(self.files)
         self.files = self.files[:int(cut * len(self.files))]
 
         transforms = [
