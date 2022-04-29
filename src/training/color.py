@@ -51,7 +51,7 @@ class ColorizationTrainer:
 
             # Back propogation
             loss = self.criterion(preds, targets)
-            loss.backward()
+            loss['total'].backward()
 
             # Weight Update
             self.optimizer.step()
@@ -60,7 +60,7 @@ class ColorizationTrainer:
 
             # Print stats after every point_batches
             self.logger.log_train(
-                losses={'main': loss.item(), 'lr': self.scheduler.get_last_lr()[0]},
+                losses={**loss, 'lr': self.scheduler.get_last_lr()[0]},
                 images={'input': inputs, 'pred': torch.FloatTensor(preds.cpu().detach()), 'target': targets},
             )
 
@@ -83,7 +83,7 @@ class ColorizationTrainer:
             loss = self.criterion(preds, targets)
 
             self.logger.log_val(
-                losses={'main': loss.item()},
+                losses=loss,
                 images={'input': inputs, 'pred': torch.FloatTensor(preds.cpu().detach()), 'target': targets},
             )
 

@@ -8,7 +8,7 @@ from loguru import logger
 from src.data.color import CustomDataset
 from src.disk import disk
 from src.logger.simple import Logger
-from src.models.rrdb import RRDBNet
+from src.losses import Compose, VGGPerceptualLoss
 from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
 from src.utils.warmup import WarmupScheduler
@@ -33,10 +33,13 @@ class Config:
         m = resnet18(True)
         m = nn.Sequential(*list(m.children())[:-2])
         model = DynamicUnet(m, 3, (128, 128)).to(device)
-        criterion = torch.nn.MSELoss(reduction='mean').to(device)
+        criterion = Compose(
+            [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
+            [1, 0.125],
+        ).to(device)
 
-        batch_size = 32
-        train_dataset = CustomDataset(data_path / 'train', crop_size=128)
+        batch_size = 16
+        train_dataset = CustomDataset(data_path / 'train', crop_size=64)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -53,18 +56,12 @@ class Config:
         )
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
-        test_dataset = CustomDataset(data_path / 'test')
-        test_dataloader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False
-        )
-        logger.info(f'Test size: {len(test_dataloader)} x {1}')
+        test_dataloader = None
 
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
         scheduler = WarmupScheduler(
             optimizer=optimizer,
-            warmup_epochs=2 * len(train_dataloader),
+            warmup_epochs=len(train_dataloader) // 3,
             scheduler=torch.optim.lr_scheduler.ExponentialLR(
                 optimizer=optimizer,
                 gamma=0.9**(1 / len(train_dataloader)),
