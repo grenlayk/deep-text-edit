@@ -1,15 +1,18 @@
+import zipfile
 from pathlib import Path
 
-import zipfile
 import torch
+from fastai.vision.models import resnet18
+from fastai.vision.models.unet import DynamicUnet
 from loguru import logger
 from src.data.color import CustomDataset
 from src.disk import disk
 from src.logger.simple import Logger
-from src.models.rrdb import RRDBNet
+from src.losses import Compose, VGGPerceptualLoss
 from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
 from src.utils.warmup import WarmupScheduler
+from torch import nn
 
 
 class Config:
@@ -26,49 +29,47 @@ class Config:
                 zip_ref.extractall('data/')
 
         total_epochs = 20  # 20
-        model = RRDBNet(3, 3, 64, 10, gc=32).to(device)
-        criterion = torch.nn.MSELoss(reduction='mean').to(device)
 
-        batch_size = 32
-        train_dataset = CustomDataset(data_path / 'train', crop_size=32)
+        m = resnet18(True)
+        m = nn.Sequential(*list(m.children())[:-2])
+        model = DynamicUnet(m, 3, (128, 128)).to(device)
+        criterion = Compose(
+            [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
+            [1, 0.125],
+        ).to(device)
+
+        batch_size = 16
+        train_dataset = CustomDataset(data_path / 'train', crop_size=64)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=8
+            num_workers=2
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
-        val_dataset = CustomDataset(data_path / 'val')
+        val_dataset = CustomDataset(data_path / 'val', cut=(200 / 5000))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
-            shuffle=False,
-            num_workers=8
+            shuffle=False
         )
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
-        test_dataset = CustomDataset(data_path / 'test')
-        test_dataloader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False,
-            num_workers=8
-        )
-        logger.info(f'Test size: {len(test_dataloader)} x {1}')
+        test_dataloader = None
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
         scheduler = WarmupScheduler(
             optimizer=optimizer,
-            warmup_epochs=2 * len(train_dataloader),
+            warmup_epochs=len(train_dataloader) // 3,
             scheduler=torch.optim.lr_scheduler.ExponentialLR(
                 optimizer=optimizer,
                 gamma=0.9**(1 / len(train_dataloader)),
             )
         )
 
-        metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_rrdb')
-        storage = Storage('./checkpoints/colorization_rrdb')
+        metric_logger = Logger(print_freq=100, image_freq=100, project_name='colorization_unet')
+        storage = Storage('./checkpoints/colorization_unet')
 
         self.trainer = ColorizationTrainer(
             model,

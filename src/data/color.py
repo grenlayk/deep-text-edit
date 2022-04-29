@@ -1,4 +1,5 @@
 from pathlib import Path
+from random import shuffle
 from typing import Optional, Tuple, Union
 
 import cv2
@@ -10,9 +11,10 @@ from torchvision import transforms as T
 
 
 class CustomDataset(Dataset):
-    def __init__(self, root_dir: Path, crop_size: Optional[Union[Tuple, int]] = None):
+    def __init__(self, root_dir: Path, crop_size: Optional[Union[Tuple, int]] = None, cut: float = 1.0):
         self.root_dir = root_dir
         self.files = list(root_dir.iterdir())
+        self.files = self.files[:int(cut * len(self.files))]
 
         transforms = [
             T.Lambda(lambda img: cv2.cvtColor(img, cv2.COLOR_BGR2RGB)),
@@ -20,7 +22,7 @@ class CustomDataset(Dataset):
         ]
 
         if crop_size is not None:
-            transforms.append(T.RandomCrop(crop_size))
+            transforms.append(T.RandomCrop(crop_size, pad_if_needed=True))
 
         self.transform = T.Compose(transforms)
 
