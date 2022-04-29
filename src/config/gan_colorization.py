@@ -11,7 +11,11 @@ from src.storage.simple import Storage
 from src.training.gan_colorization import GANColorizationTrainer
 from src.utils.warmup import WarmupScheduler
 from src.models.nlayer_discriminator import NLayerDiscriminator
+from src.losses import VGGPerceptualLoss
 
+class Identity(torch.nn.Module):
+    def forward(self, x):
+        return x
 
 class Config:
     def __init__(self):
@@ -25,48 +29,41 @@ class Config:
             disk.download(data_path.with_suffix('.zip'), data_path.with_suffix('.zip'))
             with zipfile.ZipFile(data_path.with_suffix('.zip'), 'r') as zip_ref:
                 zip_ref.extractall('data/')
-
+        
         total_epochs = 20  
         model_G = RRDBNet(3, 3, 64, 10, gc=32).to(device)
-        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=torch.nn.BatchNorm2d).to(device)
-        criterion = torch.nn.L1Loss().to(device) #torch.nn.MSELoss(reduction='mean').to(device)
-        lambda_L1 = 1.
+        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
+        criterion = torch.nn.L1Loss().to(device) 
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
+        criterion_perceptual = VGGPerceptualLoss().to(device)
+        lambda_L1 = 1.
+        lambda_per = 0.125
+        lambda_gan = 0.3
 
-        batch_size = 32
+        batch_size = 16
         train_dataset = CustomDataset(data_path / 'train', crop_size=32)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=8
+            num_workers=2
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
-        val_dataset = CustomDataset(data_path / 'val')
+        val_dataset = CustomDataset(data_path / 'val', cut=(200 / 5000))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
-            shuffle=False,
-            num_workers=8
+            shuffle=False
         )
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
-        test_dataset = CustomDataset(data_path / 'test')
-        test_dataloader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False,
-            num_workers=8
-        )
-        logger.info(f'Test size: {len(test_dataloader)} x {1}')
+        optimizer_G = torch.optim.Adam(model_G.parameters(), lr=1e-4)
+        optimizer_D = torch.optim.Adam(model_D.parameters(), lr=2e-4)
 
-        optimizer_G = torch.optim.Adam(model_G.parameters(), lr=5e-4)
-        optimizer_D = torch.optim.Adam(model_D.parameters(), lr=5e-4)
-
-        scheduler = WarmupScheduler(
+        scheduler_G = WarmupScheduler(
             optimizer=optimizer_G,
-            warmup_epochs=2 * len(train_dataloader),
+            warmup_epochs=len(train_dataloader) // 3,
             scheduler=torch.optim.lr_scheduler.ExponentialLR(
                 optimizer=optimizer_G,
                 gamma=0.9**(1 / len(train_dataloader)),
@@ -81,13 +78,15 @@ class Config:
             model_D,
             criterion,
             criterion_gan,
+            criterion_perceptual,
             lambda_L1,
+            lambda_gan,
+            lambda_per,
             optimizer_G,
             optimizer_D,
-            scheduler,
+            scheduler_G,
             train_dataloader,
             val_dataloader,
-            test_dataloader,
             total_epochs,
             metric_logger,
             storage

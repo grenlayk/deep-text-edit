@@ -12,13 +12,15 @@ class GANColorizationTrainer:
                  model_D,
                  criterion,
                  criterion_gan,
+                 criterion_perceptual,
                  lambda_L1,
+                 lambda_gan,
+                 lambda_per,
                  optimizer_G,
                  optimizer_D,
                  scheduler_G,
                  train_dataloader,
                  val_dataloader,
-                 test_dataloader,
                  total_epochs,
                  logger,
                  storage):
@@ -27,12 +29,14 @@ class GANColorizationTrainer:
         self.model_D = model_D
         self.criterion = criterion
         self.criterion_gan = criterion_gan
+        self.criterion_perceptual = criterion_perceptual
         self.lambda_L1 = lambda_L1
+        self.lambda_gan = lambda_gan
+        self.lambda_per = lambda_per
         self.optimizer_G = optimizer_G
         self.optimizer_D = optimizer_D
         self.scheduler_G = scheduler_G
         self.train_dataloader = train_dataloader
-        self.test_dataloader = test_dataloader
         self.val_dataloader = val_dataloader
         self.total_epochs = total_epochs
         self.logger = logger
@@ -63,6 +67,7 @@ class GANColorizationTrainer:
 
             # update D
             self.set_requires_grad(self.model_D, True)
+            self.set_requires_grad(self.model_G, False)
             self.optimizer_D.zero_grad()
 
             # Fake; stop backprop to the generator by detaching pred_G
@@ -75,20 +80,23 @@ class GANColorizationTrainer:
             loss_D_real = self.criterion_gan(pred_D_real, valid) 
 
             loss_D = (loss_D_real + loss_D_fake) * 0.5
-            loss_D.backward()
-            self.optimizer_D.step() 
-
+            
             # update G
             self.set_requires_grad(self.model_D, False)
+            self.set_requires_grad(self.model_G, True)
             self.optimizer_G.zero_grad() 
 
             pred_D_fake = self.model_D(preds_G)
             loss_G_gan = self.criterion_gan(pred_D_fake, valid)
             loss_G_L1 = self.criterion(preds_G, targets)
+            loss_G_per = self.criterion_perceptual(preds_G, targets)
 
-            loss_G = loss_G_gan + loss_G_L1 * self.lambda_L1
+            loss_G = self.lambda_gan * loss_G_gan + loss_G_L1 * self.lambda_L1 + loss_G_per * self.lambda_per
+            
             loss_G.backward()
+            loss_D.backward()
 
+            self.optimizer_D.step() 
             self.optimizer_G.step()
             self.scheduler_G.step()
 

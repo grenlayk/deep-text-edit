@@ -22,7 +22,7 @@ class Logger():
         self.wb_path: str = wb_path or "./wandb"
         self.train_iter = 1
         self.val_iter = 1
-        self.wandb = wandb.init(project=project_name, entity="sphericalpotatoinvacuum")
+        self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:
