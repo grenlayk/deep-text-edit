@@ -2,6 +2,8 @@ from pathlib import Path
 
 import zipfile
 import torch
+from fastai.vision.models import resnet18
+from fastai.vision.models.unet import DynamicUnet
 from loguru import logger
 from src.data.color import CustomDataset
 from src.disk import disk
@@ -30,8 +32,10 @@ class Config:
             with zipfile.ZipFile(data_path.with_suffix('.zip'), 'r') as zip_ref:
                 zip_ref.extractall('data/')
         
-        total_epochs = 20  
-        model_G = RRDBNet(3, 3, 64, 10, gc=32).to(device)
+        total_epochs = 20 
+        m = resnet18(True)
+        m = torch.nn.Sequential(*list(m.children())[:-2])
+        model_G = DynamicUnet(m, 3, (128, 128)).to(device) 
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
         criterion = torch.nn.L1Loss().to(device) 
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
