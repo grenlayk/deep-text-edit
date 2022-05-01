@@ -12,10 +12,7 @@ class GANColorizationTrainer:
                  model_D,
                  criterion,
                  criterion_gan,
-                 criterion_perceptual,
-                 lambda_L1,
                  lambda_gan,
-                 lambda_per,
                  optimizer_G,
                  optimizer_D,
                  scheduler_G,
@@ -29,10 +26,7 @@ class GANColorizationTrainer:
         self.model_D = model_D
         self.criterion = criterion
         self.criterion_gan = criterion_gan
-        self.criterion_perceptual = criterion_perceptual
-        self.lambda_L1 = lambda_L1
         self.lambda_gan = lambda_gan
-        self.lambda_per = lambda_per
         self.optimizer_G = optimizer_G
         self.optimizer_D = optimizer_D
         self.scheduler_G = scheduler_G
@@ -88,10 +82,9 @@ class GANColorizationTrainer:
 
             pred_D_fake = self.model_D(preds_G)
             loss_G_gan = self.criterion_gan(pred_D_fake, valid)
-            loss_G_L1 = self.criterion(preds_G, targets)
-            loss_G_per = self.criterion_perceptual(preds_G, targets)
+            loss_G_sup = self.criterion(preds_G, targets)
 
-            loss_G = self.lambda_gan * loss_G_gan + loss_G_L1 * self.lambda_L1 + loss_G_per * self.lambda_per
+            loss_G = self.lambda_gan * loss_G_gan + loss_G_sup['total']
             
             loss_G.backward()
             loss_D.backward()
@@ -102,9 +95,14 @@ class GANColorizationTrainer:
 
             # Print stats after every point_batches
             self.logger.log_train(
-                losses={'loss_G': loss_G.item(), 'loss_D': loss_D.item(), 
+                losses={'total_G': loss_G.item(), 
+                'L1_G': loss_G_sup['L1Loss'], 
+                'Perceptual_G': loss_G_sup['VGGPerceptualLoss'], 
+                'GAN G': loss_G_gan.item(),
+                'GAN D': loss_D.item(), 
                 'lr_G': self.scheduler_G.get_last_lr()[0]},
-                images={'input': inputs, 'pred': preds_G, 'target': targets},
+                images={'input': inputs, 
+                'pred': torch.FloatTensor(preds_G.cpu().detach()), 'target': targets},
             )
 
     def validate(self, epoch: int):
@@ -124,11 +122,13 @@ class GANColorizationTrainer:
             preds_G = self.model_G(inputs)
 
             # Loss Calculation
-            loss_G_L1 = self.criterion(preds_G, targets)
+            loss_G_sup = self.criterion(preds_G, targets)
 
             self.logger.log_val(
-                losses={'val_loss_G_L1': loss_G_L1.item()},
-                images={'val_input': inputs, 'val_pred': preds_G, 'val_target': targets},
+                losses={'L1_G': loss_G_sup['L1Loss'], 
+                'Perceptual_G': loss_G_sup['VGGPerceptualLoss']},
+                images={'val_input': inputs, 
+                'val_pred': torch.FloatTensor(preds_G.cpu().detach()), 'val_target': targets},
             )
 
         return self.logger.end_val()

@@ -13,7 +13,7 @@ from src.storage.simple import Storage
 from src.training.gan_colorization import GANColorizationTrainer
 from src.utils.warmup import WarmupScheduler
 from src.models.nlayer_discriminator import NLayerDiscriminator
-from src.losses import VGGPerceptualLoss
+from src.losses import Compose, VGGPerceptualLoss
 
 class Identity(torch.nn.Module):
     def forward(self, x):
@@ -37,11 +37,11 @@ class Config:
         m = torch.nn.Sequential(*list(m.children())[:-2])
         model_G = DynamicUnet(m, 3, (128, 128)).to(device) 
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
-        criterion = torch.nn.L1Loss().to(device) 
+        criterion = Compose(
+            [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
+            [1, 0.1],
+        ).to(device)
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
-        criterion_perceptual = VGGPerceptualLoss().to(device)
-        lambda_L1 = 1.
-        lambda_per = 0.125
         lambda_gan = 0.3
 
         batch_size = 16
@@ -82,10 +82,7 @@ class Config:
             model_D,
             criterion,
             criterion_gan,
-            criterion_perceptual,
-            lambda_L1,
             lambda_gan,
-            lambda_per,
             optimizer_G,
             optimizer_D,
             scheduler_G,
