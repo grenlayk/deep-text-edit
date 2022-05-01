@@ -1,11 +1,12 @@
-# text-deep-fake design doc
+# Text-deep-fake design doc
 
-This project aims to implement neural network architecture, described in [Text Style Brush Paper](https://arxiv.org/pdf/2106.08385.pdf).
+This project aims to implement neural network architecture, described in [Krishnan et al. (2021) -- Text Style Brush](https://arxiv.org/pdf/2106.08385.pdf).
 
 ## How to run ?
 
+- Install requirements `pip install -r requirements.txt`
 - Choose config file
-- Run `python run.py configs/config.py`
+- Run `python run.py configs/<chosen config>`
 
 ## Repo structure
 
@@ -14,17 +15,26 @@ This project aims to implement neural network architecture, described in [Text S
 │
 ├── requirements.txt        <- [necessary requirements]
 │
+├── data                    <- [some necessary data (including downloaded datasets)]
+|
 ├── src                     <- [project source code]
-│   ├── training
-│   │   ├── simple.py           <- [Template Trainer]
-│   │   ├── gan.py
-│   │   ├── ...
-│   │
 │   ├── config 
 │   │   ├── simple.py           <- [Template Config]
 │   │   ├── gan.py
 │   │   ├── ...
 │   │
+│   ├── data
+│   │   ├── simple.py           <- [Template CustomDataset]
+│   │   ├── ...
+│   │
+│   ├── disk
+│   │   ├── disk.py             <- [Disk class to upload and download data from cloud]
+│   │   ├── ...
+│   │
+│   ├── logger
+│   │   ├── simple.py           <- [Logger class to log train and validation process]
+│   │   ├── ...
+│   │ 
 │   ├── losses
 │   │   ├── simple.py           <- [Template Loss]
 │   │   ├── perceptual.py
@@ -38,18 +48,24 @@ This project aims to implement neural network architecture, described in [Text S
 │   │   ├── simple.py           <- [Template Model]
 │   │   ├── ...
 │   │
-│   ├── data
-│   │   ├── simple.py           <- [Template CustomDataset]
+│   ├── storage
+│   │   ├── simple.py           <- [Storage class to save models' checkpoints]
 │   │   ├── ...
 │   │
-│   ├── logger
-│   │   ├── storage             <- [models' checkpoints, etc]
-│   │   ├── wandb
-│   │ 
+│   ├── training
+│   │   ├── simple.py           <- [Template Trainer]
+│   │   ├── gan.py
+│   │   ├── ...
+│   │
+│   ├── utils
+│   │   ├── download.py         <- [Tool to download data from remote to cloud]
+│   │   ├── ...
+│   │
 │   ├── ...
 ```
 
 ## Classes design
+Pseudocode for classes to show their basic functionality.
 
 ### Config
 ```python
@@ -58,10 +74,10 @@ class Config():
         model = Model()             # model from src/models
         criterion = Loss()          # loss func from from src/losses
         optimizer = ...             # some non-custom optimizer 
-        storage = Storage()         # storage class func from from src/logger/storage
+        storage = Storage()         # storage class func from from src/storage
         logger = Logger()           # logger class func from from src/logger
-        train_dataloader = DataLoader(SimpleDataset('path/to/train'))
-        val_dataloader = DataLoader(SimpleDataset('path/to/val'))
+        train_dataloader = DataLoader(SimpleDataset('data/dataset/train'))
+        val_dataloader = DataLoader(SimpleDataset('data/dataset/val'))
 
         self.trainer = SimpleTrainer(<"pass all args from above">) 
     def run():
@@ -75,7 +91,7 @@ class SimpleTrainer():
         self.model = ...            # model from src/models
         self.criterion = ...        # loss func from from src/losses
         self.optimizer = ...         
-        self.storage = storage      # storage class func from from src/logger/storage
+        self.storage = storage      # storage class func from from src/storage
         self.logger = logger        # logger class func from from src/logger
         self.train_dataloader = ... # dataloader based on custom dataset from src/data
         self.val_dataloader = ...   # dataloader based on custom dataset from src/data
@@ -92,14 +108,10 @@ class SimpleTrainer():
 ### CustomDataset
 ```python
 class SimpleDataset(Dataset):
-    def __init__(remote, local):
-        if not local: 
-            self.download(remote, local)
+    def __init__():
+        ...
         
     def preprocess():
-        ...
-
-    def download():
         ...
 
     def __getitem__():
@@ -138,11 +150,11 @@ class Model():
 
 ## File storage
 
-We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints.
+We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints. 
 
 ## Requirements & restrictions
 - PyTorch framework
-- Python 3.9
+- Python 3.7
 - Type Annotations
 
 ## Future plans
