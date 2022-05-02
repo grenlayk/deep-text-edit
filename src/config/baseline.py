@@ -18,11 +18,11 @@ class Config:
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
-        data_dir = Path("data")
-        style_dir = data_dir / 'IMGUR5K_small'
+        data_dir = Path("data/imgur")
+        style_dir = data_dir
         if not data_dir.exists():
             data_dir.mkdir()
-            local_path = download_data(Path("data/IMGUR5K_small.tar"), data_dir)
+            local_path = download_data(Path("data/IMGUR5K.tar"), data_dir)
             unarchieve(local_path)
         batch_size = 4
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
@@ -37,12 +37,12 @@ class Config:
             gamma=0.2
         )
 
-        ocr_coef = 0.5
-        perceptual_coef = 0.5
+        ocr_coef = 0.2
+        perceptual_coef = 0.8
 
-        storage = Storage('checkpoints/baseline')
+        storage = Storage('checkpoints/typeface_ocr')
 
-        logger = Logger(image_freq=100, project_name='Baseline')
+        logger = Logger(image_freq=100, project_name='typeface_ocr')
 
         self.trainer = Trainer(
             model,

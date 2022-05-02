@@ -87,7 +87,7 @@ class Trainer:
         self.storage.save(
             epoch,
             {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
-            avg_losses['metric']
+            avg_losses
         )
 
 
