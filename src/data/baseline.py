@@ -12,11 +12,11 @@ from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text: str):
-    img = Image.new('L', (300, 64), color = 255)
+    img = Image.new('L', (64, 64), color = 255)
     fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
-    position = ((300 - text_width) / 2, (64 - text_height) / 2)
+    position = ((64 - text_width) / 2, (64 - text_height) / 2)
 
     d.text(position, text, font=fnt, fill = 0)
     return img        
@@ -46,7 +46,7 @@ class BaselineDataset(Dataset):
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-            img_style = cv2.resize(img_style, (128, 128))
+            img_style = cv2.resize(img_style, (64, 64))
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
@@ -58,7 +58,6 @@ class BaselineDataset(Dataset):
                 content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
-            img_content = cv2.resize(img_content, (128, 128))
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(img_content).float().unsqueeze(0)
 
