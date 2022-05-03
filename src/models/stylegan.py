@@ -214,7 +214,7 @@ class Intermediate_Generator(nn.Module):
         self.mapping = nn.Sequential(*layers)
     
     def forward(self, latent_z):
-        latent_w = self.mapping(latent_z.unsqueeze())
+        latent_w = self.mapping(latent_z.squeeze())
         return latent_w    
 
 # Generator
