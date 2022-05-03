@@ -208,7 +208,7 @@ class Intermediate_Generator(nn.Module):
         layers = [PixelNorm()]
         layers.append(SLinear(dim_latent, dim_latent))
         layers.append(nn.LeakyReLU(0.2))
-        layers.append(SLinear(dim_latent, 15*dim_latent))
+        layers.append(SLinear(dim_latent, dim_latent))
         layers.append(nn.LeakyReLU(0.2))
             
         self.mapping = nn.Sequential(*layers)
