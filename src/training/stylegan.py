@@ -35,8 +35,8 @@ class Trainer:
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
         model_ft = models.resnet18(pretrained=True)
-        self.style_embedder   = torch.nn.Sequential(*list(model_ft.children())[:-1])
-        self.content_embedder = torch.nn.Sequential(*list(model_ft.children())[:-2])
+        self.style_embedder   = torch.nn.Sequential(*list(model_ft.children())[:-1]).to(device)
+        self.content_embedder = torch.nn.Sequential(*list(model_ft.children())[:-2]).to(device)
 
     
     def train(self):
