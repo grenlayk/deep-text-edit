@@ -37,12 +37,16 @@ class Config:
         m = torch.nn.Sequential(*list(m.children())[:-2])
         model_G = DynamicUnet(m, 3, (128, 128)).to(device) 
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
+        l1_lambda = 1.
+        vgg_lambda = 0.125
         criterion = Compose(
             [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
-            [1, 0.1],
+            [l1_lambda, vgg_lambda],
         ).to(device)
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
-        lambda_gan = 0.3
+        lambda_gan = 0.5
+
+        logger.info(f'GAN lambda: {lambda_gan}, l1 lambda: {l1_lambda}, vgg lambda: {vgg_lambda}')
 
         batch_size = 16
         train_dataset = CustomDataset(data_path / 'train', crop_size=32)
@@ -63,7 +67,7 @@ class Config:
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
         optimizer_G = torch.optim.Adam(model_G.parameters(), lr=1e-4)
-        optimizer_D = torch.optim.Adam(model_D.parameters(), lr=2e-4)
+        optimizer_D = torch.optim.Adam(model_D.parameters(), lr=5e-4)
 
         scheduler_G = WarmupScheduler(
             optimizer=optimizer_G,

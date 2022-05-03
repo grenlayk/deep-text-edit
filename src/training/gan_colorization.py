@@ -57,7 +57,7 @@ class GANColorizationTrainer:
             targets = targets.to(self.device)
 
             self.optimizer_G.zero_grad()
-            preds_G = self.model_G(inputs)
+            preds_G = torch.FloatTensor(self.model_G(inputs))
 
             # update D
             self.set_requires_grad(self.model_D, True)
