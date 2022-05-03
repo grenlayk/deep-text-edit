@@ -6,7 +6,7 @@ from src.logger.simple import Logger
 from src.data.baseline import  BaselineDataset
 from src.utils.download import download_data, unarchieve 
 from src.models.stylegan import StyleBased_Generator
-from src.training.baseline import Trainer
+from src.training.stylegan import Trainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
 from torch.utils.data import DataLoader
