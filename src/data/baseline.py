@@ -12,7 +12,7 @@ from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text: str):
-    img = Image.new('RGB', (64, 64), color = (255, 255, 255)))
+    img = Image.new('RGB', (64, 64), color = (255, 255, 255))
     fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 40)
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
