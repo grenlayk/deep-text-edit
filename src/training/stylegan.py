@@ -57,9 +57,6 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            if self.scheduler is not None:
-                self.scheduler.step()
-
             self.logger.log_train(
                 losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
                 images={'style': style_batch, 'content': content_batch, 'result': res}
@@ -89,7 +86,7 @@ class Trainer:
         self.storage.save(
             epoch,
             {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
-            avg_losses['metric']
+            avg_losses['full_loss']
         )
 
 
@@ -97,4 +94,7 @@ class Trainer:
         for epoch in range(self.total_epochs):
             self.train()
             with torch.no_grad():
+              if (epoch + 3) % 10 == 0:
                 self.validate(epoch)
+            if self.scheduler is not None:
+                self.scheduler.step()

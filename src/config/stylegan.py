@@ -17,29 +17,31 @@ class Config:
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
-        data_dir = Path("data")
+        data_dir = Path("data/imgur")
         style_dir = data_dir / 'IMGUR5K_small'
         if not data_dir.exists():
             data_dir.mkdir()
             local_path = download_data(Path("data/IMGUR5K_small.tar"), data_dir)
             unarchieve(local_path)
-        batch_size = 4
+        batch_size = 16
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size = batch_size)
 
-        total_epochs = 1 #20
-        model = StyleBased_Generator(dim_latent=512).to(device)
+        total_epochs = 500 #20
+        model = StyleBased_Generator(dim_latent=512)
+        #model.load_state_dict(torch.load('/content/text-deep-fake/checkpoints/stylegan_one_style_working/14/model'))
+        model.to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
-            milestones=list(range(0, total_epochs, 5)),
+            milestones=list(range(0, total_epochs, 20)),
             gamma=0.2
         )
 
-        ocr_coef = 0.5
-        perceptual_coef = 0.5
+        ocr_coef = 0.2
+        perceptual_coef = 0.8
 
-        storage = Storage('checkpoints/stylegan')
+        storage = Storage('checkpoints/stylegan_new_dimensions')
 
         logger = Logger(image_freq=100, project_name='StyleGan')
 

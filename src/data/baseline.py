@@ -1,3 +1,74 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 import cv2
 import numpy as np
 import torch
@@ -12,11 +83,11 @@ from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text: str):
-    img = Image.new('RGB', (64, 64), color = (255, 255, 255))
-    fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 40)
+    img = Image.new('RGB', (256, 64), color = (255, 255, 255))
+    fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 50)
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
-    position = ((64 - text_width) / 2, (64 - text_height) / 2)
+    position = ((256 - text_width) / 2, (64 - text_height) / 2)
 
     d.text(position, text, font=fnt, fill = 0)
     return img        
@@ -43,7 +114,7 @@ class BaselineDataset(Dataset):
         try:
             if self.style_files[index] == self.style_dir / 'words.json':
                 index = (index + 1) % len(self.style_files)
-            img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
+            img_style = cv2.imread(str(self.style_files[0]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
             img_style = cv2.resize(img_style, (64, 64))
@@ -58,6 +129,8 @@ class BaselineDataset(Dataset):
                 content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
+            img_content = cv2.resize(img_content, (64, 64))
+
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
