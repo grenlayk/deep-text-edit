@@ -5,10 +5,10 @@ import torch
 from fastai.vision.models import resnet18
 from fastai.vision.models.unet import DynamicUnet
 from loguru import logger
-from src.data.color import CustomDataset
+from src.data.color import ColorDataset
 from src.disk import disk
 from src.logger.simple import Logger
-from src.losses import Compose, VGGPerceptualLoss
+from src.losses import ComposeLoss, VGGPerceptualLoss
 from src.storage.simple import Storage
 from src.training.color import ColorizationTrainer
 from src.utils.warmup import WarmupScheduler
@@ -33,13 +33,13 @@ class Config:
         m = resnet18(True)
         m = nn.Sequential(*list(m.children())[:-2])
         model = DynamicUnet(m, 3, (128, 128)).to(device)
-        criterion = Compose(
+        criterion = ComposeLoss(
             [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
             [1, 0.125],
         ).to(device)
 
         batch_size = 16
-        train_dataset = CustomDataset(data_path / 'train', crop_size=64)
+        train_dataset = ColorDataset(data_path / 'train', crop_size=64)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -48,7 +48,7 @@ class Config:
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
-        val_dataset = CustomDataset(data_path / 'val', cut=(200 / 5000))
+        val_dataset = ColorDataset(data_path / 'val', cut=(200 / 5000))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
