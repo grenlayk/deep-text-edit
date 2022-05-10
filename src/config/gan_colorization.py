@@ -5,7 +5,7 @@ import torch
 from fastai.vision.models import resnet18
 from fastai.vision.models.unet import DynamicUnet
 from loguru import logger
-from src.data.color import CustomDataset
+from src.data.color import ColorDataset
 from src.disk import disk
 from src.logger.simple import Logger
 from src.models.rrdb import RRDBNet
@@ -13,7 +13,7 @@ from src.storage.simple import Storage
 from src.training.gan_colorization import GANColorizationTrainer
 from src.utils.warmup import WarmupScheduler
 from src.models.nlayer_discriminator import NLayerDiscriminator
-from src.losses import Compose, VGGPerceptualLoss
+from src.losses import ComposeLoss, VGGPerceptualLoss
 
 class Identity(torch.nn.Module):
     def forward(self, x):
@@ -33,23 +33,23 @@ class Config:
                 zip_ref.extractall('data/')
         
         total_epochs = 20 
-        m = resnet18(True)
-        m = torch.nn.Sequential(*list(m.children())[:-2])
+
+        m = torch.nn.Sequential(*list(resnet18(True).children())[:-2])
         model_G = DynamicUnet(m, 3, (128, 128)).to(device) 
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
-        l1_lambda = 1.
-        vgg_lambda = 0.125
-        criterion = Compose(
-            [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
-            [l1_lambda, vgg_lambda],
+
+        lambda_l1 = 2.25
+        lambda_vgg = 0.125
+        lambda_gan = 0.25
+
+        criterion = ComposeLoss(
+            losses=[torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
+            coefs=[lambda_l1, lambda_vgg],
         ).to(device)
         criterion_gan = torch.nn.MSELoss(reduction='mean').to(device)
-        lambda_gan = 0.5
-
-        logger.info(f'GAN lambda: {lambda_gan}, l1 lambda: {l1_lambda}, vgg lambda: {vgg_lambda}')
-
+        
         batch_size = 16
-        train_dataset = CustomDataset(data_path / 'train', crop_size=32)
+        train_dataset = ColorDataset(data_path / 'train', crop_size=64)
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,
@@ -58,7 +58,7 @@ class Config:
         )
         logger.info(f'Train size: {len(train_dataloader)} x {batch_size}')
 
-        val_dataset = CustomDataset(data_path / 'val', cut=(200 / 5000))
+        val_dataset = ColorDataset(data_path / 'val', cut=(200 / 5000))
         val_dataloader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=1,
@@ -77,9 +77,14 @@ class Config:
                 gamma=0.9**(1 / len(train_dataloader)),
             )
         )
+        scheduler_D = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer=optimizer_D,
+            gamma=0.95**(1 / len(train_dataloader)),
+        )
 
-        metric_logger = Logger(print_freq=100, image_freq=100, project_name='gan_colorization')
-        storage = Storage('./checkpoints/gan_colorization')
+        project_name = 'gan_colorization'
+        metric_logger = Logger(print_freq=100, image_freq=100, project_name=project_name)
+        storage = Storage(f'./checkpoints/{project_name}')
 
         self.trainer = GANColorizationTrainer(
             model_G,
@@ -90,6 +95,7 @@ class Config:
             optimizer_G,
             optimizer_D,
             scheduler_G,
+            scheduler_D,
             train_dataloader,
             val_dataloader,
             total_epochs,

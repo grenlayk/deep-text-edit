@@ -2,8 +2,7 @@ from typing import List
 
 import torch
 
-
-class Compose(torch.nn.Module):
+class ComposeLoss(torch.nn.Module):
     def __init__(self, losses: List, coefs: List[float]):
         super().__init__()
         assert len(losses) == len(coefs)
@@ -15,6 +14,6 @@ class Compose(torch.nn.Module):
         return {
             'total': sum(result * coef for result, coef in zip(results, self._coefs)),
             **{
-                type(loss).__name__: result for loss, result in zip(self._losses, results)
+                type(loss).__name__: result * coef for loss, coef, result in zip(self._losses, self._coefs, results)
             }
         }

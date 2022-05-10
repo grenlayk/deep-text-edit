@@ -3,7 +3,6 @@ import time
 import torch
 from loguru import logger
 from torchvision.utils import save_image
-from torch.autograd import Variable
 
 
 class GANColorizationTrainer:
@@ -16,6 +15,7 @@ class GANColorizationTrainer:
                  optimizer_G,
                  optimizer_D,
                  scheduler_G,
+                 scheduler_D,
                  train_dataloader,
                  val_dataloader,
                  total_epochs,
@@ -30,6 +30,7 @@ class GANColorizationTrainer:
         self.optimizer_G = optimizer_G
         self.optimizer_D = optimizer_D
         self.scheduler_G = scheduler_G
+        self.scheduler_D = scheduler_D
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.total_epochs = total_epochs
@@ -57,52 +58,57 @@ class GANColorizationTrainer:
             targets = targets.to(self.device)
 
             self.optimizer_G.zero_grad()
-            preds_G = torch.FloatTensor(self.model_G(inputs))
-
-            # update D
-            self.set_requires_grad(self.model_D, True)
-            self.set_requires_grad(self.model_G, False)
             self.optimizer_D.zero_grad()
+            
+            ### calculate D loss
+            self.set_requires_grad(self.model_D, True)
+            self.set_requires_grad(self.model_G, False) 
 
-            # Fake; stop backprop to the generator by detaching pred_G
-            pred_D_fake = self.model_D(preds_G.detach())
+            # Fake
+            pred_D_fake = self.model_D(self.model_G(inputs).detach())
             fake = torch.tensor(0.).expand_as(pred_D_fake).to(self.device)
             loss_D_fake = self.criterion_gan(pred_D_fake, fake)
             # Real
             pred_D_real = self.model_D(targets)
             valid = torch.tensor(1.).expand_as(pred_D_real).to(self.device)
             loss_D_real = self.criterion_gan(pred_D_real, valid) 
-
             loss_D = (loss_D_real + loss_D_fake) * 0.5
-            
-            # update G
-            self.set_requires_grad(self.model_D, False)
-            self.set_requires_grad(self.model_G, True)
-            self.optimizer_G.zero_grad() 
 
+            ### calculate G losses
+            self.set_requires_grad(self.model_D, False)
+            self.set_requires_grad(self.model_G, True) 
+
+            preds_G = self.model_G(inputs)
             pred_D_fake = self.model_D(preds_G)
             loss_G_gan = self.criterion_gan(pred_D_fake, valid)
             loss_G_sup = self.criterion(preds_G, targets)
-
             loss_G = self.lambda_gan * loss_G_gan + loss_G_sup['total']
-            
-            loss_G.backward()
-            loss_D.backward()
+
+            # update models
+            self.set_requires_grad(self.model_D, True)
+
+            loss = loss_D + loss_G
+            loss.backward()
 
             self.optimizer_D.step() 
             self.optimizer_G.step()
+            self.scheduler_D.step()
             self.scheduler_G.step()
-
+            
             # Print stats after every point_batches
             self.logger.log_train(
-                losses={'total_G': loss_G.item(), 
-                'L1_G': loss_G_sup['L1Loss'], 
-                'Perceptual_G': loss_G_sup['VGGPerceptualLoss'], 
-                'GAN G': loss_G_gan.item(),
-                'GAN D': loss_D.item(), 
-                'lr_G': self.scheduler_G.get_last_lr()[0]},
-                images={'input': inputs, 
-                'pred': torch.FloatTensor(preds_G.cpu().detach()), 'target': targets},
+                losses={
+                'total G': loss_G.item(), 
+                'G L1': loss_G_sup['L1Loss'], 
+                'G Perceptual': loss_G_sup['VGGPerceptualLoss'], 
+                'G GAN': self.lambda_gan * loss_G_gan.item(),
+                'total D': loss_D.item(), 
+                'lr G': self.scheduler_G.get_last_lr()[0],
+                'lr D': self.scheduler_D.get_last_lr()[0]},
+                images={
+                'input': inputs, 
+                'pred': torch.FloatTensor(preds_G.cpu().detach()), 
+                'target': targets},
             )
 
     def validate(self, epoch: int):
@@ -118,17 +124,17 @@ class GANColorizationTrainer:
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
 
-            # Forward Propagation
             preds_G = self.model_G(inputs)
-
-            # Loss Calculation
             loss_G_sup = self.criterion(preds_G, targets)
 
             self.logger.log_val(
-                losses={'L1_G': loss_G_sup['L1Loss'], 
-                'Perceptual_G': loss_G_sup['VGGPerceptualLoss']},
-                images={'val_input': inputs, 
-                'val_pred': torch.FloatTensor(preds_G.cpu().detach()), 'val_target': targets},
+                losses={
+                    'G L1': loss_G_sup['L1Loss'], 
+                    'G Perceptual': loss_G_sup['VGGPerceptualLoss']},
+                images={
+                    'val_input': inputs, 
+                    'val_pred': torch.FloatTensor(preds_G.cpu().detach()), 
+                    'val_target': targets},
             )
 
         return self.logger.end_val()
@@ -138,14 +144,17 @@ class GANColorizationTrainer:
             start = time.time_ns()
             self.train()
             logger.success(f'Finished training epoch #{epoch} in {(time.time_ns() - start) / 1e9}s')
+
             with torch.no_grad():
                 _, _ = self.validate(epoch)
 
             # Save the Model to disk
             self.storage.save(
-                epoch,
-                {'model_G': self.model_G, 'model_D': self.model_D, 'optimizer_G': self.optimizer_G,
-                'optimizer_D': self.optimizer_D, 'scheduler_G': self.scheduler_G},
-                None
+                epoch=epoch,
+                modules={
+                    'model_G': self.model_G, 'model_D': self.model_D, 
+                    'optimizer_G': self.optimizer_G, 'optimizer_D': self.optimizer_D, 
+                    'scheduler_G': self.scheduler_G, 'scheduler_D': self.scheduler_D},
+                metric=None
             )
             logger.info('Model saved')
