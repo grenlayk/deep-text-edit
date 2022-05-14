@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms as T
 
 
-class CustomDataset(Dataset):
+class ColorDataset(Dataset):
     def __init__(self, root_dir: Path, crop_size: Optional[Union[Tuple, int]] = None, cut: float = 1.0):
         self.root_dir = root_dir
         self.files = list(root_dir.iterdir())
