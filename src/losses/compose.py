@@ -3,7 +3,7 @@ from typing import List
 import torch
 
 
-class Compose(torch.nn.Module):
+class ComposeLoss(torch.nn.Module):
     def __init__(self, losses: List, coefs: List[float]):
         super().__init__()
         assert len(losses) == len(coefs)
