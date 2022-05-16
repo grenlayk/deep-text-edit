@@ -8,7 +8,6 @@ from loguru import logger
 from src.data.color import ColorDataset
 from src.disk import disk
 from src.logger.simple import Logger
-from src.models.rrdb import RRDBNet
 from src.storage.simple import Storage
 from src.training.gan_colorization import GANColorizationTrainer
 from src.utils.warmup import WarmupScheduler
