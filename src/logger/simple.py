@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Optional, Dict
+from typing import Dict, Optional
 import wandb
 
 
@@ -11,18 +11,23 @@ class Logger():
     def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
-        self.loss_buff: dict[str, dict] = defaultdict()
+        self.loss_buff: Dict[str, dict] = defaultdict()
         self.loss_buff['values'] = defaultdict(list)
         self.loss_buff['sumlast'] = defaultdict(float)  # type: ignore
         self.loss_buff['sum'] = defaultdict(float)  # type: ignore
-        self.metrics_buff: dict[str, dict] = defaultdict()
+        self.metrics_buff: Dict[str, dict] = defaultdict()
         self.metrics_buff['values'] = defaultdict(list)
         self.metrics_buff['sumlast'] = defaultdict(float)  # type: ignore
         self.metrics_buff['sum'] = defaultdict(float)  # type: ignore
         self.wb_path: str = wb_path or "./wandb"
         self.train_iter = 1
         self.val_iter = 1
-        self.wandb = wandb.init(project=project_name, entity="text-deep-fake")
+
+        run = wandb.init(project=project_name, entity="text-deep-fake")
+        if run is not None:
+            self.wandb = run
+        else:
+            raise AssertionError("wandb.init is None")
 
     def log_train(self, losses: Optional[Dict[str, float]] = None, images: Optional[Dict[str, Tensor]] = None):
         if self.train_iter == 1:

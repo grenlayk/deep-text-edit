@@ -67,7 +67,7 @@ class SimpleTrainer:
 
             pred = self.model(inputs)
             loss = self.criterion(pred, target)
-            metric = self.metric(pred, target)
+            metric = self.metric(pred, target) if self.metric is not None else None
             self.logger.log_val(
                 losses={'main': loss.item()},
                 metrics=metric,

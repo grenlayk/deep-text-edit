@@ -2,6 +2,7 @@ from typing import List
 
 import torch
 
+
 class ComposeLoss(torch.nn.Module):
     def __init__(self, losses: List, coefs: List[float]):
         super().__init__()

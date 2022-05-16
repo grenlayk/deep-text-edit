@@ -28,11 +28,11 @@ class Config:
             with zipfile.ZipFile(data_path.with_suffix('.zip'), 'r') as zip_ref:
                 zip_ref.extractall('data/')
 
-        total_epochs = 20  # 20
+        total_epochs = 20
 
-        m = resnet18(True)
-        m = nn.Sequential(*list(m.children())[:-2])
-        model = DynamicUnet(m, 3, (128, 128)).to(device)
+        resnet = resnet18(True)
+        resnet_blocks = nn.Sequential(*list(resnet.children())[:-2])
+        model = DynamicUnet(resnet_blocks, 3, (128, 128)).to(device)
         criterion = ComposeLoss(
             [torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
             [1, 0.125],
@@ -56,8 +56,6 @@ class Config:
         )
         logger.info(f'Validate size: {len(val_dataloader)} x {1}')
 
-        test_dataloader = None
-
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
         scheduler = WarmupScheduler(
             optimizer=optimizer,
@@ -78,7 +76,7 @@ class Config:
             scheduler,
             train_dataloader,
             val_dataloader,
-            test_dataloader,
+            None,
             total_epochs,
             metric_logger,
             storage

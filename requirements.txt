@@ -88,10 +88,10 @@ tomli==2.0.1
 torch==1.11.0+cu113
 torchvision==0.12.0+cu113
 tqdm==4.64.0
-typed-ast==1.5.2
+typed-ast==1.5.3
 typer==0.4.1
-typing-extensions==3.10.0.2
-urllib3==1.26.9
+typing-extensions==4.2.0
+urllib3==1.25.11
 wandb==0.12.11
 wasabi==0.9.1
 wrapt==1.14.0

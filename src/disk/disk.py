@@ -1,6 +1,6 @@
 import configparser
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import yadisk
 from loguru import logger
@@ -98,7 +98,7 @@ class Disk:
             for item in self._traverse_remote(remote_path):
                 self.download(item.relative_to('app:'), local_path / item.relative_to(remote_path))
         else:
-            local_path.parent.mkdir(exist_ok=True, parents=True)
+            local_path.parent.mkdir(parents=True, exist_ok=True)
             self._y.download(remote_path.as_posix(), local_path.as_posix())
 
     @logger.catch

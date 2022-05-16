@@ -10,6 +10,7 @@ pycodestyle:
 pylint:
   disable:
     - too-many-arguments
+    - too-many-function-args
     - too-many-locals
     - too-many-statements
     - useless-super-delegation
