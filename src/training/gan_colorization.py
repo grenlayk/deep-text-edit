@@ -7,6 +7,7 @@ from torchvision.utils import save_image
 
 class GANColorizationTrainer:
     def __init__(self,
+                 device,
                  model_G,
                  model_D,
                  criterion,
@@ -21,7 +22,7 @@ class GANColorizationTrainer:
                  total_epochs,
                  logger,
                  storage):
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device
         self.model_G = model_G
         self.model_D = model_D
         self.criterion = criterion

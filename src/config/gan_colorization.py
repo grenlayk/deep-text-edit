@@ -38,9 +38,9 @@ class Config:
         model_G = DynamicUnet(m, 3, (128, 128)).to(device) 
         model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : Identity())).to(device)
 
-        lambda_l1 = 2.25
+        lambda_l1 = 2
         lambda_vgg = 0.125
-        lambda_gan = 0.25
+        lambda_gan = 0.15
 
         criterion = ComposeLoss(
             losses=[torch.nn.L1Loss().to(device), VGGPerceptualLoss().to(device)],
@@ -79,7 +79,7 @@ class Config:
         )
         scheduler_D = torch.optim.lr_scheduler.ExponentialLR(
             optimizer=optimizer_D,
-            gamma=0.95**(1 / len(train_dataloader)),
+            gamma=0.9**(1 / len(train_dataloader)),
         )
 
         project_name = 'gan_colorization'
@@ -87,6 +87,7 @@ class Config:
         storage = Storage(f'./checkpoints/{project_name}')
 
         self.trainer = GANColorizationTrainer(
+            device,
             model_G,
             model_D,
             criterion,
