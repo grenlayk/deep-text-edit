@@ -17,20 +17,21 @@ class Config:
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
+
         data_dir = Path("data/imgur")
         style_dir = data_dir / 'IMGUR5K_small'
         if not data_dir.exists():
             data_dir.mkdir()
             local_path = download_data(Path("data/IMGUR5K_small.tar"), data_dir)
             unarchieve(local_path)
+        
         batch_size = 16
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size = batch_size)
 
-        total_epochs = 500 #20
-        model = StyleBased_Generator(dim_latent=512)
-        #model.load_state_dict(torch.load('/content/text-deep-fake/checkpoints/stylegan_one_style_working/14/model'))
-        model.to(device)
+        total_epochs = 500
+        model = StyleBased_Generator(dim_latent=512).to(device)
+
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
@@ -38,12 +39,15 @@ class Config:
             gamma=0.2
         )
 
-        ocr_coef = 0.2
-        perceptual_coef = 0.8
+        content_coef = 0.2
+        style_coef = 0.8
+        style_loss = VGGPerceptualLoss()
+        content_loss = VGGPerceptualLoss()
 
-        storage = Storage('checkpoints/stylegan_new_dimensions')
-
-        logger = Logger(image_freq=100, project_name='StyleGan')
+        project_name = 'stylegan_olya_tests'
+        
+        storage = Storage(f'checkpoints/{project_name}')
+        logger = Logger(image_freq=100, project_name=project_name)
 
         self.trainer = Trainer(
             model,
@@ -55,13 +59,11 @@ class Config:
             logger,
             total_epochs,
             device,
-            ocr_coef,
-            perceptual_coef,
-            VGGPerceptualLoss()
+            content_coef,
+            style_coef,
+            content_loss,
+            style_loss
         )
 
     def run(self):
         self.trainer.run()
-
-
-config = Config().run()

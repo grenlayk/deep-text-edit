@@ -6,6 +6,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
 from torchvision import models
+
 class Trainer:
     def __init__(self,
                  model: nn.Module,
@@ -17,9 +18,10 @@ class Trainer:
                  logger: Logger,
                  total_epochs: int,
                  device: str,
-                 coef_ocr_loss: float,
-                 coef_perceptual_loss: float,
-                 perceptual_loss: nn.Module):
+                 coef_content_loss: float,
+                 coef_style_loss: float,
+                 content_loss: nn.Module,
+                 style_loss: nn.Module):
         
         self.device = device
         self.model = model
@@ -30,10 +32,10 @@ class Trainer:
         self.total_epochs = total_epochs
         self.logger = logger
         self.storage = storage
-        self.ocr_loss = ocr.OCRLoss().to(device)
-        self.perceptual_loss = perceptual_loss.to(device)
-        self.coef_ocr = coef_ocr_loss
-        self.coef_perceptual = coef_perceptual_loss
+        self.content_loss =  content_loss 
+        self.style_loss = style_loss.to(device)
+        self.coef_content_loss = coef_content_loss
+        self.coef_style_loss = coef_style_loss
         model_ft = models.resnet18(pretrained=True)
         self.style_embedder   = torch.nn.Sequential(*list(model_ft.children())[:-1]).to(device)
         self.content_embedder = torch.nn.Sequential(*list(model_ft.children())[:-2]).to(device)
@@ -51,14 +53,15 @@ class Trainer:
             self.optimizer.zero_grad()
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
+            content_loss = self.content_loss(res, label_batch)
+            style_loss = self.style_loss(res, style_batch, feature_layers=[], style_layers=[1, 2])
+            loss = self.coef_content_loss * content_loss +  self.coef_style_loss * style_loss
+            
             loss.backward()
             self.optimizer.step()
 
             self.logger.log_train(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
+                losses={'content_perc_loss': content_loss.item(), 'style_perc_loss': style_loss.item(), 'full_loss': loss.item()},
                 images={'style': style_batch, 'content': content_batch, 'result': res}
             )
 
