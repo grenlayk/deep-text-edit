@@ -8,7 +8,7 @@ import wandb
 
 
 class Logger():
-    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None):
+    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None, entity="text-deep-fake"):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
         self.loss_buff: Dict[str, dict] = defaultdict()
@@ -23,7 +23,7 @@ class Logger():
         self.train_iter = 1
         self.val_iter = 1
 
-        run = wandb.init(project=project_name, entity="text-deep-fake")
+        run = wandb.init(project=project_name, entity=entity)
         if run is not None:
             self.wandb = run
         else:

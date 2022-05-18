@@ -54,7 +54,7 @@ class Trainer:
 
             res = self.model(content_embeds, style_embeds)
             content_loss = self.content_loss(res, label_batch)
-            style_loss = self.style_loss(res, style_batch, feature_layers=[], style_layers=[1, 2])
+            style_loss = self.style_loss(style_batch, res)
             loss = self.coef_content_loss * content_loss +  self.coef_style_loss * style_loss
             
             loss.backward()
@@ -76,12 +76,12 @@ class Trainer:
             content_embeds = self.content_embedder(content_batch)
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, label_batch)
-            perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
+            content_loss = self.content_loss(res, content_batch)
+            style_loss = self.style_loss(style_batch, res)
+            loss = self.coef_content_loss * content_loss +  self.coef_style_loss * style_loss
             
             self.logger.log_val(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
+                losses={'ocr_loss': content_loss.item(), 'perceptual_loss': style_loss.item(), 'full_loss': loss.item()},
                 images={'style': style_batch, 'content': content_batch, 'result': res}
             )
 

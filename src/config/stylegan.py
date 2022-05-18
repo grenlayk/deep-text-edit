@@ -9,6 +9,7 @@ from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan import Trainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
+from src.losses.gram import VGGGramLoss
 from torch.utils.data import DataLoader
 
 class Config:
@@ -42,7 +43,7 @@ class Config:
         content_coef = 0.2
         style_coef = 0.8
         style_loss = VGGPerceptualLoss()
-        content_loss = VGGPerceptualLoss()
+        content_loss = VGGGramLoss()
 
         project_name = 'stylegan_olya_tests'
         
