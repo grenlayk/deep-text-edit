@@ -15,6 +15,6 @@ class ComposeLoss(torch.nn.Module):
         return {
             'total': sum(result * coef for result, coef in zip(results, self._coefs)),
             **{
-                type(loss).__name__: result for loss, result in zip(self._losses, results)
+                type(loss).__name__: result * coef for loss, coef, result in zip(self._losses, self._coefs, results)
             }
         }
