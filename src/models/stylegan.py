@@ -251,7 +251,7 @@ class StyleBased_Generator(nn.Module):
     def forward(self, 
                 content_embed, 
                 style_embed, 
-                step = 6,       # Step means how many layers (count from 4 x 4) are used to train
+                step = 5,       # Step means how many layers (count from 4 x 4) are used to train
                 alpha=-1):      # Alpha is the parameter of smooth conversion of resolution):
 
         latent_w = self.fcs(style_embed)
