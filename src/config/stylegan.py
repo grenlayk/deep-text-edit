@@ -11,6 +11,7 @@ from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
 from src.losses.gram import VGGGramLoss
 from torch.utils.data import DataLoader
+from torchvision import models
 
 class Config:
     def __init__(self):
@@ -32,24 +33,30 @@ class Config:
 
         total_epochs = 500
         model = StyleBased_Generator(dim_latent=512).to(device)
+        model_ft = models.resnet18(pretrained=True)
+        style_embedder = torch.nn.Sequential(*list(model_ft.children())[:-1]).to(device)
+        model_cnt = models.resnet18(pretrained=True)
+        content_embedder = torch.nn.Sequential(*list(model_cnt.children())[:-2]).to(device)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
+        params = list(model.parameters()) + list(style_embedder.parameters()) + list(content_embedder.parameters())
+
+        optimizer = torch.optim.Adam(params, lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=list(range(0, total_epochs, 20)),
             gamma=0.2
         )
 
-        content_coef = 0.2
+        content_coef = 0.8
         style_coef = 0.8
-        style_loss = VGGPerceptualLoss()
-        content_loss = VGGGramLoss()
+        style_loss = VGGPerceptualLoss().to(device)
+        content_loss = VGGGramLoss().to(device)
 
         project_name = 'stylegan_olya_tests'
         
         storage = Storage(f'checkpoints/{project_name}')
-        logger = Logger(image_freq=100, project_name=project_name)
-
+        logger = Logger(image_freq=100, project_name=project_name, entity="grenlayk")
+        
         self.trainer = Trainer(
             model,
             optimizer,
@@ -63,7 +70,9 @@ class Config:
             content_coef,
             style_coef,
             content_loss,
-            style_loss
+            style_loss,
+            style_embedder,
+            content_embedder
         )
 
     def run(self):

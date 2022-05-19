@@ -2,7 +2,7 @@ import torch
 import torchvision
 
 class VGGGramLoss(torch.nn.Module):
-    def __init__(self, resize=True):
+    def __init__(self, resize=False):
         super(VGGGramLoss, self).__init__()
         blocks = []
         blocks.append(torchvision.models.vgg16(pretrained=True).features[:4].eval())
@@ -18,7 +18,7 @@ class VGGGramLoss(torch.nn.Module):
         self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
         self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
 
-    def forward(self, input, target, feature_layers=[], style_layers=[1, 2]):
+    def forward(self, input, target, feature_layers=[], style_layers=[2, 3]):
         if input.shape[1] != 3:
             input = input.repeat(1, 3, 1, 1)
             target = target.repeat(1, 3, 1, 1)
@@ -38,7 +38,8 @@ class VGGGramLoss(torch.nn.Module):
             if i in style_layers:
                 act_x = x.reshape(x.shape[0], x.shape[1], -1)
                 act_y = y.reshape(y.shape[0], y.shape[1], -1)
-                gram_x = act_x @ act_x.permute(0, 2, 1)
-                gram_y = act_y @ act_y.permute(0, 2, 1)
+                b, c, h, w = x.shape
+                gram_x = act_x @ act_x.permute(0, 2, 1) / (h * w)
+                gram_y = act_y @ act_y.permute(0, 2, 1) / (h * w)
                 loss += torch.nn.functional.l1_loss(gram_x, gram_y)
         return loss

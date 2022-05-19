@@ -21,7 +21,9 @@ class Trainer:
                  coef_content_loss: float,
                  coef_style_loss: float,
                  content_loss: nn.Module,
-                 style_loss: nn.Module):
+                 style_loss: nn.Module,
+                 style_embedder: nn.Module, 
+                 content_embedder: nn.Module):
         
         self.device = device
         self.model = model
@@ -36,14 +38,15 @@ class Trainer:
         self.style_loss = style_loss.to(device)
         self.coef_content_loss = coef_content_loss
         self.coef_style_loss = coef_style_loss
-        model_ft = models.resnet18(pretrained=True)
-        self.style_embedder   = torch.nn.Sequential(*list(model_ft.children())[:-1]).to(device)
-        self.content_embedder = torch.nn.Sequential(*list(model_ft.children())[:-2]).to(device)
+        self.style_embedder   = style_embedder
+        self.content_embedder = content_embedder
 
     
     def train(self):
         logger.info('Start training')
         self.model.train()
+        self.style_embedder.train()
+        self.content_embedder.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
             style_batch = style_batch.to(self.device)
@@ -53,7 +56,7 @@ class Trainer:
             self.optimizer.zero_grad()
 
             res = self.model(content_embeds, style_embeds)
-            content_loss = self.content_loss(res, label_batch)
+            content_loss = self.content_loss(res, content_batch)
             style_loss = self.style_loss(style_batch, res)
             loss = self.coef_content_loss * content_loss +  self.coef_style_loss * style_loss
             
@@ -68,6 +71,8 @@ class Trainer:
 
     def validate(self, epoch):
         self.model.eval()
+        self.style_embedder.eval()
+        self.content_embedder.eval()
 
         for style_batch, content_batch, label_batch in self.val_dataloader:
             style_batch = style_batch.to(self.device)

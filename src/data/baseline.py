@@ -14,7 +14,7 @@ from pathlib import Path
 def draw_one(text: str):
     text_len = len(text)
     font_size = 50
-    w = max(128, text_len * font_size * 0.64)
+    w = max(128, int(text_len * font_size * 0.64))
     h = 64
 
     img = Image.new('RGB', (w, h), color = (255, 255, 255))
