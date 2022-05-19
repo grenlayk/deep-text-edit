@@ -26,7 +26,7 @@ class BaselineDataset(Dataset):
     def __init__(self, style_dir: Path):
         '''
             root_dir - directory with 2 subdirectories - root_dir/style, root_dir/content
-            Images in root_dir/content(hard-coded): 64x256
+            Images in root_dir/content(hard-coded): 256 x 64
             Images in root_dir/style: arbitrary - need to be resized to 256x256?
         '''
         self.style_dir = style_dir
@@ -46,7 +46,7 @@ class BaselineDataset(Dataset):
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-            img_style = cv2.resize(img_style, (64, 64))
+            img_style = cv2.resize(img_style, (256, 64)) #
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
@@ -58,11 +58,10 @@ class BaselineDataset(Dataset):
                 content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
-            img_content = cv2.resize(img_content, (64, 64))
+            img_content = cv2.resize(img_content, (256, 64)) #
 
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
-
 
             return img_style, img_content, content
 

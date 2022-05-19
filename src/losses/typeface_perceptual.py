@@ -2,6 +2,7 @@ import torch
 import torchvision
 from src.disk import disk 
 from pathlib import Path
+
 class TypefacePerceptualLoss(torch.nn.Module):
     def __init__(self, model_remote_path = 'checkpoints/typeface/2/model', model_local_path = 'typeface', resize=True):
         super(TypefacePerceptualLoss, self).__init__()
