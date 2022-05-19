@@ -5,10 +5,11 @@ from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
-from torchvision import models
 class Trainer:
     def __init__(self,
                  model: nn.Module,
+                 style_embedder: nn.Module,
+                 content_embedder:nn.Module,
                  optimizer: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler,
                  train_dataloader: DataLoader,
@@ -34,9 +35,8 @@ class Trainer:
         self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
-        model_ft = models.resnet18(pretrained=True)
-        self.style_embedder   = torch.nn.Sequential(*list(model_ft.children())[:-1]).to(device)
-        self.content_embedder = torch.nn.Sequential(*list(model_ft.children())[:-2]).to(device)
+        self.style_embedder   = style_embedder
+        self.content_embedder = content_embedder
 
     
     def train(self):

@@ -9,6 +9,7 @@ from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan import Trainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
+from torchvision import models
 from torch.utils.data import DataLoader
 
 class Config:
@@ -31,12 +32,17 @@ class Config:
         model = StyleBased_Generator(dim_latent=512)
         #model.load_state_dict(torch.load('/content/text-deep-fake/checkpoints/stylegan_one_style_working/14/model'))
         model.to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
+        model_ft_style = models.resnet18(pretrained=True)
+        style_embedder   = torch.nn.Sequential(*list(model_ft_style.children())[:-1]).to(device)
+        model_ft_content = models.resnet18(pretrained=True)
+        content_embedder = torch.nn.Sequential(*list(model_ft_content.children())[:-2]).to(device)
+        optimizer = torch.optim.Adam([model.parameters(), style_embedder, content_embedder] lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=list(range(0, total_epochs, 20)),
             gamma=0.2
         )
+
 
         ocr_coef = 0.2
         perceptual_coef = 0.8
@@ -47,6 +53,8 @@ class Config:
 
         self.trainer = Trainer(
             model,
+            style_embedder,
+            content_embedder,
             optimizer,
             scheduler,
             train_dataloader,
