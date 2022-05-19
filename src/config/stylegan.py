@@ -36,7 +36,7 @@ class Config:
         style_embedder   = torch.nn.Sequential(*list(model_ft_style.children())[:-1]).to(device)
         model_ft_content = models.resnet18(pretrained=True)
         content_embedder = torch.nn.Sequential(*list(model_ft_content.children())[:-2]).to(device)
-        optimizer = torch.optim.Adam([model.parameters(), style_embedder, content_embedder] lr=1e-3, weight_decay=1e-6)
+        optimizer = torch.optim.Adam([model.parameters(), style_embedder, content_embedder], lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=list(range(0, total_epochs, 20)),
