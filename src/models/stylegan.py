@@ -1,4 +1,4 @@
-# Import necessary modules
+# source: https://github.com/SiskonEmilia/StyleGAN-PyTorch/blob/master/model.py
 import torch
 import torch.nn as nn
 import math
@@ -226,8 +226,9 @@ class StyleBased_Generator(nn.Module):
         super().__init__()
         # Waiting to adjust the size
         self.fcs    = Intermediate_Generator(dim_latent)
+        self.first_conv = nn.Identity()
         self.convs  = nn.ModuleList([
-            Early_StyleConv_Block(512, dim_latent),
+            nn.Identity(),# Early_StyleConv_Block(512, dim_latent),
             StyleConv_Block(512, 512, dim_latent),
             StyleConv_Block(512, 512, dim_latent),
             StyleConv_Block(512, 512, dim_latent),
@@ -257,15 +258,17 @@ class StyleBased_Generator(nn.Module):
         latent_w = self.fcs(style_embed)
         result = 0
 
+        first_content = self.first_conv(content_embed)
+
         for i, conv in enumerate(self.convs):
                 
             # Not the first layer, need to upsample
             if i > 0 and step > 0:
                 result_upsample = nn.functional.interpolate(result, scale_factor=2, mode='bilinear',
-                                                  align_corners=False)
+                                                            align_corners=False)
                 result = conv(result_upsample, latent_w)
             else:
-                result = conv(content_embed, latent_w)
+                result = first_content
             
             # Final layer, output rgb image
             if i == step:
