@@ -5,7 +5,9 @@ from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
-class Trainer:
+
+
+class StyleGanTrainer:
     def __init__(self,
                  model: nn.Module,
                  style_embedder: nn.Module,
@@ -20,7 +22,8 @@ class Trainer:
                  device: str,
                  coef_ocr_loss: float,
                  coef_perceptual_loss: float,
-                 perceptual_loss: nn.Module):
+                 perceptual_loss: nn.Module,
+                 ocr_loss:nn.Module):
         
         self.device = device
         self.model = model
@@ -31,7 +34,7 @@ class Trainer:
         self.total_epochs = total_epochs
         self.logger = logger
         self.storage = storage
-        self.ocr_loss = ocr.OCRLoss().to(device)
+        self.ocr_loss = ocr_loss.to(device)
         self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
