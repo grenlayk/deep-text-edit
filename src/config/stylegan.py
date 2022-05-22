@@ -6,9 +6,10 @@ from src.logger.simple import Logger
 from src.data.baseline import  BaselineDataset
 from src.utils.download import download_data, unarchieve 
 from src.models.stylegan import StyleBased_Generator
-from src.training.stylegan import Trainer
+from src.training.stylegan import StyleGanTrainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
+from src.losses.ocr import OCRLoss
 from torchvision import models
 from torch.utils.data import DataLoader
 
@@ -43,7 +44,7 @@ class Config:
             gamma=0.2
         )
 
-
+        
         ocr_coef = 0.2
         perceptual_coef = 0.8
 
@@ -51,7 +52,7 @@ class Config:
 
         logger = Logger(image_freq=100, project_name='StyleGan')
 
-        self.trainer = Trainer(
+        self.trainer = StyleGanTrainer(
             model,
             style_embedder,
             content_embedder,
@@ -65,7 +66,8 @@ class Config:
             device,
             ocr_coef,
             perceptual_coef,
-            VGGPerceptualLoss()
+            VGGPerceptualLoss(),
+            OCRLoss()
         )
 
     def run(self):
