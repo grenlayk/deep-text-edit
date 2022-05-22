@@ -2,7 +2,7 @@ import torch
 import torchvision
 
 class VGGGramLoss(torch.nn.Module):
-    def __init__(self, resize=False):
+    def __init__(self, resize=False, feature_layers=[], style_layers=[2, 3]):
         super(VGGGramLoss, self).__init__()
         blocks = []
         blocks.append(torchvision.models.vgg16(pretrained=True).features[:4].eval())
@@ -17,8 +17,10 @@ class VGGGramLoss(torch.nn.Module):
         self.resize = resize
         self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
         self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
+        self.style_layers = style_layers
+        self.feature_layers = feature_layers
 
-    def forward(self, input, target, feature_layers=[], style_layers=[2, 3]):
+    def forward(self, input, target):
         if input.shape[1] != 3:
             input = input.repeat(1, 3, 1, 1)
             target = target.repeat(1, 3, 1, 1)
@@ -33,9 +35,9 @@ class VGGGramLoss(torch.nn.Module):
         for i, block in enumerate(self.blocks):
             x = block(x)
             y = block(y)
-            if i in feature_layers:
+            if i in self.feature_layers:
                 loss += torch.nn.functional.l1_loss(x, y)
-            if i in style_layers:
+            if i in self.style_layers:
                 act_x = x.reshape(x.shape[0], x.shape[1], -1)
                 act_y = y.reshape(y.shape[0], y.shape[1], -1)
                 b, c, h, w = x.shape
