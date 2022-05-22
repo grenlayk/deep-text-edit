@@ -39,7 +39,6 @@ class Config:
         content_embedder = torch.nn.Sequential(*list(model_cnt.children())[:-2]).to(device)
 
         params = list(model.parameters()) + list(style_embedder.parameters()) + list(content_embedder.parameters())
-
         optimizer = torch.optim.Adam(params, lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
@@ -56,7 +55,7 @@ class Config:
         
         storage = Storage(f'checkpoints/{project_name}')
         logger = Logger(image_freq=100, project_name=project_name, entity="grenlayk")
-        
+
         self.trainer = Trainer(
             model,
             optimizer,

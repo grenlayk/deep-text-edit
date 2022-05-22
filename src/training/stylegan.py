@@ -5,7 +5,6 @@ from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
-from torchvision import models
 
 class Trainer:
     def __init__(self,

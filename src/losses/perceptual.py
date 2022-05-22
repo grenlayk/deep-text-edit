@@ -2,7 +2,7 @@ import torch
 import torchvision
 
 class VGGPerceptualLoss(torch.nn.Module):
-    def __init__(self, resize=True):
+    def __init__(self, resize=False):
         super(VGGPerceptualLoss, self).__init__()
         blocks = []
         blocks.append(torchvision.models.vgg16(pretrained=True).features[:4].eval())

@@ -8,7 +8,7 @@ import wandb
 
 
 class Logger():
-    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None, entity="text-deep-fake"):
+    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None, entity="text-deep-fake-2"):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
         self.loss_buff: Dict[str, dict] = defaultdict()
