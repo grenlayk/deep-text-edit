@@ -11,7 +11,7 @@ class StyleGanTrainer:
     def __init__(self,
                  model: nn.Module,
                  style_embedder: nn.Module,
-                 content_embedder:nn.Module,
+                 content_embedder: nn.Module,
                  optimizer: optim.Optimizer,
                  scheduler: optim.lr_scheduler._LRScheduler,
                  train_dataloader: DataLoader,
@@ -45,6 +45,8 @@ class StyleGanTrainer:
     def train(self):
         logger.info('Start training')
         self.model.train()
+        self.content_embedder.train()
+        self.style_embedder.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
             style_batch = style_batch.to(self.device)
@@ -68,7 +70,9 @@ class StyleGanTrainer:
 
     def validate(self, epoch):
         self.model.eval()
-
+        self.content_embedder.eval()
+        self.style_embedder.eval()
+        
         for style_batch, content_batch, label_batch in self.val_dataloader:
             style_batch = style_batch.to(self.device)
             content_batch = content_batch.to(self.device)
