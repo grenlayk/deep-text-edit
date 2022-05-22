@@ -11,7 +11,27 @@ from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
 from src.losses.ocr import OCRLoss
 from torchvision import models
+from torchvision.models.resnet import BasicBlock
 from torch.utils.data import DataLoader
+
+class ContentResnet(models.ResNet):
+    def _forward_impl(self, x):
+        # See note [TorchScript super()]
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        #x = self.avgpool(x)
+        #x = torch.flatten(x, 1)
+        #x = self.fc(x)
+
+        return x
 
 class Config:
     def __init__(self):
@@ -33,11 +53,12 @@ class Config:
         model = StyleBased_Generator(dim_latent=512)
         #model.load_state_dict(torch.load('/content/text-deep-fake/checkpoints/stylegan_one_style_working/14/model'))
         model.to(device)
-        model_ft_style = models.resnet18(pretrained=True)
-        style_embedder   = torch.nn.Sequential(*list(model_ft_style.children())[:-1]).to(device)
-        model_ft_content = models.resnet18(pretrained=True)
-        content_embedder = torch.nn.Sequential(*list(model_ft_content.children())[:-2]).to(device)
-        optimizer = torch.optim.Adam([model.parameters(), style_embedder.parameters(), content_embedder.parameters()], lr=1e-3, weight_decay=1e-6)
+        style_embedder = models.resnet18()
+        style_embedder.fc = torch.nn.Identity()
+        style_embedder = style_embedder.to(device)
+        content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
+        optimizer = torch.optim.AdamW(list(model.parameters()) + list(style_embedder.parameters()) + list(content_embedder.parameters()), 
+                                      lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=list(range(0, total_epochs, 20)),
