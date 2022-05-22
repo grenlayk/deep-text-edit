@@ -70,6 +70,3 @@ class Config:
 
     def run(self):
         self.trainer.run()
-
-
-config = Config().run()
