@@ -1,49 +1,45 @@
 from pathlib import Path
+from random import shuffle
+from typing import Optional, Tuple, Union
 
 import cv2
-import numpy as np
 import torch
-import torchvision
+import torchvision.transforms.functional as TF
 from loguru import logger
 from torch.utils.data import Dataset
+from torchvision import transforms as T
 
 
-class CustomDataset(Dataset):
-    def __init__(self, root_dir: Path):
+class ColorDataset(Dataset):
+    def __init__(self, root_dir: Path, crop_size: Optional[Union[Tuple, int]] = None, cut: float = 1.0):
         self.root_dir = root_dir
         self.files = list(root_dir.iterdir())
+        self.files = self.files[:int(cut * len(self.files))]
+
+        transforms = [
+            T.Lambda(lambda img: cv2.cvtColor(img, cv2.COLOR_BGR2RGB)),
+            T.ToTensor()
+        ]
+
+        if crop_size is not None:
+            transforms.append(T.RandomCrop(crop_size, pad_if_needed=True))
+
+        self.transform = T.Compose(transforms)
+
         logger.info(f'File[0]: {self.files[0]}, Total Files: {len(self.files)}')
 
     def __len__(self):
         return len(self.files)
 
+    @logger.catch
     def __getitem__(self, index: int):
         try:
-            rgb_img = cv2.imread(str(self.files[index]))
-            if rgb_img is None:
-                raise Exception
-            rgb_img = rgb_img.astype(np.float32)
-            rgb_img /= 255.0
+            rgb_img = self.transform(cv2.imread(str(self.files[index])))
 
-            rgb_res_img = cv2.resize(rgb_img, (300, 300))
-            l_img = cv2.cvtColor(rgb_res_img, cv2.COLOR_BGR2Lab)[:, :, 0]
+            bw_img = TF.adjust_saturation(rgb_img, 0)
 
-            l_img = l_img / 50.0 - 1.0
-            l_img = torchvision.transforms.ToTensor()(l_img)
-            l_img = l_img.expand(3, -1, -1)
-
-            rgb_enc_img = cv2.resize(rgb_img, (224, 224))
-            lab_encoder_img = cv2.cvtColor(rgb_enc_img, cv2.COLOR_BGR2Lab)
-
-            a_encoder_img = lab_encoder_img[:, :, 1] / 128.0
-            b_encoder_img = lab_encoder_img[:, :, 2] / 128.0
-            a_encoder_img = torch.stack([torch.Tensor(a_encoder_img)])
-            b_encoder_img = torch.stack([torch.Tensor(b_encoder_img)])
-            ab_encoder_img = torch.cat([a_encoder_img, b_encoder_img], dim=0)
-
-            return l_img, ab_encoder_img
+            return bw_img, rgb_img
 
         except Exception as e:
             logger.error(f'Exception at {self.files[index]}, {e}')
             return torch.tensor(-1), torch.tensor(-1)
-        

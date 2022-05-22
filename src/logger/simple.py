@@ -8,7 +8,7 @@ import wandb
 
 
 class Logger():
-    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None):
+    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None, entity:str = "text-deep-fake-2"):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
         self.loss_buff: Dict[str, dict] = defaultdict()
@@ -23,7 +23,7 @@ class Logger():
         self.train_iter = 1
         self.val_iter = 1
 
-        run = wandb.init(project=project_name, entity="text-deep-fake")
+        run = wandb.init(project=project_name, entity=entity)
         if run is not None:
             self.wandb = run
         else:
@@ -39,7 +39,7 @@ class Logger():
             for loss_name, loss_value in losses.items():
                 self.loss_buff['values'][loss_name] += [loss_value]
                 self.loss_buff['sumlast'][loss_name] += loss_value
-                self.wandb.log({f"{loss_name} loss": loss_value})
+                self.wandb.log({f"train/{loss_name} loss": loss_value}, commit=False)
 
         if self.train_iter % self.print_freq == 0:
             self.end_time = time.time()
@@ -54,9 +54,10 @@ class Logger():
             self.loss_buff['sumlast'].clear()
 
         if self.train_iter % self.image_freq == 0 and images:
-            for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})
+            self.wandb.log({f'train/{image_name}': wandb.Image(image)
+                           for image_name, image in images.items()}, commit=False)
 
+        self.wandb.log({}, commit=True)
         self.train_iter += 1
 
     def log_val(self,
@@ -97,9 +98,8 @@ class Logger():
             self.metrics_buff['sumlast'].clear()
             logger.info('------------')
 
-        if images is not None and self.val_iter % self.image_freq == 0:
-            for image_name, image in images.items():
-                self.wandb.log({f'{image_name}': wandb.Image(image)})
+        if images is not None:
+            self.wandb.log({f'val/{image_name}': wandb.Image(image) for image_name, image in images.items()})
 
         self.val_iter += 1
 
