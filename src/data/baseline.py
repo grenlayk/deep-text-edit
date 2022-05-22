@@ -12,13 +12,6 @@ from src.disk import  disk
 from pathlib import Path
 
 def draw_one(text: str):
-<<<<<<< HEAD
-    img = Image.new('RGB', (256, 64), color = (255, 255, 255))
-    fnt = ImageFont.truetype('./data/VerilySerifMono.otf', 50)
-    d = ImageDraw.Draw(img)
-    text_width, text_height = d.textsize(text, fnt)
-    position = ((256 - text_width) / 2, (64 - text_height) / 2)
-=======
     text_len = len(text)
     font_size = 50
     w = max(128, int(text_len * font_size * 0.64))
@@ -29,7 +22,6 @@ def draw_one(text: str):
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
     position = ((w - text_width) / 2, (h - text_height) / 2)
->>>>>>> main
 
     d.text(position, text, font=fnt, fill = 0)
     return img        
@@ -60,11 +52,7 @@ class BaselineDataset(Dataset):
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-<<<<<<< HEAD
-            img_style = cv2.resize(img_style, (64, 64))
-=======
             img_style = cv2.resize(img_style, img_size) 
->>>>>>> main
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
@@ -76,18 +64,10 @@ class BaselineDataset(Dataset):
                 content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
-<<<<<<< HEAD
-            img_content = cv2.resize(img_content, (64, 64))
-
-            img_content = img_content * 1.0 / 255
-            img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
-
-=======
             img_content = cv2.resize(img_content, img_size) 
 
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
->>>>>>> main
 
             return img_style, img_content, content
 
