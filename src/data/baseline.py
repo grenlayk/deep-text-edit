@@ -41,9 +41,9 @@ class BaselineDataset(Dataset):
 
     def __getitem__(self, index):
         try:
-            # if self.style_files[index] == self.style_dir / 'words.json':
-            #     index = (index + 1) % len(self.style_files)
-            img_style = cv2.imread(str(self.style_files[0]), cv2.IMREAD_COLOR)
+            if self.style_files[index] == self.style_dir / 'words.json':
+                index = (index + 1) % len(self.style_files)
+            img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
             img_style = cv2.resize(img_style, (64, 64))
