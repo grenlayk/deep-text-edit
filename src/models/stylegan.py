@@ -184,14 +184,14 @@ class StyleConv_Block(nn.Module):
     def forward(self, previous_result, latent_w):
         # Conv 3*3
         result = self.conv1(previous_result)
-        noise1 = torch.normal(mean=0,std=torch.ones(result.shape)).cuda()
-        noise2 = torch.normal(mean=0,std=torch.ones(result.shape)).cuda()
+        #noise1 = torch.normal(mean=0,std=torch.ones(result.shape)).cuda()
+        #noise2 = torch.normal(mean=0,std=torch.ones(result.shape)).cuda()
         # Conv & Norm
-        result = result + self.noise1(noise1)
+        #result = result + self.noise1(noise1)
         result = self.adain(result, self.style1(latent_w))
         result = self.lrelu(result)
         result = self.conv2(result)
-        result = result + self.noise2(noise2)
+        #result = result + self.noise2(noise2)
         result = self.adain(result, self.style2(latent_w))
         result = self.lrelu(result)
         
