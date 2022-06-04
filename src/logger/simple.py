@@ -3,12 +3,21 @@ from collections import defaultdict
 
 from loguru import logger
 from torch import Tensor
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 import wandb
 
 
 class Logger():
-    def __init__(self, print_freq: int = 100, image_freq: int = 1000, wb_path: str = None, project_name: str = None, entity:str = "text-deep-fake-2"):
+    def __init__(
+            self,
+            print_freq: int = 100,
+            image_freq: int = 1000,
+            wb_path: str = None,
+            project_name: str = None,
+            entity: str = "text-deep-fake2",
+            tags: Sequence = None,
+            group: str = None,
+            config: Dict = None):
         self.print_freq: int = print_freq
         self.image_freq: int = image_freq
         self.loss_buff: Dict[str, dict] = defaultdict()
@@ -23,7 +32,7 @@ class Logger():
         self.train_iter = 1
         self.val_iter = 1
 
-        run = wandb.init(project=project_name, entity=entity)
+        run = wandb.init(project=project_name, entity=entity, tags=tags, group=group, config=config)
         if run is not None:
             self.wandb = run
         else:
