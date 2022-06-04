@@ -1,7 +1,9 @@
+import cv2
+import numpy as np
 import torch
+from src.data.baseline import draw_one
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
@@ -23,8 +25,8 @@ class StyleGanTrainer:
                  coef_ocr_loss: float,
                  coef_perceptual_loss: float,
                  perceptual_loss: nn.Module,
-                 ocr_loss:nn.Module):
-        
+                 ocr_loss: nn.Module):
+
         self.device = device
         self.model = model
         self.optimizer = optimizer
@@ -38,10 +40,9 @@ class StyleGanTrainer:
         self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
-        self.style_embedder   = style_embedder
+        self.style_embedder = style_embedder
         self.content_embedder = content_embedder
 
-    
     def train(self):
         logger.info('Start training')
         self.model.train()
@@ -49,6 +50,9 @@ class StyleGanTrainer:
         self.style_embedder.train()
 
         for style_batch, content_batch, label_batch in self.train_dataloader:
+            if max(len(label) for label in label_batch) > 25:
+                continue
+
             style_batch = style_batch.to(self.device)
             content_batch = content_batch.to(self.device)
             style_embeds = self.style_embedder(style_batch)
@@ -56,23 +60,38 @@ class StyleGanTrainer:
             self.optimizer.zero_grad()
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, label_batch)
+            ocr_loss, recognized = self.ocr_loss(res, label_batch, return_recognized=True)
+            words = []
+            for word in recognized:
+                words.append(
+                    torch.from_numpy(
+                        np.transpose(
+                            (cv2.resize(np.array(draw_one(word)), (128, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
+                        )
+                    ).float()
+                )
+            word_images = torch.stack(words)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
+            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss
             loss.backward()
             self.optimizer.step()
 
             self.logger.log_train(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
-                images={'style': style_batch, 'content': content_batch, 'result': res}
-            )
-
+                losses={
+                    'ocr_loss': ocr_loss.item(),
+                    'perceptual_loss': perceptual_loss.item(),
+                    'full_loss': loss.item()},
+                images={
+                    'style': style_batch,
+                    'content': content_batch,
+                    'result': res,
+                    'recognized': word_images})
 
     def validate(self, epoch):
         self.model.eval()
         self.content_embedder.eval()
         self.style_embedder.eval()
-        
+
         for style_batch, content_batch, label_batch in self.val_dataloader:
             style_batch = style_batch.to(self.device)
             content_batch = content_batch.to(self.device)
@@ -82,12 +101,17 @@ class StyleGanTrainer:
             res = self.model(content_embeds, style_embeds)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
-            
+            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss
+
             self.logger.log_val(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
-                images={'style': style_batch, 'content': content_batch, 'result': res}
-            )
+                losses={
+                    'ocr_loss': ocr_loss.item(),
+                    'perceptual_loss': perceptual_loss.item(),
+                    'full_loss': loss.item()},
+                images={
+                    'style': style_batch,
+                    'content': content_batch,
+                    'result': res})
 
         avg_losses, _ = self.logger.end_val()
         self.storage.save(
@@ -96,12 +120,11 @@ class StyleGanTrainer:
             avg_losses['full_loss']
         )
 
-
     def run(self):
         for epoch in range(self.total_epochs):
             self.train()
             with torch.no_grad():
-              if (epoch + 3) % 10 == 0:
-                self.validate(epoch)
+                if (epoch + 3) % 10 == 0:
+                    self.validate(epoch)
             if self.scheduler is not None:
                 self.scheduler.step()
