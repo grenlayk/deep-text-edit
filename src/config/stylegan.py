@@ -50,7 +50,7 @@ class Config:
         total_epochs = 500
 
         model = StyleBased_Generator(dim_latent=512)
-        model.load_state_dict(torch.load('models/Stylegan_content/model'))
+        model.load_state_dict(torch.load('models/Stylegan_content_192x64/model'))
         model.to(device)
 
         style_embedder = models.resnet18()
@@ -59,7 +59,7 @@ class Config:
         style_embedder.load_state_dict(torch.load('models/Stylegan_content/style_embedder'))
 
         content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
-        content_embedder.load_state_dict(torch.load('models/Stylegan_content/content_embedder'))
+        content_embedder.load_state_dict(torch.load('models/Stylegan_content_192x64/content_embedder'))
 
         optimizer = torch.optim.AdamW(
             list(model.parameters()) +
@@ -68,16 +68,15 @@ class Config:
             lr=1e-3,
             weight_decay=1e-6
         )
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(
             optimizer,
-            milestones=list(range(0, total_epochs, 20)),
-            gamma=0.7
+            gamma=0.8
         )
 
         ocr_coef = 0.08
         perceptual_coef = 0.92
 
-        storage = Storage('checkpoints/stylegan(pretrained_on_content)_gram_ocr')
+        storage = Storage('checkpoints/stylegan(pretrained_on_content)_gram_ocr_192x64')
 
         logger = Logger(
             image_freq=100,
@@ -86,7 +85,8 @@ class Config:
             config={
                 'ocr_coef': ocr_coef,
                 'perceptual_coef': perceptual_coef,
-                'style_layers': [2, 3]
+                'style_layers': [2, 3],
+                'img_size': (192, 64)
             }
         )
 

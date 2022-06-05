@@ -66,7 +66,7 @@ class StyleGanTrainer:
                 words.append(
                     torch.from_numpy(
                         np.transpose(
-                            (cv2.resize(np.array(draw_one(word)), (128, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
+                            (cv2.resize(np.array(draw_one(word)), (192, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
                         )
                     ).float()
                 )
@@ -93,6 +93,8 @@ class StyleGanTrainer:
         self.style_embedder.eval()
 
         for style_batch, content_batch, label_batch in self.val_dataloader:
+            if max(len(label) for label in label_batch) > 25:
+                continue
             style_batch = style_batch.to(self.device)
             content_batch = content_batch.to(self.device)
             style_embeds = self.style_embedder(style_batch)
@@ -114,17 +116,18 @@ class StyleGanTrainer:
                     'result': res})
 
         avg_losses, _ = self.logger.end_val()
-        self.storage.save(
-            epoch,
-            {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
-            avg_losses['full_loss']
-        )
+        self.storage.save(epoch,
+                          {'model': self.model,
+                           'content_embedder': self.content_embedder,
+                           'style_embedder': self.style_embedder,
+                           'optimizer': self.optimizer,
+                           'scheduler': self.scheduler},
+                          avg_losses['full_loss'])
 
     def run(self):
         for epoch in range(self.total_epochs):
             self.train()
             with torch.no_grad():
-                if (epoch + 3) % 10 == 0:
-                    self.validate(epoch)
+                self.validate(epoch)
             if self.scheduler is not None:
                 self.scheduler.step()
