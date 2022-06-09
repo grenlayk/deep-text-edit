@@ -49,17 +49,21 @@ class Config:
 
         total_epochs = 500
 
+        weights_folder = 'checkpoints/stylegan_l1_200x64/187'
+        if not Path(weights_folder).exists():
+            disk.download(weights_folder, weights_folder)
+        
         model = StyleBased_Generator(dim_latent=512)
-        model.load_state_dict(torch.load('models/Stylegan_content_192x64/model'))
+        model.load_state_dict(torch.load(f'{weights_folder}/model'))
         model.to(device)
 
         style_embedder = models.resnet18()
         style_embedder.fc = torch.nn.Identity()
         style_embedder = style_embedder.to(device)
-        style_embedder.load_state_dict(torch.load('models/Stylegan_content/style_embedder'))
+        style_embedder.load_state_dict(torch.load(f'{weights_folder}/style_embedder'))
 
         content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
-        content_embedder.load_state_dict(torch.load('models/Stylegan_content_192x64/content_embedder'))
+        content_embedder.load_state_dict(torch.load(f'{weights_folder}/content_embedder'))
 
         optimizer = torch.optim.AdamW(
             list(model.parameters()) +
@@ -87,6 +91,8 @@ class Config:
             config={
                 'ocr_coef': ocr_coef,
                 'perceptual_coef': perceptual_coef,
+                'cycle_coef': cycle_coef,
+                'recon_coef': recon_coef,
                 'style_layers': [2, 3],
                 'img_size': (192, 64)
             }

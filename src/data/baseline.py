@@ -82,6 +82,5 @@ class BaselineDataset(Dataset):
             return img_style, img_content, content, img_content_style
 
         except Exception as e:
-            raise e
             logger.error(f'Exception at {self.style_files[index]}, {e}')
-            return torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), 'Error'
+            raise e
