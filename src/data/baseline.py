@@ -8,23 +8,24 @@ import string
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 from torch.utils.data import Dataset
-from src.disk import  disk
+from src.disk import disk
 from pathlib import Path
+
 
 def draw_one(text: str):
     text_len = len(text)
     font_size = 50
-    w = max(128, int(text_len * font_size * 0.64))
+    w = max(192, int(text_len * font_size * 0.64))
     h = 64
 
-    img = Image.new('RGB', (w, h), color = (255, 255, 255))
+    img = Image.new('RGB', (w, h), color=(255, 255, 255))
     fnt = ImageFont.truetype('./data/VerilySerifMono.otf', font_size)
     d = ImageDraw.Draw(img)
     text_width, text_height = d.textsize(text, fnt)
     position = ((w - text_width) / 2, (h - text_height) / 2)
 
-    d.text(position, text, font=fnt, fill = 0)
-    return img        
+    d.text(position, text, font=fnt, fill=0)
+    return img
 
 
 class BaselineDataset(Dataset):
@@ -35,9 +36,9 @@ class BaselineDataset(Dataset):
             Images in root_dir/style: arbitrary - need to be resized to 256x256?
         '''
         self.style_dir = style_dir
-        self.style_files = list(self.style_dir.iterdir())
+        self.style_files = list(self.style_dir.glob('*.png'))
         json_path = style_dir / 'words.json'
-        with open(json_path) as json_file:
+        with open(json_path, 'r', encoding='utf-8') as json_file:
             self.words = json.load(json_file)
         logger.info(f'Total Files: {len(self.style_files) }')
 
@@ -46,13 +47,11 @@ class BaselineDataset(Dataset):
 
     def __getitem__(self, index):
         try:
-            img_size = (128, 64)
-            if self.style_files[index] == self.style_dir / 'words.json':
-                index = (index + 1) % len(self.style_files)
+            img_size = (192, 64)
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-            img_style = cv2.resize(img_style, img_size) 
+            img_style = cv2.resize(img_style, img_size)
             img_style = img_style * 1.0 / 255
             img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
@@ -64,13 +63,24 @@ class BaselineDataset(Dataset):
                 content = ''.join([i for i in content if i in allowed_symbols])
             pil_content = draw_one(content)
             img_content = np.array(pil_content)
-            img_content = cv2.resize(img_content, img_size) 
+            img_content = cv2.resize(img_content, img_size)
 
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
-            return img_style, img_content, content
+            content_style = self.words[self.style_files[index].stem]
+            content_style = ''.join([i for i in content_style if i in allowed_symbols])
+            if not content_style:
+                content_style = 'o'
+            pil_content_style = draw_one(content_style)
+            img_content_style = np.array(pil_content_style)
+            img_content_style = cv2.resize(img_content_style, img_size)
+
+            img_content_style = img_content_style * 1.0 / 255
+            img_content_style = torch.from_numpy(np.transpose(img_content_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
+
+            return img_style, img_content, content, img_content_style
 
         except Exception as e:
             logger.error(f'Exception at {self.style_files[index]}, {e}')
-            return torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), torch.tensor(-1), 'Error'
+            raise e

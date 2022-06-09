@@ -1,6 +1,8 @@
+from loguru import logger
 import torch
 from torch import nn
 from torchvision import transforms as T
+import torch.nn.functional as F
 
 from pathlib import Path
 from src.models.STRFL import TRBA, Options
@@ -46,7 +48,7 @@ class OCRLoss(nn.Module):
 
         self.model.train()
 
-    def forward(self, images, labels):
+    def forward(self, images, labels, return_recognized=False):
         batch_size = images.size(0)
         # For max length prediction
         text_for_pred = (
@@ -64,4 +66,20 @@ class OCRLoss(nn.Module):
             preds.view(-1, preds.shape[-1]), target.contiguous().view(-1)
         )
 
+        if return_recognized:
+            preds_size = torch.IntTensor([preds.size(1)] * batch_size).cuda()
+            _, preds_index = preds.max(2)
+            preds_str = self.opt.Converter.decode(preds_index, preds_size)
+            preds_prob = F.softmax(preds, dim=2)
+            preds_max_prob, _ = preds_prob.max(dim=2)
+
+            recognized = []
+
+            for pred, pred_max_prob in zip(preds_str, preds_max_prob):
+                pred_EOS = pred.find("[EOS]")
+                pred = pred[:pred_EOS]  # prune after "end of sentence" token ([s])
+                pred_max_prob = pred_max_prob[:pred_EOS]
+                recognized.append(pred)
+
+            return loss, recognized
         return loss
