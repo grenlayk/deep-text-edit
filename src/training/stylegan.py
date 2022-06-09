@@ -25,7 +25,9 @@ class StyleGanTrainer:
                  coef_ocr_loss: float,
                  coef_perceptual_loss: float,
                  perceptual_loss: nn.Module,
-                 ocr_loss: nn.Module):
+                 ocr_loss: nn.Module,
+                 coef_cycle_loss: float,
+                 coef_reconstruction_loss:float):
 
         self.device = device
         self.model = model
@@ -40,8 +42,11 @@ class StyleGanTrainer:
         self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
+        self.coef_cycle = coef_cycle_loss
+        self.coef_recon = coef_reconstruction_loss
         self.style_embedder = style_embedder
         self.content_embedder = content_embedder
+        self.l1 = torch.nn.L1Loss() 
 
     def train(self):
         logger.info('Start training')
@@ -49,7 +54,7 @@ class StyleGanTrainer:
         self.content_embedder.train()
         self.style_embedder.train()
 
-        for style_batch, content_batch, label_batch in self.train_dataloader:
+        for style_batch, content_batch, label_batch, style_label_batch in self.train_dataloader:
             if max(len(label) for label in label_batch) > 25:
                 continue
 
@@ -71,8 +76,21 @@ class StyleGanTrainer:
                     ).float()
                 )
             word_images = torch.stack(words)
+
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss
+
+            style_label_embedds = self.content_embedder(style_label_batch)
+
+            reconstucted = self.model(style_label_embedds, style_embeds)
+            reconstucted_loss = self.l1(style_batch, reconstucted)
+
+            reconstucted_style_embedds = self.style_embedder(reconstucted)
+            cycle = self.model(style_label_embedds, reconstucted_style_embedds)
+            cycle_loss = self.l1(style_batch, cycle)
+
+            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss \
+                 + self.coef_cycle * cycle_loss + self.coef_recon * reconstucted_loss
+
             loss.backward()
             self.optimizer.step()
 
@@ -80,7 +98,9 @@ class StyleGanTrainer:
                 losses={
                     'ocr_loss': ocr_loss.item(),
                     'perceptual_loss': perceptual_loss.item(),
-                    'full_loss': loss.item()},
+                    'full_loss': loss.item(),
+                    'cycle': cycle_loss.item(),
+                    'reconstruction': reconstucted_loss.item()},
                 images={
                     'style': style_batch,
                     'content': content_batch,

@@ -68,7 +68,8 @@ class BaselineDataset(Dataset):
             img_content = img_content * 1.0 / 255
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
-            return img_style, img_content, content
+            content_style = self.words[self.style_files[index].stem]
+            return img_style, img_content, content, content_style
 
         except Exception as e:
             raise e

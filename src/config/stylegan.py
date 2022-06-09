@@ -74,7 +74,9 @@ class Config:
         )
 
         ocr_coef = 0.08
-        perceptual_coef = 0.92
+        perceptual_coef = 0.5
+        cycle_coef = 0.25
+        recon_coef = 0.25
 
         storage = Storage('checkpoints/stylegan(pretrained_on_content)_gram_ocr_192x64')
 
@@ -105,7 +107,9 @@ class Config:
             ocr_coef,
             perceptual_coef,
             VGGGramLoss(),
-            OCRLoss()
+            OCRLoss(),
+            cycle_coef,
+            recon_coef
         )
 
     def run(self):
