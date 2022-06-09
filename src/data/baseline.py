@@ -69,7 +69,17 @@ class BaselineDataset(Dataset):
             img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
 
             content_style = self.words[self.style_files[index].stem]
-            return img_style, img_content, content, content_style
+            content_style = ''.join([i for i in content_style if i in allowed_symbols])
+            if not content_style:
+                content_style = 'o'
+            pil_content_style = draw_one(content_style)
+            img_content_style = np.array(pil_content_style)
+            img_content_style = cv2.resize(img_content_style, img_size)
+
+            img_content_style = img_content_style * 1.0 / 255
+            img_content_style = torch.from_numpy(np.transpose(img_content_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
+
+            return img_style, img_content, content, img_content_style
 
         except Exception as e:
             raise e

@@ -60,6 +60,7 @@ class StyleGanTrainer:
 
             style_batch = style_batch.to(self.device)
             content_batch = content_batch.to(self.device)
+            style_label_batch = style_label_batch.to(self.device)
             style_embeds = self.style_embedder(style_batch)
             content_embeds = self.content_embedder(content_batch)
             self.optimizer.zero_grad()
