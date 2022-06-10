@@ -3,13 +3,15 @@ from loguru import logger as info_logger
 from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
+from src.losses.vgg import VGGLoss
 from src.data.baseline import BaselineDataset
 from src.utils.download import download_dataset
 from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan import StyleGanTrainer
 from src.storage.simple import Storage
-from src.losses.gram import VGGGramLoss
 from src.losses.STRFL import OCRLoss
+from src.losses.typeface_perceptual import TypefacePerceptualLoss
+from src.losses.compose import ComposeLoss
 from torchvision import models
 from torchvision.models.resnet import BasicBlock
 from torch.utils.data import DataLoader
@@ -77,8 +79,10 @@ class Config:
             gamma=0.8
         )
 
-        ocr_coef = 0.08
-        perceptual_coef = 0.5
+        ocr_coef = 0.12
+        emb_coef = 4.0
+        perc_coef = 100.0
+        tex_coef = 5.0
         cycle_coef = 0.25
         recon_coef = 0.25
 
@@ -90,9 +94,11 @@ class Config:
             tags=('gram', 'pretrained_on_content', 'trba_ocr', 'full_dataset'),
             config={
                 'ocr_coef': ocr_coef,
-                'perceptual_coef': perceptual_coef,
                 'cycle_coef': cycle_coef,
                 'recon_coef': recon_coef,
+                'emb_coef': emb_coef,
+                'perc_coef': perc_coef,
+                'tex_coef': tex_coef,
                 'style_layers': [2, 3],
                 'img_size': (192, 64)
             }
@@ -110,12 +116,15 @@ class Config:
             logger,
             total_epochs,
             device,
-            ocr_coef,
-            perceptual_coef,
-            VGGGramLoss(),
+            VGGLoss(),
             OCRLoss(),
+            TypefacePerceptualLoss(), 
             cycle_coef,
-            recon_coef
+            recon_coef,
+            ocr_coef,
+            emb_coef,
+            perc_coef,
+            tex_coef
         )
 
     def run(self):
