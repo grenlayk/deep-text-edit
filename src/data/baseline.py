@@ -5,27 +5,10 @@ import json
 import random
 import string
 
-from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 from torch.utils.data import Dataset
-from src.disk import disk
+from src.utils.draw import draw_word
 from pathlib import Path
-
-
-def draw_one(text: str):
-    text_len = len(text)
-    font_size = 50
-    w = max(192, int(text_len * font_size * 0.64))
-    h = 64
-
-    img = Image.new('RGB', (w, h), color=(255, 255, 255))
-    fnt = ImageFont.truetype('./data/VerilySerifMono.otf', font_size)
-    d = ImageDraw.Draw(img)
-    text_width, text_height = d.textsize(text, fnt)
-    position = ((w - text_width) / 2, (h - text_height) / 2)
-
-    d.text(position, text, font=fnt, fill=0)
-    return img
 
 
 class BaselineDataset(Dataset):
@@ -61,7 +44,7 @@ class BaselineDataset(Dataset):
             while not content:
                 content = random.choice(list(self.words.values()))
                 content = ''.join([i for i in content if i in allowed_symbols])
-            pil_content = draw_one(content)
+            pil_content = draw_word(content)
             img_content = np.array(pil_content)
             img_content = cv2.resize(img_content, img_size)
 
@@ -72,7 +55,7 @@ class BaselineDataset(Dataset):
             content_style = ''.join([i for i in content_style if i in allowed_symbols])
             if not content_style:
                 content_style = 'o'
-            pil_content_style = draw_one(content_style)
+            pil_content_style = draw_word(content_style)
             img_content_style = np.array(pil_content_style)
             img_content_style = cv2.resize(img_content_style, img_size)
 

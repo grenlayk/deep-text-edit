@@ -8,6 +8,8 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
 
+from src.utils.draw import draw_word, draw_words, img_to_tensor
+
 
 class StyleGanTrainer:
     def __init__(self,
@@ -81,16 +83,7 @@ class StyleGanTrainer:
 
             res = self.model(content_embeds, style_embeds)
             ocr_loss, recognized = self.ocr_loss(res, content_label_batch, return_recognized=True)
-            words = []
-            for word in recognized:
-                words.append(
-                    torch.from_numpy(
-                        np.transpose(
-                            (cv2.resize(np.array(draw_one(word)), (192, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
-                        )
-                    ).float()
-                )
-            word_images = torch.stack(words)
+            word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
 
             style_label_embeds = self.content_embedder(style_label_batch)
 
