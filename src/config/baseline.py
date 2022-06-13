@@ -25,7 +25,7 @@ class Config:
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size=batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size=batch_size)
 
-        total_epochs = 1  # 20
+        total_epochs = 20
         model = RRDB_pretrained().to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
