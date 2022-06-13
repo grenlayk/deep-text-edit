@@ -1,7 +1,7 @@
 import torch
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from src.losses.STRFL import OCRLoss
+from src.losses.ocr import OCRLoss
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
