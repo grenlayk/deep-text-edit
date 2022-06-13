@@ -153,11 +153,11 @@ class StyleGanTrainer:
             style_label_embeds = self.content_embedder(style_label_batch)
 
             reconstructed = self.model(style_label_embeds, style_embeds)
-            reconstructed_loss = self.l1(style_batch, reconstructed)
+            reconstructed_loss = self.cons_loss(style_batch, reconstructed)
 
             reconstructed_style_embeds = self.style_embedder(reconstructed)
             cycle = self.model(style_label_embeds, reconstructed_style_embeds)
-            cycle_loss = self.l1(style_batch, cycle)
+            cycle_loss = self.cons_loss(style_batch, cycle)
 
             perc_loss, tex_loss = self.perc_loss(style_batch, res)
             emb_loss = self.typeface_loss(style_batch, res)
