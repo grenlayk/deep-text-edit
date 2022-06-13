@@ -9,6 +9,7 @@ from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
+from src.losses.ocr import OCRLoss
 from torch.utils.data import DataLoader
 
 
@@ -53,7 +54,8 @@ class Config:
             device,
             ocr_coef,
             perceptual_coef,
-            VGGPerceptualLoss()
+            OCRLoss(),
+            VGGPerceptualLoss(),
         )
 
     def run(self):

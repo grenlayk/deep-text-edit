@@ -123,7 +123,8 @@ class Config:
             tex_coef,
             OCRLoss(),
             TypefacePerceptualLoss(),
-            VGGLoss()
+            VGGLoss(),
+            torch.nn.L1Loss()
         )
 
     def run(self):
