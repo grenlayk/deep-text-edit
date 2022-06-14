@@ -58,7 +58,7 @@ class RRDBNet(nn.Module):
         self.conv_first = nn.Conv2d(in_nc, nf, 3, 1, 1, bias=True)
         self.RRDB_trunk = make_layer(RRDB_block_f, nb)
         self.trunk_conv = nn.Conv2d(nf, nf, 3, 1, 1, bias=True)
-        #### upsampling
+        # upsampling
         self.upconv1 = nn.Conv2d(nf, nf, 3, 1, 1, bias=True)
         self.upconv2 = nn.Conv2d(nf, nf, 3, 1, 1, bias=True)
         self.HRconv = nn.Conv2d(nf, nf, 3, 1, 1, bias=True)
@@ -77,11 +77,13 @@ class RRDBNet(nn.Module):
 
         return out
 
+
 class RRDB_pretrained(nn.Module):
-    def __init__(self, model_path = None):
+    def __init__(self, model_path=None):
         super().__init__()
-        self.model = RRDBNet(4, 3, 64, 10, gc=32)
+        self.model = RRDBNet(6, 3, 64, 10, gc=32)
         if model_path:
             self.model.load_state_dict(torch.load(model_path), strict=True)
+
     def forward(self, x):
         return self.model(x)

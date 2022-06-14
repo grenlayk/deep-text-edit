@@ -1,12 +1,11 @@
-import cv2
-import numpy as np
 import torch
-from src.data.baseline import draw_one
 from src.logger.simple import Logger
 from src.storage.simple import Storage
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
+
+from src.utils.draw import draw_word, img_to_tensor
 
 
 class StyleGanTrainer:
@@ -22,15 +21,17 @@ class StyleGanTrainer:
                  logger: Logger,
                  total_epochs: int,
                  device: str,
-                 perceptual_loss: nn.Module,
-                 ocr_loss: nn.Module,
-                 typeface_loss: nn.Module,
-                 coef_cycle_loss: float,
-                 coef_reconstruction_loss:float,
                  ocr_coef: float,
+                 cycle_coef: float,
+                 recon_coef: float,
                  emb_coef: float,
                  perc_coef: float,
-                 tex_coef: float):
+                 tex_coef: float,
+                 ocr_loss: nn.Module,
+                 typeface_loss: nn.Module,
+                 perc_loss: nn.Module,
+                 cons_loss: nn.Module
+                 ):
 
         self.device = device
         self.model = model
@@ -41,19 +42,18 @@ class StyleGanTrainer:
         self.total_epochs = total_epochs
         self.logger = logger
         self.storage = storage
-        self.ocr_loss = ocr_loss.to(device)
-        self.perceptual_loss = perceptual_loss.to(device)
-        self.typeface_loss = typeface_loss.to(device)
         self.ocr_coef = ocr_coef
+        self.cycle_coef = cycle_coef
+        self.recon_coef = recon_coef
         self.emb_coef = emb_coef
         self.perc_coef = perc_coef
         self.tex_coef = tex_coef
-        self.coef_ocr = ocr_coef
-        self.coef_cycle = coef_cycle_loss
-        self.coef_recon = coef_reconstruction_loss
+        self.typeface_loss = typeface_loss.to(device)
+        self.ocr_loss = ocr_loss.to(device)
+        self.perc_loss = perc_loss.to(device)
+        self.cons_loss = cons_loss.to(device)
         self.style_embedder = style_embedder
         self.content_embedder = content_embedder
-        self.l1 = torch.nn.L1Loss() 
 
     def train(self):
         logger.info('Start training')
@@ -61,45 +61,46 @@ class StyleGanTrainer:
         self.content_embedder.train()
         self.style_embedder.train()
 
-        for style_batch, content_batch, label_batch, style_label_batch in self.train_dataloader:
-            if max(len(label) for label in label_batch) > 25:
+        # style_imgs - images containing the style we want to imitate
+        # desired_content - rendered images containing the content we want to draw
+        # desired_labels - text labels of content batch
+        # style_content - rendered images containing the words from the style images
+        for style_imgs, desired_content, desired_labels, style_content in self.train_dataloader:
+            if max(len(label) for label in desired_labels) > 25:
                 continue
 
-            style_batch = style_batch.to(self.device)
-            content_batch = content_batch.to(self.device)
-            style_label_batch = style_label_batch.to(self.device)
-            style_embeds = self.style_embedder(style_batch)
-            content_embeds = self.content_embedder(content_batch)
             self.optimizer.zero_grad()
 
+            style_imgs = style_imgs.to(self.device)
+            desired_content = desired_content.to(self.device)
+            style_content = style_content.to(self.device)
+
+            style_embeds = self.style_embedder(style_imgs)
+            content_embeds = self.content_embedder(desired_content)
+
             res = self.model(content_embeds, style_embeds)
-            ocr_loss, recognized = self.ocr_loss(res, label_batch, return_recognized=True)
-            words = []
-            for word in recognized:
-                words.append(
-                    torch.from_numpy(
-                        np.transpose(
-                            (cv2.resize(np.array(draw_one(word)), (192, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
-                        )
-                    ).float()
-                )
-            word_images = torch.stack(words)
+            ocr_loss, recognized = self.ocr_loss(res, desired_labels, return_recognized=True)
+            word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
 
-            perc_loss, tex_loss = self.perceptual_loss(style_batch, res)
-            emb_loss = self.typeface_loss(style_batch, res)
+            style_content_embeds = self.content_embedder(style_content)
 
-            style_label_embedds = self.content_embedder(style_label_batch)
+            reconstructed = self.model(style_content_embeds, style_embeds)
+            reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
-            reconstucted = self.model(style_label_embedds, style_embeds)
-            reconstucted_loss = self.l1(style_batch, reconstucted)
+            reconstructed_style_embeds = self.style_embedder(reconstructed)
+            cycle = self.model(style_content_embeds, reconstructed_style_embeds)
+            cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            reconstucted_style_embedds = self.style_embedder(reconstucted)
-            cycle = self.model(style_label_embedds, reconstucted_style_embedds)
-            cycle_loss = self.l1(style_batch, cycle)
+            perc_loss, tex_loss = self.perc_loss(style_imgs, reconstructed)
+            emb_loss = self.typeface_loss(style_imgs, reconstructed)
 
-            loss = self.coef_ocr * ocr_loss  + self.coef_cycle * cycle_loss \
-                 + self.coef_recon * reconstucted_loss + self.perc_coef * perc_loss \
-                 + self.tex_coef * tex_loss + self.emb_coef * emb_loss
+            loss = \
+                self.ocr_coef * ocr_loss + \
+                self.cycle_coef * cycle_loss + \
+                self.recon_coef * reconstructed_loss + \
+                self.perc_coef * perc_loss + \
+                self.tex_coef * tex_loss + \
+                self.emb_coef * emb_loss
 
             loss.backward()
             self.optimizer.step()
@@ -107,15 +108,16 @@ class StyleGanTrainer:
             self.logger.log_train(
                 losses={
                     'ocr_loss': ocr_loss.item(),
-                    'tex': tex_loss.item(),
-                    'emb': emb_loss.item(),
-                    'perc': perc_loss.item(),
-                    'cycle': cycle_loss.item(),
-                    'reconstruction': reconstucted_loss.item(),
+                    'perc_loss': perc_loss.item(),
+                    'cycle_loss': cycle_loss.item(),
+                    'recon_loss': reconstructed_loss.item(),
+                    'tex_loss': tex_loss.item(),
+                    'emb_loss': emb_loss.item(),
                     'full_loss': loss.item()},
                 images={
-                    'style': style_batch,
-                    'content': content_batch,
+                    'style': style_imgs,
+                    'content': desired_content,
+                    'reconstructed': reconstructed,
                     'result': res,
                     'recognized': word_images})
 
@@ -124,45 +126,53 @@ class StyleGanTrainer:
         self.content_embedder.eval()
         self.style_embedder.eval()
 
-        for style_batch, content_batch, label_batch, style_label_batch in self.val_dataloader:
-            if max(len(label) for label in label_batch) > 25:
+        for style_imgs, desired_content, desired_labels, style_content in self.val_dataloader:
+            if max(len(label) for label in desired_labels) > 25:
                 continue
-            style_batch = style_batch.to(self.device)
-            content_batch = content_batch.to(self.device)
-            style_label_batch = style_label_batch.to(self.device)
-            style_embeds = self.style_embedder(style_batch)
-            content_embeds = self.content_embedder(content_batch)
+
+            self.optimizer.zero_grad()
+
+            style_imgs = style_imgs.to(self.device)
+            desired_content = desired_content.to(self.device)
+            style_content = style_content.to(self.device)
+            style_embeds = self.style_embedder(style_imgs)
+            content_embeds = self.content_embedder(desired_content)
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, label_batch)
-            perc_loss, tex_loss = self.perceptual_loss(style_batch, res)
-            emb_loss = self.typeface_loss(style_batch, res)
+            ocr_loss = self.ocr_loss(res, desired_labels)
 
-            style_label_embedds = self.content_embedder(style_label_batch)
+            style_label_embeds = self.content_embedder(style_content)
 
-            reconstucted = self.model(style_label_embedds, style_embeds)
-            reconstucted_loss = self.l1(style_batch, reconstucted)
+            reconstructed = self.model(style_label_embeds, style_embeds)
+            reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
-            reconstucted_style_embedds = self.style_embedder(reconstucted)
-            cycle = self.model(style_label_embedds, reconstucted_style_embedds)
-            cycle_loss = self.l1(style_batch, cycle)
+            reconstructed_style_embeds = self.style_embedder(reconstructed)
+            cycle = self.model(style_label_embeds, reconstructed_style_embeds)
+            cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            loss = self.coef_ocr * ocr_loss  + self.coef_cycle * cycle_loss \
-                 + self.coef_recon * reconstucted_loss + self.perc_coef * perc_loss \
-                 + self.tex_coef * tex_loss + self.emb_coef * emb_loss
+            perc_loss, tex_loss = self.perc_loss(style_imgs, res)
+            emb_loss = self.typeface_loss(style_imgs, res)
+
+            loss = \
+                self.ocr_coef * ocr_loss + \
+                self.cycle_coef * cycle_loss + \
+                self.recon_coef * reconstructed_loss + \
+                self.perc_coef * perc_loss + \
+                self.tex_coef * tex_loss + \
+                self.emb_coef * emb_loss
 
             self.logger.log_val(
                 losses={
                     'ocr_loss': ocr_loss.item(),
-                    'tex': tex_loss.item(),
-                    'emb': emb_loss.item(),
-                    'perc': perc_loss.item(),
-                    'cycle': cycle_loss.item(),
-                    'reconstruction': reconstucted_loss.item(),
+                    'perc_loss': perc_loss.item(),
+                    'cycle_loss': cycle_loss.item(),
+                    'recon_loss': reconstructed_loss.item(),
+                    'tex_loss': tex_loss.item(),
+                    'emb_loss': emb_loss.item(),
                     'full_loss': loss.item()},
                 images={
-                    'style': style_batch,
-                    'content': content_batch,
+                    'style': style_imgs,
+                    'content': desired_content,
                     'result': res})
 
         avg_losses, _ = self.logger.end_val()

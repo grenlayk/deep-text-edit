@@ -3,13 +3,15 @@ from loguru import logger as info_logger
 from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
-from src.data.baseline import  BaselineDataset
-from src.utils.download import download_data, unarchieve 
+from src.data.baseline import BaselineDataset
+from src.utils.download import download_dataset
 from src.models.rrdb import RRDB_pretrained
 from src.training.baseline import Trainer
 from src.storage.simple import Storage
 from src.losses.perceptual import VGGPerceptualLoss
+from src.losses.ocr import OCRLoss
 from torch.utils.data import DataLoader
+
 
 class Config:
     def __init__(self):
@@ -17,17 +19,14 @@ class Config:
 
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
-        data_dir = Path("data")
-        style_dir = data_dir / 'IMGUR5K_small'
-        if not data_dir.exists():
-            data_dir.mkdir()
-            local_path = download_data(Path("data/IMGUR5K_small.tar"), data_dir)
-            unarchieve(local_path)
-        batch_size = 4
-        train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size = batch_size)
-        val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size = batch_size)
 
-        total_epochs = 1 #20
+        style_dir = Path('data/IMGUR5K')
+        download_dataset('IMGUR5K')
+        batch_size = 4
+        train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size=batch_size)
+        val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size=batch_size)
+
+        total_epochs = 20
         model = RRDB_pretrained().to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-6)
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -55,7 +54,8 @@ class Config:
             device,
             ocr_coef,
             perceptual_coef,
-            VGGPerceptualLoss()
+            OCRLoss(),
+            VGGPerceptualLoss(),
         )
 
     def run(self):

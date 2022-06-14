@@ -5,13 +5,13 @@ from pathlib import Path
 from src.logger.simple import Logger
 from src.losses.vgg import VGGLoss
 from src.data.baseline import BaselineDataset
+from src.losses.vgg import VGGLoss
 from src.utils.download import download_dataset
 from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan import StyleGanTrainer
 from src.storage.simple import Storage
 from src.losses.STRFL import OCRLoss
 from src.losses.typeface_perceptual import TypefacePerceptualLoss
-from src.losses.compose import ComposeLoss
 from torchvision import models
 from torchvision.models.resnet import BasicBlock
 from torch.utils.data import DataLoader
@@ -45,16 +45,16 @@ class Config:
         info_logger.info(f'Using device: {device}')
         style_dir = Path('data/IMGUR5K')
         download_dataset('IMGUR5K')
-        batch_size = 16
+        batch_size = 8
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size=batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size=batch_size)
 
         total_epochs = 500
 
-        weights_folder = 'checkpoints/stylegan_l1_200x64/187'
+        weights_folder = 'models/Stylegan (pretrained on content)'
         if not Path(weights_folder).exists():
             disk.download(weights_folder, weights_folder)
-        
+
         model = StyleBased_Generator(dim_latent=512)
         model.load_state_dict(torch.load(f'{weights_folder}/model'))
         model.to(device)
@@ -79,19 +79,18 @@ class Config:
             gamma=0.8
         )
 
-        ocr_coef = 0.12
+        ocr_coef = 0.08
+        cycle_coef = 0.25
+        recon_coef = 0.25
         emb_coef = 4.0
         perc_coef = 100.0
         tex_coef = 5.0
-        cycle_coef = 0.25
-        recon_coef = 0.25
 
-        storage = Storage('checkpoints/stylegan(pretrained_on_content)_gram_ocr_192x64')
+        storage = Storage('checkpoints/stylegan(pretrained_on_content)_typeface_ocr_192x64')
 
         logger = Logger(
             image_freq=100,
-            project_name='StyleGan',
-            tags=('gram', 'pretrained_on_content', 'trba_ocr', 'full_dataset'),
+            project_name='TDF',
             config={
                 'ocr_coef': ocr_coef,
                 'cycle_coef': cycle_coef,
@@ -99,7 +98,6 @@ class Config:
                 'emb_coef': emb_coef,
                 'perc_coef': perc_coef,
                 'tex_coef': tex_coef,
-                'style_layers': [2, 3],
                 'img_size': (192, 64)
             }
         )
@@ -116,15 +114,16 @@ class Config:
             logger,
             total_epochs,
             device,
-            VGGLoss(),
-            OCRLoss(),
-            TypefacePerceptualLoss(), 
+            ocr_coef,
             cycle_coef,
             recon_coef,
-            ocr_coef,
             emb_coef,
             perc_coef,
-            tex_coef
+            tex_coef,
+            OCRLoss(),
+            TypefacePerceptualLoss(),
+            VGGLoss(),
+            torch.nn.L1Loss()
         )
 
     def run(self):

@@ -1,10 +1,11 @@
 import torch
 from src.logger.simple import Logger
 from src.storage.simple import Storage
-from src.losses import ocr
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
+
+
 class Trainer:
     def __init__(self,
                  model: nn.Module,
@@ -18,8 +19,9 @@ class Trainer:
                  device: str,
                  coef_ocr_loss: float,
                  coef_perceptual_loss: float,
+                 ocr_loss: nn.Module,
                  perceptual_loss: nn.Module):
-        
+
         self.device = device
         self.model = model
         self.optimizer = optimizer
@@ -29,11 +31,10 @@ class Trainer:
         self.total_epochs = total_epochs
         self.logger = logger
         self.storage = storage
-        self.ocr_loss = ocr.OCRLoss().to(device)
+        self.ocr_loss: nn.Module = ocr_loss.to(device)
         self.perceptual_loss = perceptual_loss.to(device)
         self.coef_ocr = coef_ocr_loss
         self.coef_perceptual = coef_perceptual_loss
-
 
     def concat_batches(self, batch_1, batch_2):
         '''
@@ -41,7 +42,6 @@ class Trainer:
         '''
         return torch.cat((batch_1, batch_2), 1)
 
-    
     def train(self):
         logger.info('Start training')
         self.model.train()
@@ -54,14 +54,18 @@ class Trainer:
             res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
+            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss
             loss.backward()
             self.optimizer.step()
             self.logger.log_train(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
-                images={'style': style_batch, 'content': content_batch, 'result': res}
-            )
-
+                losses={
+                    'ocr_loss': ocr_loss.item(),
+                    'perceptual_loss': perceptual_loss.item(),
+                    'full_loss': loss.item()},
+                images={
+                    'style': style_batch,
+                    'content': content_batch,
+                    'result': res})
 
     def validate(self, epoch):
         self.model.eval()
@@ -72,20 +76,24 @@ class Trainer:
             res = self.model(concat_batches)
             ocr_loss = self.ocr_loss(res, label_batch)
             perceptual_loss = self.perceptual_loss(style_batch, res)
-            loss = self.coef_ocr * ocr_loss +  self.coef_perceptual * perceptual_loss
-            
-            self.logger.log_val(
-                losses={'ocr_loss': ocr_loss.item(), 'perceptual_loss': perceptual_loss.item(), 'full_loss': loss.item()},
-                images={'style': style_batch, 'content': content_batch, 'result': res}
-            )
+            loss = self.coef_ocr * ocr_loss + self.coef_perceptual * perceptual_loss
 
-        avg_losses, _ = self.logger.end_val()
+            self.logger.log_val(
+                losses={
+                    'ocr_loss': ocr_loss.item(),
+                    'perceptual_loss': perceptual_loss.item(),
+                    'full_loss': loss.item()},
+                images={
+                    'style': style_batch,
+                    'content': content_batch,
+                    'result': res})
+
+        avg_losses, avg_metrics = self.logger.end_val()
         self.storage.save(
             epoch,
             {'model': self.model, 'optimizer': self.optimizer, 'scheduler': self.scheduler},
-            avg_losses['metric']
+            avg_metrics
         )
-
 
     def run(self):
         for epoch in range(self.total_epochs):
