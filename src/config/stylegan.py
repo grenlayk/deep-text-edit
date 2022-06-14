@@ -91,7 +91,6 @@ class Config:
         logger = Logger(
             image_freq=100,
             project_name='TDF',
-            tags=('typeface', 'pretrained_on_content', 'trba_ocr', 'full_dataset'),
             config={
                 'ocr_coef': ocr_coef,
                 'cycle_coef': cycle_coef,

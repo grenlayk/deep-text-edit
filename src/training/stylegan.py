@@ -1,14 +1,11 @@
-import cv2
-import numpy as np
 import torch
-from src.data.baseline import draw_one
 from src.logger.simple import Logger
 from src.storage.simple import Storage
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from loguru import logger
 
-from src.utils.draw import draw_word, draw_words, img_to_tensor
+from src.utils.draw import draw_word, img_to_tensor
 
 
 class StyleGanTrainer:
@@ -64,38 +61,38 @@ class StyleGanTrainer:
         self.content_embedder.train()
         self.style_embedder.train()
 
-        # style_batch - images containing the style we want to imitate
-        # conent_batch - rendered images containing the conent we want to draw
-        # label_batch - text labels of content batch
-        # style_label_batch - text labels of style batch
-        for style_batch, content_batch, content_label_batch, style_label_batch in self.train_dataloader:
-            if max(len(label) for label in content_label_batch) > 25:
+        # style_imgs - images containing the style we want to imitate
+        # desired_content - rendered images containing the content we want to draw
+        # desired_labels - text labels of content batch
+        # style_content - rendered images containing the words from the style images
+        for style_imgs, desired_content, desired_labels, style_content in self.train_dataloader:
+            if max(len(label) for label in desired_labels) > 25:
                 continue
 
             self.optimizer.zero_grad()
 
-            style_batch = style_batch.to(self.device)
-            content_batch = content_batch.to(self.device)
-            style_label_batch = style_label_batch.to(self.device)
+            style_imgs = style_imgs.to(self.device)
+            desired_content = desired_content.to(self.device)
+            style_content = style_content.to(self.device)
 
-            style_embeds = self.style_embedder(style_batch)
-            content_embeds = self.content_embedder(content_batch)
+            style_embeds = self.style_embedder(style_imgs)
+            content_embeds = self.content_embedder(desired_content)
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss, recognized = self.ocr_loss(res, content_label_batch, return_recognized=True)
+            ocr_loss, recognized = self.ocr_loss(res, desired_labels, return_recognized=True)
             word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
 
-            style_label_embeds = self.content_embedder(style_label_batch)
+            style_content_embeds = self.content_embedder(style_content)
 
-            reconstructed = self.model(style_label_embeds, style_embeds)
-            reconstructed_loss = self.cons_loss(style_batch, reconstructed)
+            reconstructed = self.model(style_content_embeds, style_embeds)
+            reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
             reconstructed_style_embeds = self.style_embedder(reconstructed)
-            cycle = self.model(style_label_embeds, reconstructed_style_embeds)
-            cycle_loss = self.cons_loss(style_batch, cycle)
+            cycle = self.model(style_content_embeds, reconstructed_style_embeds)
+            cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            perc_loss, tex_loss = self.perc_loss(style_batch, res)
-            emb_loss = self.typeface_loss(style_batch, res)
+            perc_loss, tex_loss = self.perc_loss(style_imgs, reconstructed)
+            emb_loss = self.typeface_loss(style_imgs, reconstructed)
 
             loss = \
                 self.ocr_coef * ocr_loss + \
@@ -118,8 +115,9 @@ class StyleGanTrainer:
                     'emb_loss': emb_loss.item(),
                     'full_loss': loss.item()},
                 images={
-                    'style': style_batch,
-                    'content': content_batch,
+                    'style': style_imgs,
+                    'content': desired_content,
+                    'reconstructed': reconstructed,
                     'result': res,
                     'recognized': word_images})
 
@@ -128,32 +126,32 @@ class StyleGanTrainer:
         self.content_embedder.eval()
         self.style_embedder.eval()
 
-        for style_batch, content_batch, content_label_batch, style_label_batch in self.val_dataloader:
-            if max(len(label) for label in content_label_batch) > 25:
+        for style_imgs, desired_content, desired_labels, style_content in self.val_dataloader:
+            if max(len(label) for label in desired_labels) > 25:
                 continue
 
             self.optimizer.zero_grad()
 
-            style_batch = style_batch.to(self.device)
-            content_batch = content_batch.to(self.device)
-            style_label_batch = style_label_batch.to(self.device)
-            style_embeds = self.style_embedder(style_batch)
-            content_embeds = self.content_embedder(content_batch)
+            style_imgs = style_imgs.to(self.device)
+            desired_content = desired_content.to(self.device)
+            style_content = style_content.to(self.device)
+            style_embeds = self.style_embedder(style_imgs)
+            content_embeds = self.content_embedder(desired_content)
 
             res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, content_label_batch)
+            ocr_loss = self.ocr_loss(res, desired_labels)
 
-            style_label_embeds = self.content_embedder(style_label_batch)
+            style_label_embeds = self.content_embedder(style_content)
 
             reconstructed = self.model(style_label_embeds, style_embeds)
-            reconstructed_loss = self.cons_loss(style_batch, reconstructed)
+            reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
             reconstructed_style_embeds = self.style_embedder(reconstructed)
             cycle = self.model(style_label_embeds, reconstructed_style_embeds)
-            cycle_loss = self.cons_loss(style_batch, cycle)
+            cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            perc_loss, tex_loss = self.perc_loss(style_batch, res)
-            emb_loss = self.typeface_loss(style_batch, res)
+            perc_loss, tex_loss = self.perc_loss(style_imgs, res)
+            emb_loss = self.typeface_loss(style_imgs, res)
 
             loss = \
                 self.ocr_coef * ocr_loss + \
@@ -173,8 +171,8 @@ class StyleGanTrainer:
                     'emb_loss': emb_loss.item(),
                     'full_loss': loss.item()},
                 images={
-                    'style': style_batch,
-                    'content': content_batch,
+                    'style': style_imgs,
+                    'content': desired_content,
                     'result': res})
 
         avg_losses, _ = self.logger.end_val()
