@@ -1,15 +1,14 @@
 import torch
-import numpy as np
-import cv2
 from PIL import Image, ImageDraw, ImageFont
+from torchvision import transforms as T
 
 
 def img_to_tensor(img: Image) -> torch.Tensor:
-    return torch.from_numpy(
-        np.transpose(
-                    (cv2.resize(np.array(img), (192, 64)) / 255)[:, :, [2, 1, 0]], (2, 0, 1)
-        )
-    ).float()
+    transform = T.Compose([
+        T.ToTensor(),
+        T.Resize((64, 192))
+    ])
+    return transform(img)
 
 
 def draw_word(word: str) -> Image:

@@ -8,6 +8,7 @@ import string
 from loguru import logger
 from torch.utils.data import Dataset
 from src.utils.draw import draw_word
+from torchvision import transforms as T
 from pathlib import Path
 
 
@@ -24,19 +25,24 @@ class BaselineDataset(Dataset):
         with open(json_path, 'r', encoding='utf-8') as json_file:
             self.words = json.load(json_file)
         logger.info(f'Total Files: {len(self.style_files) }')
+        self.transform = T.Compose([
+            T.ToTensor(),
+            T.Resize((64, 192)),
+        ])
+        self.augment = T.Compose([
+            T.RandomInvert(),
+        ])
 
     def __len__(self):
         return len(self.style_files)
 
     def __getitem__(self, index):
         try:
-            img_size = (192, 64)
             img_style = cv2.imread(str(self.style_files[index]), cv2.IMREAD_COLOR)
             if img_style is None:
                 raise Exception
-            img_style = cv2.resize(img_style, img_size)
-            img_style = img_style * 1.0 / 255
-            img_style = torch.from_numpy(np.transpose(img_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
+            img_style = self.transform(img_style)
+            img_style = self.augment(img_style)
 
             content = random.choice(list(self.words.values()))
             allowed_symbols = string.ascii_lowercase + string.digits
@@ -44,23 +50,13 @@ class BaselineDataset(Dataset):
             while not content:
                 content = random.choice(list(self.words.values()))
                 content = ''.join([i for i in content if i in allowed_symbols])
-            pil_content = draw_word(content)
-            img_content = np.array(pil_content)
-            img_content = cv2.resize(img_content, img_size)
-
-            img_content = img_content * 1.0 / 255
-            img_content = torch.from_numpy(np.transpose(img_content[:, :, [2, 1, 0]], (2, 0, 1))).float()
+            img_content = self.transform(draw_word(content))
 
             content_style = self.words[self.style_files[index].stem]
             content_style = ''.join([i for i in content_style if i in allowed_symbols])
             if not content_style:
                 content_style = 'o'
-            pil_content_style = draw_word(content_style)
-            img_content_style = np.array(pil_content_style)
-            img_content_style = cv2.resize(img_content_style, img_size)
-
-            img_content_style = img_content_style * 1.0 / 255
-            img_content_style = torch.from_numpy(np.transpose(img_content_style[:, :, [2, 1, 0]], (2, 0, 1))).float()
+            img_content_style = self.transform(draw_word(content_style))
 
             return img_style, img_content, content, img_content_style
 
