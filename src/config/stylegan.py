@@ -79,7 +79,7 @@ class Config:
             gamma=0.8
         )
 
-        ocr_coef = 0.08
+        ocr_coef = 0.12
         cycle_coef = 0.25
         recon_coef = 0.25
         emb_coef = 4.0

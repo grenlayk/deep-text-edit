@@ -45,7 +45,7 @@ class BaselineDataset(Dataset):
             img_style = self.augment(img_style)
 
             content = random.choice(list(self.words.values()))
-            allowed_symbols = string.ascii_lowercase + string.digits
+            allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
             content = ''.join([i for i in content if i in allowed_symbols])
             while not content:
                 content = random.choice(list(self.words.values()))
