@@ -160,8 +160,6 @@ class StyleGanAdvTrainer:
 
             self.optimizer_D.step() 
             self.optimizer_G.step()
-            self.scheduler_D.step()
-            self.scheduler_G.step()
 
             self.logger.log_train(
                 losses={
@@ -259,3 +257,5 @@ class StyleGanAdvTrainer:
                 self.validate(epoch)
             if self.scheduler_G is not None:
                 self.scheduler_G.step()
+            if self.scheduler_D is not None:
+                self.scheduler_D.step()
