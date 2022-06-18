@@ -76,19 +76,14 @@ class StyleGanAdvTrainer:
                          style_embeds: torch.Tensor
                          ):
         pred_D_fake = self.model_D(self.model_G(content_embeds, style_embeds).detach())
-        fake = torch.tensor(0.).expand_as(pred_D_fake).to(self.device)
-        loss_D_fake = self.adv_loss(pred_D_fake, fake)
-
         pred_D_real = self.model_D(style_imgs)
-        valid = torch.tensor(1.).expand_as(pred_D_real).to(self.device)
-        loss_D_real = self.adv_loss(pred_D_real, valid) 
-
-        return (loss_D_real + loss_D_fake) * 0.5
+        fake = torch.tensor(0.).expand_as(pred_D_fake).to(self.device)
+        real = torch.tensor(1.).expand_as(pred_D_real).to(self.device)
+        return (self.adv_loss(pred_D_real, real) + self.adv_loss(pred_D_fake, fake)) / 2.
 
     def model_G_adv_loss(self, res: torch.Tensor):
         pred_D_fake = self.model_D(res)
         valid = torch.tensor(1.).expand_as(pred_D_fake).to(self.device)
-
         return self.adv_loss(pred_D_fake, valid)
 
     def train(self):

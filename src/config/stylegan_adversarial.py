@@ -7,7 +7,7 @@ from src.losses.vgg import VGGLoss
 from src.data.baseline import BaselineDataset
 from src.losses.vgg import VGGLoss
 from src.utils.download import download_dataset
-from src.models.embedder import ContentResnet
+from src.models.embedders import ContentResnet, StyleResnet
 from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan_adversarial import StyleGanAdvTrainer
@@ -41,9 +41,7 @@ class Config:
         model_G.load_state_dict(torch.load(f'{weights_folder}/model'))
         model_G.to(device)
 
-        style_embedder = models.resnet18()
-        style_embedder.fc = torch.nn.Identity()
-        style_embedder = style_embedder.to(device)
+        style_embedder = StyleResnet(BasicBlock, [2, 2, 2, 2]).to(device) 
         style_embedder.load_state_dict(torch.load(f'{weights_folder}/style_embedder'))
 
         content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
@@ -70,12 +68,12 @@ class Config:
             gamma=0.8
         )
 
-        ocr_coef = 0.12
-        cycle_coef = 0.25
-        recon_coef = 0.25
-        emb_coef = 4.0
-        perc_coef = 100.0
-        tex_coef = 5.0
+        ocr_coef = 0.07
+        cycle_coef = 2.0
+        recon_coef = 2.0
+        emb_coef = 0.0
+        perc_coef = 0.0
+        tex_coef = 6.0
         adv_coef = 0.13
 
         checkpoint_folder = 'stylegan(pretrained_on_content)_typeface_ocr_adv_192x64'

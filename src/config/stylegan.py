@@ -7,7 +7,7 @@ from src.losses.vgg import VGGLoss
 from src.data.baseline import BaselineDataset
 from src.losses.vgg import VGGLoss
 from src.utils.download import download_dataset
-from src.models.embedder import ContentResnet
+from src.models.embedders import ContentResnet, StyleResnet
 from src.models.stylegan import StyleBased_Generator
 from src.training.stylegan import StyleGanTrainer
 from src.storage.simple import Storage
@@ -40,9 +40,7 @@ class Config:
         model.load_state_dict(torch.load(f'{weights_folder}/model'))
         model.to(device)
 
-        style_embedder = models.resnet18()
-        style_embedder.fc = torch.nn.Identity()
-        style_embedder = style_embedder.to(device)
+        style_embedder = StyleResnet(BasicBlock, [2, 2, 2, 2]).to(device) 
         style_embedder.load_state_dict(torch.load(f'{weights_folder}/style_embedder'))
 
         content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
