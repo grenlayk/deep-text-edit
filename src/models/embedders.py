@@ -6,6 +6,7 @@ class ContentResnet(models.ResNet):
     def __init__(self):
         # resnet18 init
         super().__init__(BasicBlock, [2, 2, 2, 2])
+        self.fc = torch.nn.Identity()
 
     def _forward_impl(self, x):
         # See note [TorchScript super()]
