@@ -8,8 +8,9 @@ from src.data.baseline import BaselineDataset
 from src.losses.vgg import VGGLoss
 from src.utils.download import download_dataset
 from src.models.embedders import ContentResnet, StyleResnet
+from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.stylegan import StyleBased_Generator
-from src.training.stylegan import StyleGanTrainer
+from src.training.stylegan_adversarial import StyleGanAdvTrainer
 from src.storage.simple import Storage
 from src.losses.STRFL import OCRLoss
 from src.losses.typeface_perceptual import TypefacePerceptualLoss
@@ -34,9 +35,9 @@ class Config:
         if not Path(weights_folder).exists():
             disk.download(weights_folder, weights_folder)
 
-        model = StyleBased_Generator(dim_latent=512)
-        model.load_state_dict(torch.load(f'{weights_folder}/model'))
-        model.to(device)
+        model_G = StyleBased_Generator(dim_latent=512)
+        model_G.load_state_dict(torch.load(f'{weights_folder}/model'))
+        model_G.to(device)
 
         style_embedder = StyleResnet().to(device) 
         style_embedder.load_state_dict(torch.load(f'{weights_folder}/style_embedder'))
@@ -44,30 +45,41 @@ class Config:
         content_embedder = ContentResnet().to(device)
         content_embedder.load_state_dict(torch.load(f'{weights_folder}/content_embedder'))
 
-        optimizer = torch.optim.AdamW(
-            list(model.parameters()) +
+        model_D = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3, norm_layer=(lambda x : torch.nn.Identity()))
+        model_D.to(device)
+
+        optimizer_G = torch.optim.AdamW(
+            list(model_G.parameters()) +
             list(style_embedder.parameters()) +
             list(content_embedder.parameters()),
             lr=1e-3,
             weight_decay=1e-6
         )
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            optimizer,
+        scheduler_G = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer_G,
             gamma=0.8
         )
 
-        ocr_coef = 0.12
-        cycle_coef = 0.25
-        recon_coef = 0.25
-        emb_coef = 4.0
-        perc_coef = 100.0
-        tex_coef = 5.0
+        optimizer_D = torch.optim.AdamW(model_D.parameters(), lr=1e-4)
+        scheduler_D = torch.optim.lr_scheduler.ExponentialLR(
+            optimizer_D,
+            gamma=0.8
+        )
 
-        storage = Storage('checkpoints/stylegan(pretrained_on_content)_typeface_ocr_192x64')
+        ocr_coef = 0.07
+        cycle_coef = 2.0
+        recon_coef = 2.0
+        emb_coef = 0.0
+        perc_coef = 0.0
+        tex_coef = 6.0
+        adv_coef = 0.13
+
+        checkpoint_folder = 'stylegan(pretrained_on_content)_typeface_ocr_adv_192x64'
+        storage = Storage(f'checkpoints/{checkpoint_folder}')
 
         logger = Logger(
             image_freq=100,
-            project_name='TDF',
+            project_name='TDF-GAN',
             config={
                 'ocr_coef': ocr_coef,
                 'cycle_coef': cycle_coef,
@@ -75,16 +87,20 @@ class Config:
                 'emb_coef': emb_coef,
                 'perc_coef': perc_coef,
                 'tex_coef': tex_coef,
+                'adv_coef': adv_coef,
                 'img_size': (192, 64)
             }
         )
 
-        self.trainer = StyleGanTrainer(
-            model,
+        self.trainer = StyleGanAdvTrainer(
+            model_G,
+            model_D,
             style_embedder,
             content_embedder,
-            optimizer,
-            scheduler,
+            optimizer_G,
+            optimizer_D,
+            scheduler_G,
+            scheduler_D,
             train_dataloader,
             val_dataloader,
             storage,
@@ -97,10 +113,12 @@ class Config:
             emb_coef,
             perc_coef,
             tex_coef,
+            adv_coef,
             OCRLoss(),
             TypefacePerceptualLoss(),
             VGGLoss(),
-            torch.nn.L1Loss()
+            torch.nn.L1Loss(),
+            torch.nn.MSELoss()
         )
 
     def run(self):
