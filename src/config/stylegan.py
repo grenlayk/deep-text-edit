@@ -13,8 +13,6 @@ from src.training.stylegan import StyleGanTrainer
 from src.storage.simple import Storage
 from src.losses.STRFL import OCRLoss
 from src.losses.typeface_perceptual import TypefacePerceptualLoss
-from torchvision import models
-from torchvision.models.resnet import BasicBlock
 from torch.utils.data import DataLoader
 
 
@@ -40,10 +38,10 @@ class Config:
         model.load_state_dict(torch.load(f'{weights_folder}/model'))
         model.to(device)
 
-        style_embedder = StyleResnet(BasicBlock, [2, 2, 2, 2]).to(device) 
+        style_embedder = StyleResnet().to(device) 
         style_embedder.load_state_dict(torch.load(f'{weights_folder}/style_embedder'))
 
-        content_embedder = ContentResnet(BasicBlock, [2, 2, 2, 2]).to(device)
+        content_embedder = ContentResnet().to(device)
         content_embedder.load_state_dict(torch.load(f'{weights_folder}/content_embedder'))
 
         optimizer = torch.optim.AdamW(
