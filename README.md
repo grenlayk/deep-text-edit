@@ -1,12 +1,15 @@
-# Text-deep-fake design doc
+# Text-deep-fake
 
-This project aims to implement neural network architecture, described in [Krishnan et al. (2021) -- Text Style Brush](https://arxiv.org/pdf/2106.08385.pdf).
+This project aims to implement neural network architecture, described in [Krishnan et al. (2021) -- Text Style Brush](https://arxiv.org/pdf/2106.08385.pdf). 
+
+Our implementation is unofficial and might contain some differences from the origin implementation. 
 
 ## How to run ?
 
 - Install requirements `pip install -r requirements.txt`
-- Choose config file
-- Run `python run.py configs/<chosen config>`
+- Choose config file in `src/config` folder
+- Log in into wandb if needed `wandb login`
+- Run `python3 run.py './src/config/<chosen config>'`
 
 ## Repo structure
 
@@ -15,7 +18,9 @@ This project aims to implement neural network architecture, described in [Krishn
 │
 ├── requirements.txt        <- [necessary requirements]
 │
-├── data                    <- [some necessary data (including downloaded datasets)]
+├── data                    <- [necessary data (including downloaded datasets)]
+|
+├── docs                    <- [docs and images]
 |
 ├── src                     <- [project source code]
 │   ├── config 
@@ -36,16 +41,16 @@ This project aims to implement neural network architecture, described in [Krishn
 │   │   ├── ...
 │   │ 
 │   ├── losses
-│   │   ├── simple.py           <- [Template Loss]
+│   │   ├── ocr.py              <- [Recognizer Loss]
 │   │   ├── perceptual.py
 │   │   ├── ...
 │   │
 │   ├── metrics
-│   │   ├── simple.py           <- [Template Metric]
+│   │   ├── accuracy.py         <- [Accuracy Metric]
 │   │   ├── ...
 │   │
 │   ├── models
-│   │   ├── simple.py           <- [Template Model]
+│   │   ├── ocr.py              <- [Model for CTC Loss]
 │   │   ├── ...
 │   │
 │   ├── storage
@@ -54,7 +59,7 @@ This project aims to implement neural network architecture, described in [Krishn
 │   │
 │   ├── training
 │   │   ├── simple.py           <- [Template Trainer]
-│   │   ├── gan.py
+│   │   ├── stylegan.py
 │   │   ├── ...
 │   │
 │   ├── utils
@@ -64,93 +69,35 @@ This project aims to implement neural network architecture, described in [Krishn
 │   ├── ...
 ```
 
+## Architecture
+
+TODO: Add architecture image and decribe differences from the original paper.
+
+## Results
+
+TODO: add images of results
+
+## Datasets 
+
+### Imgur5K
+
+We trained our model using [Imgur5K](https://github.com/facebookresearch/IMGUR5K-Handwriting-Dataset) dataset. You can download it using instruction from the origin repo. 
+
+Other way is to use our script which hasn't been uploaded to the repo yet. We are working on it!
+
+TODO: upload script and add dicription
+
 ## Classes design
-Pseudocode for classes to show their basic functionality.
 
-### Config
-```python
-class Config():
-    def __init__(): 
-        model = Model()             # model from src/models
-        criterion = Loss()          # loss func from from src/losses
-        optimizer = ...             # some non-custom optimizer 
-        storage = Storage()         # storage class func from from src/storage
-        logger = Logger()           # logger class func from from src/logger
-        train_dataloader = DataLoader(SimpleDataset('data/dataset/train'))
-        val_dataloader = DataLoader(SimpleDataset('data/dataset/val'))
-
-        self.trainer = SimpleTrainer(<"pass all args from above">) 
-    def run():
-        self.trainer.run()
-```
-
-### Trainer
-```python
-class SimpleTrainer():
-    def __init__():
-        self.model = ...            # model from src/models
-        self.criterion = ...        # loss func from from src/losses
-        self.optimizer = ...         
-        self.storage = storage      # storage class func from from src/storage
-        self.logger = logger        # logger class func from from src/logger
-        self.train_dataloader = ... # dataloader based on custom dataset from src/data
-        self.val_dataloader = ...   # dataloader based on custom dataset from src/data
-    def run():
-        for _ in range(max_epoch):
-            self.train()            # train steps
-            self.validate()         # validation steps
-    def train():
-        # train actions per epoch
-    def validate():
-        # validation actions per epoch
-```
-
-### CustomDataset
-```python
-class SimpleDataset(Dataset):
-    def __init__():
-        ...
-        
-    def preprocess():
-        ...
-
-    def __getitem__():
-        ...
-
-    def __len__():
-        ...
-```
-
-### Losses
-```python
-class Loss():
-    def __init__():
-        ...
-    def forward():
-        ...
-```
-
-### Metric
-```python
-class Metric():
-    def __init__():
-        ...
-    def __call__():
-        ...
-```
-
-### Model
-```python
-class Model():
-    def __init__():
-        ...
-    def forward():
-        ...
-```
+We did our best to make classes' names speak for themselves. Anyway, small intro: 
+- `Config` class stored in `src/config` contains information about experiment configuration: model, loss functions, coefficients, optimaizer, dataset info, tools, etc. 
+- `Trainer` class stored in  `src/training` contains information about experiment training process: train and validation steps, losses' calculation and propagation, etc.
 
 ## File storage
 
-We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints. 
+We use Yandex.disk with 1TB storage to store dataset, logs and checkpoints. Main reason for us to use it -- we had free access to this service. 
+
+We understand that usage of this service is not user-friendly for other users and will come up with the solution soon. Right now you can comment out `disk` class from the code and download necessary datasets manually in `data` folder.
 
 ## Requirements & restrictions
 - PyTorch framework
