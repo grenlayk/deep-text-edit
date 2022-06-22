@@ -101,6 +101,8 @@ class StyleGanAdvTrainer:
         for style_imgs, desired_content, desired_labels, style_content, style_labels in self.train_dataloader:
             if max(len(label) for label in desired_labels) > 25:
                 continue
+            if max(len(label) for label in style_labels) > 25:
+                continue
             
             self.optimizer_G.zero_grad()
             self.optimizer_D.zero_grad()
@@ -185,6 +187,8 @@ class StyleGanAdvTrainer:
 
         for style_imgs, desired_content, desired_labels, style_content, style_labels in self.val_dataloader:
             if max(len(label) for label in desired_labels) > 25:
+                continue
+            if max(len(label) for label in style_labels) > 25:
                 continue
 
             self.optimizer_G.zero_grad()
