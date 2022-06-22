@@ -97,7 +97,8 @@ class StyleGanAdvTrainer:
         # desired_content - rendered images containing the content we want to draw
         # desired_labels - text labels of content batch
         # style_content - rendered images containing the words from the style images
-        for style_imgs, desired_content, desired_labels, style_content in self.train_dataloader:
+        # style_labels - text labels of the style_imgs batch
+        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.train_dataloader:
             if max(len(label) for label in desired_labels) > 25:
                 continue
             
@@ -132,8 +133,8 @@ class StyleGanAdvTrainer:
             cycled = self.model_G(style_content_embeds, reconstructed_style_embeds)
             cycle_loss = self.cons_loss(style_imgs, cycled)
 
-            # ocr_loss_rec = self.ocr_loss(reconstructed, style_content)
-            ocr_loss = ocr_loss_preds
+            ocr_loss_rec = self.ocr_loss(reconstructed, style_labels)
+            ocr_loss = (ocr_loss_preds + ocr_loss_rec) / 2.
 
             perc_loss, tex_loss = self.perc_loss(style_imgs, reconstructed)
             emb_loss = self.typeface_loss(style_imgs, reconstructed)
@@ -182,7 +183,7 @@ class StyleGanAdvTrainer:
         self.content_embedder.eval()
         self.style_embedder.eval()
 
-        for style_imgs, desired_content, desired_labels, style_content in self.val_dataloader:
+        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.val_dataloader:
             if max(len(label) for label in desired_labels) > 25:
                 continue
 
@@ -196,7 +197,7 @@ class StyleGanAdvTrainer:
             content_embeds = self.content_embedder(desired_content)
 
             preds = self.model_G(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(preds, desired_labels)
+            ocr_loss_preds = self.ocr_loss(preds, desired_labels)
 
             style_label_embeds = self.content_embedder(style_content)
 
@@ -207,9 +208,12 @@ class StyleGanAdvTrainer:
             cycle = self.model_G(style_label_embeds, reconstructed_style_embeds)
             cycle_loss = self.cons_loss(style_imgs, cycle)
 
+            ocr_loss_rec = self.ocr_loss(reconstructed, style_labels)
+            ocr_loss = (ocr_loss_preds + ocr_loss_rec) / 2.
+
             perc_loss, tex_loss = self.perc_loss(style_imgs, preds)
             emb_loss = self.typeface_loss(style_imgs, preds)
-            adv_loss = self.model_G_adv_loss(preds)
+            adv_loss = self.model_G_adv_loss(reconstructed)
 
             loss = \
                 self.ocr_coef * ocr_loss + \

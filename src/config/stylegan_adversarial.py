@@ -4,7 +4,7 @@ from src.disk import disk
 from pathlib import Path
 from src.logger.simple import Logger
 from src.losses.vgg import VGGLoss
-from src.data.baseline import BaselineDataset
+from src.data.stylegan import StyleganDataset
 from src.losses.vgg import VGGLoss
 from src.utils.download import download_dataset
 from src.models.embedders import ContentResnet, StyleResnet
@@ -26,8 +26,8 @@ class Config:
         style_dir = Path('data/IMGUR5K')
         download_dataset('IMGUR5K')
         batch_size = 16
-        train_dataloader = DataLoader(BaselineDataset(style_dir / 'train'), shuffle=True, batch_size=batch_size)
-        val_dataloader = DataLoader(BaselineDataset(style_dir / 'val'), batch_size=batch_size)
+        train_dataloader = DataLoader(StyleganDataset(style_dir / 'train'), shuffle=True, batch_size=batch_size)
+        val_dataloader = DataLoader(StyleganDataset(style_dir / 'val'), batch_size=batch_size)
 
         total_epochs = 500
 
