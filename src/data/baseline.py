@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 class BaselineDataset(Dataset):
-    def __init__(self, style_dir: Path):
+    def __init__(self, style_dir: Path, return_style_labels: bool = False):
         '''
             root_dir - directory with 2 subdirectories - root_dir/style, root_dir/content
             Images in root_dir/content(hard-coded): 64 x 256
@@ -21,6 +21,7 @@ class BaselineDataset(Dataset):
         '''
         self.style_dir = style_dir
         self.style_files = list(self.style_dir.glob('*.png'))
+        self.return_style_labels = return_style_labels
         json_path = style_dir / 'words.json'
         with open(json_path, 'r', encoding='utf-8') as json_file:
             self.words = json.load(json_file)
@@ -58,6 +59,9 @@ class BaselineDataset(Dataset):
                 content_style = 'o'
             img_content_style = self.transform(draw_word(content_style))
 
+            if self.return_style_labels:
+                return img_style, img_content, content, img_content_style, content_style
+            
             return img_style, img_content, content, img_content_style
 
         except Exception as e:
