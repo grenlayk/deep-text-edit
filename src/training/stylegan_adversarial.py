@@ -129,16 +129,16 @@ class StyleGanAdvTrainer:
             reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
             reconstructed_style_embeds = self.style_embedder(reconstructed)
-            cycle_preds = self.model_G(style_content_embeds, reconstructed_style_embeds)
-            cycle_loss = self.cons_loss(style_imgs, cycle_preds)
+            cycled = self.model_G(style_content_embeds, reconstructed_style_embeds)
+            cycle_loss = self.cons_loss(style_imgs, cycled)
 
-            ocr_loss_cycle, recognized = self.ocr_loss(cycle_preds, desired_labels, return_recognized=True)
-            ocr_loss = ocr_loss_preds + ocr_loss_cycle
+            # ocr_loss_rec = self.ocr_loss(reconstructed, style_content)
+            ocr_loss = ocr_loss_preds
 
             perc_loss, tex_loss = self.perc_loss(style_imgs, reconstructed)
             emb_loss = self.typeface_loss(style_imgs, reconstructed)
 
-            adv_loss = self.model_G_adv_loss(preds)
+            adv_loss = self.model_G_adv_loss(reconstructed)
 
             loss_G = \
                 self.ocr_coef * ocr_loss + \
