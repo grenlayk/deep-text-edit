@@ -81,8 +81,8 @@ class StyleGanAdvTrainer:
         real = torch.tensor(1.).expand_as(pred_D_real).to(self.device)
         return (self.adv_loss(pred_D_real, real) + self.adv_loss(pred_D_fake, fake)) / 2.
 
-    def model_G_adv_loss(self, res: torch.Tensor):
-        pred_D_fake = self.model_D(res)
+    def model_G_adv_loss(self, preds: torch.Tensor):
+        pred_D_fake = self.model_D(preds)
         valid = torch.tensor(1.).expand_as(pred_D_fake).to(self.device)
         return self.adv_loss(pred_D_fake, valid)
 
@@ -97,7 +97,8 @@ class StyleGanAdvTrainer:
         # desired_content - rendered images containing the content we want to draw
         # desired_labels - text labels of content batch
         # style_content - rendered images containing the words from the style images
-        for style_imgs, desired_content, desired_labels, style_content in self.train_dataloader:
+        # style_labels - text labels of the style_imgs batch
+        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.train_dataloader:
             if max(len(label) for label in desired_labels) > 25:
                 continue
             
@@ -110,33 +111,35 @@ class StyleGanAdvTrainer:
 
             style_embeds = self.style_embedder(style_imgs)
             content_embeds = self.content_embedder(desired_content)
+            style_content_embeds = self.content_embedder(style_content)
 
             ### calculate D loss
             self.set_requires_grad(self.model_D, True)
             self.set_requires_grad(self.model_G, False) 
-            loss_D = self.model_D_adv_loss(style_imgs, content_embeds, style_embeds)
+            loss_D = self.model_D_adv_loss(style_imgs, style_content_embeds, style_embeds)
 
             ### calculate G losses
             self.set_requires_grad(self.model_D, False)
             self.set_requires_grad(self.model_G, True) 
             
-            res = self.model_G(content_embeds, style_embeds)
-            ocr_loss, recognized = self.ocr_loss(res, desired_labels, return_recognized=True)
+            preds = self.model_G(content_embeds, style_embeds)
+            ocr_loss_preds, recognized = self.ocr_loss(preds, desired_labels, return_recognized=True)
             word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
-
-            style_content_embeds = self.content_embedder(style_content)
 
             reconstructed = self.model_G(style_content_embeds, style_embeds)
             reconstructed_loss = self.cons_loss(style_imgs, reconstructed)
 
             reconstructed_style_embeds = self.style_embedder(reconstructed)
-            cycle = self.model_G(style_content_embeds, reconstructed_style_embeds)
-            cycle_loss = self.cons_loss(style_imgs, cycle)
+            cycled = self.model_G(style_content_embeds, reconstructed_style_embeds)
+            cycle_loss = self.cons_loss(style_imgs, cycled)
+
+            ocr_loss_rec = self.ocr_loss(reconstructed, style_labels)
+            ocr_loss = (ocr_loss_preds + ocr_loss_rec) / 2.
 
             perc_loss, tex_loss = self.perc_loss(style_imgs, reconstructed)
             emb_loss = self.typeface_loss(style_imgs, reconstructed)
 
-            adv_loss = self.model_G_adv_loss(res)
+            adv_loss = self.model_G_adv_loss(reconstructed)
 
             loss_G = \
                 self.ocr_coef * ocr_loss + \
@@ -171,7 +174,7 @@ class StyleGanAdvTrainer:
                     'style': style_imgs,
                     'content': desired_content,
                     'reconstructed': reconstructed,
-                    'result': res,
+                    'result': preds,
                     'recognized': word_images})
 
     def validate(self, epoch: int):
@@ -180,7 +183,7 @@ class StyleGanAdvTrainer:
         self.content_embedder.eval()
         self.style_embedder.eval()
 
-        for style_imgs, desired_content, desired_labels, style_content in self.val_dataloader:
+        for style_imgs, desired_content, desired_labels, style_content, style_labels in self.val_dataloader:
             if max(len(label) for label in desired_labels) > 25:
                 continue
 
@@ -193,8 +196,8 @@ class StyleGanAdvTrainer:
             style_embeds = self.style_embedder(style_imgs)
             content_embeds = self.content_embedder(desired_content)
 
-            res = self.model_G(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, desired_labels)
+            preds = self.model_G(content_embeds, style_embeds)
+            ocr_loss_preds = self.ocr_loss(preds, desired_labels)
 
             style_label_embeds = self.content_embedder(style_content)
 
@@ -205,9 +208,12 @@ class StyleGanAdvTrainer:
             cycle = self.model_G(style_label_embeds, reconstructed_style_embeds)
             cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            perc_loss, tex_loss = self.perc_loss(style_imgs, res)
-            emb_loss = self.typeface_loss(style_imgs, res)
-            adv_loss = self.model_G_adv_loss(res)
+            ocr_loss_rec = self.ocr_loss(reconstructed, style_labels)
+            ocr_loss = (ocr_loss_preds + ocr_loss_rec) / 2.
+
+            perc_loss, tex_loss = self.perc_loss(style_imgs, preds)
+            emb_loss = self.typeface_loss(style_imgs, preds)
+            adv_loss = self.model_G_adv_loss(reconstructed)
 
             loss = \
                 self.ocr_coef * ocr_loss + \
@@ -231,7 +237,7 @@ class StyleGanAdvTrainer:
                 images={
                     'style': style_imgs,
                     'content': desired_content,
-                    'result': res})
+                    'result': preds})
 
         avg_losses, _ = self.logger.end_val()
         self.storage.save(epoch,

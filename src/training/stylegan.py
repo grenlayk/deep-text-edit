@@ -78,8 +78,8 @@ class StyleGanTrainer:
             style_embeds = self.style_embedder(style_imgs)
             content_embeds = self.content_embedder(desired_content)
 
-            res = self.model(content_embeds, style_embeds)
-            ocr_loss, recognized = self.ocr_loss(res, desired_labels, return_recognized=True)
+            preds = self.model(content_embeds, style_embeds)
+            ocr_loss, recognized = self.ocr_loss(preds, desired_labels, return_recognized=True)
             word_images = torch.stack(list(map(lambda word: img_to_tensor(draw_word(word)), recognized)))
 
             style_content_embeds = self.content_embedder(style_content)
@@ -118,7 +118,7 @@ class StyleGanTrainer:
                     'style': style_imgs,
                     'content': desired_content,
                     'reconstructed': reconstructed,
-                    'result': res,
+                    'result': preds,
                     'recognized': word_images})
 
     def validate(self, epoch):
@@ -138,8 +138,8 @@ class StyleGanTrainer:
             style_embeds = self.style_embedder(style_imgs)
             content_embeds = self.content_embedder(desired_content)
 
-            res = self.model(content_embeds, style_embeds)
-            ocr_loss = self.ocr_loss(res, desired_labels)
+            preds = self.model(content_embeds, style_embeds)
+            ocr_loss = self.ocr_loss(preds, desired_labels)
 
             style_label_embeds = self.content_embedder(style_content)
 
@@ -150,8 +150,8 @@ class StyleGanTrainer:
             cycle = self.model(style_label_embeds, reconstructed_style_embeds)
             cycle_loss = self.cons_loss(style_imgs, cycle)
 
-            perc_loss, tex_loss = self.perc_loss(style_imgs, res)
-            emb_loss = self.typeface_loss(style_imgs, res)
+            perc_loss, tex_loss = self.perc_loss(style_imgs, preds)
+            emb_loss = self.typeface_loss(style_imgs, preds)
 
             loss = \
                 self.ocr_coef * ocr_loss + \
@@ -173,7 +173,7 @@ class StyleGanTrainer:
                 images={
                     'style': style_imgs,
                     'content': desired_content,
-                    'result': res})
+                    'result': preds})
 
         avg_losses, _ = self.logger.end_val()
         self.storage.save(epoch,
