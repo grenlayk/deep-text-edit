@@ -71,12 +71,14 @@ Our implementation is unofficial and might contain some differences from the ori
 
 ## Architecture
 
-We started our work from a very simple architecture, shown below: 
+We started our work from a very simple architecture, shown below:
+
 ![Baseline](docs/baseline.png)
 
 We call it baseline and you can find its config [here](src/config/baseline.py). We did it because we could and because we needed something to set up work space.
 
 Anyway, we ended up with this architecture, very similar to TextStyleBrush:
+
 ![final architecture](docs/final_architecture.png)
 
 You can find its config [here](src/config/stylegan_adversarial.py). It's not perfect, but we did our best -- you can check out results below.
@@ -87,13 +89,7 @@ TODO: Decribe differences from the original paper.
 
 ## Results
 
-Here are some results: 
-
-![results 1](docs/Results_part_1.png)
-
-And some more:
-![results 2](docs/Results_part_2.png)
-
+![results 1](docs/Results.png)
 
 
 ## Datasets 
