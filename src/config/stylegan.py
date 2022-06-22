@@ -56,12 +56,12 @@ class Config:
             gamma=0.8
         )
 
-        ocr_coef = 0.12
-        cycle_coef = 0.25
-        recon_coef = 0.25
-        emb_coef = 4.0
-        perc_coef = 100.0
-        tex_coef = 5.0
+        ocr_coef = 0.07
+        cycle_coef = 2.0
+        recon_coef = 2.0
+        emb_coef = 0.0
+        perc_coef = 0.0
+        tex_coef = 6.0
 
         storage = Storage('checkpoints/stylegan(pretrained_on_content)_typeface_ocr_192x64')
 

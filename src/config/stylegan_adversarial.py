@@ -57,22 +57,22 @@ class Config:
         )
         scheduler_G = torch.optim.lr_scheduler.ExponentialLR(
             optimizer_G,
-            gamma=0.8
+            gamma=0.9
         )
 
         optimizer_D = torch.optim.AdamW(model_D.parameters(), lr=1e-4)
         scheduler_D = torch.optim.lr_scheduler.ExponentialLR(
             optimizer_D,
-            gamma=0.8
+            gamma=0.9
         )
 
         ocr_coef = 0.07
         cycle_coef = 2.0
         recon_coef = 2.0
         emb_coef = 0.0
-        perc_coef = 0.0
-        tex_coef = 6.0
-        adv_coef = 0.13
+        perc_coef = 25.0
+        tex_coef = 7.0
+        adv_coef = 0.06
 
         checkpoint_folder = 'stylegan(pretrained_on_content)_typeface_ocr_adv_192x64'
         storage = Storage(f'checkpoints/{checkpoint_folder}')
