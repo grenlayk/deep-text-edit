@@ -93,9 +93,9 @@ Before you do, there are differences with the original paper:
 | Input style size| 64 x 192 | 256 x 256|
 | Input content size| 64 x 192 | 64 x 256 |
 | Soft masks | no | yes|
-| Adversarial loss | MSE | cross entropy with regularization |
+| Adversarial loss | MSE | non-saturating loss with regularization |
 | Discriminator | NLayerDiscriminator | ?? | 
-| OCR | TRBA | ?? |
+| Text recognizer | TRBA | ?? |
 | Hardware | Google Colab resources : ) | 8GPUS with 16GB of RAM |
 
 ## Results
