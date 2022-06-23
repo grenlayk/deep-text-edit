@@ -71,11 +71,36 @@ Our implementation is unofficial and might contain some differences from the ori
 
 ## Architecture
 
-TODO: Add architecture image and decribe differences from the original paper.
+We started our work from a very simple architecture, shown below:
+
+![Baseline](docs/baseline.png)
+
+We call it baseline and you can find its config [here](src/config/baseline.py). We did it because we could and because we needed something to set up work space.
+
+Anyway, we ended up with this architecture, very similar to TextStyleBrush:
+
+![final architecture](docs/final_architecture.png)
+
+You can find its config [here](src/config/stylegan_adversarial.py). It's not perfect, but we did our best -- you can check out results below.
+
+Before you do, there are differences with the original paper:
+
+| Subject  | Us     | TextStyleBrush|
+|-----------|--------|---------------|
+| Generator | styleGAN| styleGAN2 |
+| Encoders | resNet18 | resNet34|
+| Style loss model| VGG16 | VGG19 |
+| Input style size| 64 x 192 | 256 x 256|
+| Input content size| 64 x 192 | 64 x 256 |
+| Soft masks | no | yes|
+| Adversarial loss | MSE | cross entropy with regularization |
+| Discriminator | NLayerDiscriminator | ?? | 
+| OCR | TRBA | ?? |
+| Hardware | Google Colab resources : ) | 8GPUS with 16GB of RAM |
 
 ## Results
 
-TODO: add images of results
+![results 1](docs/Results.png)
 
 ## Datasets 
 
