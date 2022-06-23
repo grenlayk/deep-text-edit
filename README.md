@@ -85,12 +85,22 @@ You can find its config [here](src/config/stylegan_adversarial.py). It's not per
 
 Before you do, there are differences with the original paper:
 
-TODO: Decribe differences from the original paper.
+| Subject  | Us     | TextStyleBrush|
+|-----------|--------|---------------|
+| Generator | styleGAN| styleGAN2 |
+| Encoders | resNet18 | resNet34|
+| Style loss model| VGG16 | VGG19 |
+| Input style size| 64 x 192 | 256 x 256|
+| Input content size| 64 x 192 | 64 x 256 |
+| Soft masks | no | yes|
+| Adversarial loss | MSE | cross entropy with regularization |
+| Discriminator | NLayerDiscriminator | ?? | 
+| OCR | TRBA | ?? |
+| Hardware | Google Colab resources : ) | 8GPUS with 16GB of RAM |
 
 ## Results
 
 ![results 1](docs/Results.png)
-
 
 ## Datasets 
 
