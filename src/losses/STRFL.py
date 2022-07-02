@@ -1,3 +1,10 @@
+# source: https://github.com/ku21fan/STR-Fewer-Labels
+# 
+# Copyright (c) 2021 Baek JeongHun
+# 
+# ------------------------------------------------
+# loss function is modified to match our template
+
 from loguru import logger
 import torch
 from torch import nn

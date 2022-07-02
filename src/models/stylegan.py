@@ -1,4 +1,7 @@
 # source: https://github.com/SiskonEmilia/StyleGAN-PyTorch/blob/master/model.py
+# 
+# Copyright (c) 2019 Siskon
+
 import torch
 import torch.nn as nn
 import math

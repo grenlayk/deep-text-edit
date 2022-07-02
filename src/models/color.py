@@ -1,3 +1,7 @@
+# source: https://github.com/ahemaesh/Deep-Image-Colorization
+# 
+# Copyright (c) 2020 Avinash H Raju, Atulya Ravishankar
+
 import torch
 from torch import nn
 from torchvision.models.resnet import resnet50
