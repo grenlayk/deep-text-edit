@@ -133,3 +133,8 @@ We understand that usage of this service is not user-friendly for other users an
 
 ### Tests
 - CI tests 
+
+## Acknowledgements
+
+- To our supervisors -- [Renat Khizbullin](https://github.com/E1eMenta) and [Danil Kononyhin](https://github.com/DanilKonon) from Huawei Technologies for their support and lead in this project.
+
