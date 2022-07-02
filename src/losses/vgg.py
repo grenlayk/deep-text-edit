@@ -1,3 +1,10 @@
+# source: https://gist.github.com/alper111/8233cdb0414b4cb5853f2f730ab95a49
+# 
+# Copyright (c) 2020 Alper Ahmetoğlu
+#
+# ------------------------------------------------
+# modification of perceptual.py and gram.py files with normalization 
+
 import torch
 import torchvision
 from torchvision import transforms as T
