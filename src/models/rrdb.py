@@ -1,3 +1,11 @@
+#    source: https://github.com/xinntao/ESRGAN
+#
+#    Copyright 2019 Xintao Wang, Ke Yu, Shixiang Wu, Jinjin Gu, Yihao Liu, 
+#                   Chao Dong, Chen Change Loy, Yu Qiao, Xiaoou Tang
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+
 import functools
 import torch
 import torch.nn as nn

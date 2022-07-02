@@ -1,3 +1,5 @@
+# source: https://pytorch.org/vision/0.8/_modules/torchvision/models/resnet.html
+
 import torch
 from torchvision import models
 from torchvision.models.resnet import BasicBlock

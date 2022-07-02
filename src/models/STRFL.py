@@ -1,3 +1,7 @@
+# source: https://github.com/ku21fan/STR-Fewer-Labels
+# 
+# Copyright (c) 2021 Baek JeongHun
+
 import numpy as np
 import torch
 from torch import nn

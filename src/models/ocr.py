@@ -1,3 +1,7 @@
+# source: https://github.com/meijieru/crnn.pytorch
+# 
+# Copyright (c) 2017 Jieru Mei meijieru@gmail.com
+
 import torch.nn as nn
 import torch
 
