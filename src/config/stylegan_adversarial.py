@@ -24,7 +24,6 @@ class Config:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
         style_dir = Path('data/IMGUR5K')
-        download_dataset('IMGUR5K')
         batch_size = 16
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train', return_style_labels=True), shuffle=True, batch_size=batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val', return_style_labels=True), batch_size=batch_size)
@@ -33,7 +32,9 @@ class Config:
 
         weights_folder = 'models/Stylegan (pretrained on content)'
         if not Path(weights_folder).exists():
-            disk.download(weights_folder, weights_folder)
+            logger.error('You need to download the folder from https://disk.yandex.ru/d/YOUn0_QuLinLeg and '
+                         'put it in the models/ folder in the root of the repository')
+            exit(1)
 
         model_G = StyleBased_Generator(dim_latent=512)
         model_G.load_state_dict(torch.load(f'{weights_folder}/model'))
