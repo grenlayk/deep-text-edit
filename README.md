@@ -10,7 +10,8 @@ Our implementation is unofficial and might contain some differences from the ori
 - Choose config file in `src/config` folder
 - Log in into wandb if needed `wandb login`
 - Download `models` folder from [cloud](https://disk.yandex.ru/d/gTJa6Bg2QW0GJQ) this folder contains all pretrained models which we use. This folder should be in root folder as shown below.
-- 
+- Download IMGUR5K dataset: use original `download_imgur5k.py` script which you can find [here](https://github.com/facebookresearch/IMGUR5K-Handwriting-Dataset).
+- TODO: add instructions about crops we did
 - Run `python3 run.py './src/config/<chosen config>'`
 
 ## Repo structure

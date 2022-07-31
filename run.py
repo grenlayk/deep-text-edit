@@ -19,9 +19,9 @@ from loguru import logger
 def run(config_file, yadisk):
     config_file = Path(config_file)
     config_file = (config_file.parent / config_file.stem).as_posix().replace('/', '.')
-    a = import_module(config_file)
+    imported = import_module(config_file)
     disk.set_disabled(not yadisk)
-    config = a.Config()
+    config = imported.Config()
     config.run()
 
 
