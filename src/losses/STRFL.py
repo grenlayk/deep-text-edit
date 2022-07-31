@@ -40,7 +40,12 @@ class OCRLoss(nn.Module):
         img_w = 100
 
         if not Path(model_local_path).exists():
-            disk.download(model_remote_path, model_local_path)
+            if not disk.get_disabled():
+                disk.download(model_remote_path, model_local_path)
+            else:
+                logger.error('You need to download the TRBA-PR.pth from https://disk.yandex.ru/d/gTJa6Bg2QW0GJQ and '
+                             'put it in the models/TRBA folder in the root of the repository')
+                exit(1)
 
         opt = Options()
         self.opt = opt

@@ -24,16 +24,30 @@ class Config:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         info_logger.info(f'Using device: {device}')
         style_dir = Path('data/IMGUR5K')
-        download_dataset('IMGUR5K')
+
+        if not disk.get_disabled():
+            download_dataset('IMGUR5K')
+        else:
+            if not Path(style_dir).exists():
+                logger.error('You should download IMGUR5K dataset first.')
+                exit(1)
+        
         batch_size = 16
         train_dataloader = DataLoader(BaselineDataset(style_dir / 'train', return_style_labels=True), shuffle=True, batch_size=batch_size)
         val_dataloader = DataLoader(BaselineDataset(style_dir / 'val', return_style_labels=True), batch_size=batch_size)
 
         total_epochs = 500
 
-        weights_folder = 'models/Stylegan (pretrained on content)'
+        weights_folder_name = 'Stylegan (pretrained on content)'
+        weights_folder = f'models/{weights_folder_name}'
         if not Path(weights_folder).exists():
-            disk.download(weights_folder, weights_folder)
+            if not disk.get_disabled():
+                disk.download(weights_folder, weights_folder)
+            else:
+                logger.error(f'You need to download the {weights_folder_name} folder from '
+                             'https://disk.yandex.ru/d/gTJa6Bg2QW0GJQ and '
+                             'put it in the models/ folder in the root of the repository')
+                exit(1)
 
         model_G = StyleBased_Generator(dim_latent=512)
         model_G.load_state_dict(torch.load(f'{weights_folder}/model'))

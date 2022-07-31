@@ -5,7 +5,6 @@ from typing import List, Optional, Union
 import yadisk
 from loguru import logger
 
-
 class Disk:
     '''
     Disk is a class for working with the folder in YandexDisk. To use an instance
@@ -20,11 +19,20 @@ class Disk:
         self._cred_cache_path = Path('.yadisk_cache/credentials.ini')
 
         self._cred_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        self._disabled = True
+
+    def set_disabled(self, disable):
+        self._disabled = disable
+
+    def get_disabled(self):
+        return self._disabled
 
     def login(self, use_cache=True, cache_credentials=True):
         '''
         Login to Yandex Disk. You must call this method before you can use other functions.
         '''
+        if self._disabled:
+            return
 
         if use_cache and self._cred_cache_path.exists():
             config = configparser.ConfigParser()
@@ -83,6 +91,8 @@ class Disk:
             local_path (Optional[Union[str, Path]]): Path to the object on the machine.
             Duplicates remote if not present.
         '''
+        if self._disabled:
+            return
 
         assert self._logged_in, 'You must log in first'
 
@@ -109,6 +119,8 @@ class Disk:
             local (Union[str, Path]): Path to the object on the machine
             remote (Optional[Union[str, Path]]): Path to the object in the cloud. Duplicates local if not present
         '''
+        if self._disabled:
+            return
 
         assert self._logged_in, 'You must log in first'
 
