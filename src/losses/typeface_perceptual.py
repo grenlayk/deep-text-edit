@@ -1,3 +1,4 @@
+from loguru import logger
 import torch
 import torchvision
 import torchvision.transforms as T
@@ -12,7 +13,12 @@ class TypefacePerceptualLoss(torch.nn.Module):
             model_local_path='models/TypefaceClassifier/model'):
         super().__init__()
         if not Path(model_local_path).exists():
-            disk.download(model_remote_path, model_local_path)
+            if not disk.get_disabled():
+                disk.download(model_remote_path, model_local_path)
+            else:
+                logger.error('You need to download the TypefaceClassifier/model from https://disk.yandex.ru/d/gTJa6Bg2QW0GJQ and '
+                             'put it in the models/ folder in the root of the repository')
+                exit(1)
 
         model = torchvision.models.vgg16().cuda()
         model.classifier[-1] = torch.nn.Linear(4096, 2500)

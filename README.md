@@ -9,6 +9,8 @@ Our implementation is unofficial and might contain some differences from the ori
 - Install requirements `pip install -r requirements.txt`
 - Choose config file in `src/config` folder
 - Log in into wandb if needed `wandb login`
+- Download `models` folder from [cloud](https://disk.yandex.ru/d/gTJa6Bg2QW0GJQ) this folder contains all pretrained models which we use. This folder should be in root folder as shown below.
+- 
 - Run `python3 run.py './src/config/<chosen config>'`
 
 ## Repo structure
@@ -21,6 +23,8 @@ Our implementation is unofficial and might contain some differences from the ori
 ├── data                    <- [necessary data (including downloaded datasets)]
 |
 ├── docs                    <- [docs and images]
+|
+├── models                  <- [pretrained models -- download this folder from cloud]
 |
 ├── src                     <- [project source code]
 │   ├── config 
