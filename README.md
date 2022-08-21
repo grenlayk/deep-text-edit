@@ -116,9 +116,9 @@ Before you do, there are differences with the original paper:
 
 We trained our model using [Imgur5K](https://github.com/facebookresearch/IMGUR5K-Handwriting-Dataset) dataset. You can download it using instruction from the origin repo. 
 
-Other way is to use our script which hasn't been uploaded to the repo yet. We are working on it!
+What we did: we dowloaded original repo from the link above. We modified `download_imgur5k.py` a little bit: added ability to proceed download process from the point where it stopped in case of exeptions and added ability to run it in parallel. We do not publish this version because we were afraid of conflicts with their Licence. Anyway you can do it yourself or use code from [PR](https://github.com/facebookresearch/IMGUR5K-Handwriting-Dataset/pull/5) in official repo.
 
-TODO: upload script and add dicription
+After that we added `prepare_dataset.py` to that folder and ran it. Output if this script is the dataset which we use. Put in into `data/` folder of this project and you are ready to go.
 
 ## Classes design
 
