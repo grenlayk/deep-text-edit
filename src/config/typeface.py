@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from loguru import logger
 from src.disk import disk
+from src.utils.download import download_dataset
 from src.logger.simple import Logger
 from src.metrics.accuracy import TopKAccuracy
 from src.storage.simple import Storage
@@ -23,10 +24,7 @@ class Config:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
         logger.info(f'Using device: {device}')
 
-        if not Path('data/Typefaces').exists():
-            disk.download('data/Typefaces.tar', 'data/Typefaces.tar')
-            with tarfile.open('data/Typefaces.tar', 'r') as tar:
-                tar.extractall('data/Typefaces')
+        download_dataset('Typefaces')
 
         model = vgg11(pretrained=True)
         model.classifier[-1] = torch.nn.Linear(4096, 2500)
