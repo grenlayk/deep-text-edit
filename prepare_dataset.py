@@ -78,21 +78,24 @@ def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: b
             if img is None:
                 continue
             for ann_id in ann_ids:
-                info = annotation['ann_id'][ann_id]
-                info['word'] = str(info['word'])
-                if len(info['word']) == 0:
-                    continue
+                try:
+                    info = annotation['ann_id'][ann_id]
+                    info['word'] = str(info['word'])
+                    if len(info['word']) == 0:
+                        continue
 
-                words[ann_id] = info['word']
+                    words[ann_id] = info['word']
 
-                if (output_path / f'{ann_id}.png').exists():
-                    continue
+                    if (output_path / f'{ann_id}.png').exists():
+                        continue
 
-                box = info['bounding_box']
-                if isinstance(box, str):
-                    box = json.loads(box)
-                img_cropped = crop_minAreaRect(img, *box)
-                cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
+                    box = info['bounding_box']
+                    if isinstance(box, str):
+                        box = json.loads(box)
+                    img_cropped = crop_minAreaRect(img, *box)
+                    cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
+                except:
+                    pass
         json.dump(words, (output_path / 'words.json').open('w'))
 
 
