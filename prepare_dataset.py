@@ -1,14 +1,13 @@
-import random
-import click
-import cv2
-from loguru import logger
-import numpy as np
+import argparse
 import json
+import random
 from pathlib import Path
+
+import cv2
+import numpy as np
 from tqdm import tqdm
 
 
-@logger.catch
 def crop_minAreaRect(img, xc, yc, w, h, a):
     box = cv2.boxPoints(((xc, yc), (w, h), -a))
     w, h = int(w), int(h)
@@ -24,27 +23,6 @@ def crop_minAreaRect(img, xc, yc, w, h, a):
     return warped
 
 
-@click.command()
-@click.option('-a', '--annotations-path',
-              type=click.Path(exists=True,
-                              file_okay=False,
-                              readable=True,
-                              path_type=Path),
-              default=Path('dataset_info/'))
-@click.option('-i', '--images-path',
-              type=click.Path(exists=True,
-                              file_okay=False,
-                              readable=True,
-                              path_type=Path),
-              default=Path('dataset_info/'))
-@click.option('-s', '--save_path',
-              type=click.Path(file_okay=False,
-                              writable=True,
-                              path_type=Path),
-              default=Path('cropped/'))
-@click.option('--no-split', is_flag=True)
-@click.option('--reduce', type=float)
-@logger.catch
 def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: bool, reduce: float):
     annotations: list[Path]
     outputs: list[Path]
@@ -93,4 +71,16 @@ def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: b
 
 
 if __name__ == '__main__':
-    main()  # pylint: disable=no-value-for-parameter
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-a', '--annotations-path', required=True)
+    parser.add_argument('-i', '--images-path', required=True)
+    parser.add_argument('-s', '--save_path', required=True)
+    args = parser.parse_args()
+    main(
+        Path(args.annotations_path),
+        Path(args.images_path),
+        Path(args.save_path),
+        False,
+        None
+    )  # pylint: disable=no-value-for-parameter
