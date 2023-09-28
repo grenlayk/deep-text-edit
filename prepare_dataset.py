@@ -87,8 +87,11 @@ def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: b
 
                 if (output_path / f'{ann_id}.png').exists():
                     continue
-                xc, yc, w, h, a = info['bounding_box']
-                img_cropped = crop_minAreaRect(img, xc, yc, w, h, a)
+
+                box = info['bounding_box']
+                if isinstance(box, str):
+                    box = json.loads(box)
+                img_cropped = crop_minAreaRect(img, *box)
                 cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
         json.dump(words, (output_path / 'words.json').open('w'))
 
