@@ -95,6 +95,7 @@ def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: b
                     img_cropped = crop_minAreaRect(img, *box)
                     cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
                 except:
+                    print('Error')
                     pass
         json.dump(words, (output_path / 'words.json').open('w'))
 
