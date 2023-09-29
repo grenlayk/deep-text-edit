@@ -79,6 +79,6 @@ class NormalizeImages(Dataset):
         for key in self.image_keys:
             image = data[key]
             image = self.norm(image=image)["image"]
-            data[self.image_key] = image
+            data[key] = image
 
         return data
