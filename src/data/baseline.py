@@ -12,6 +12,39 @@ from torchvision import transforms as T
 from pathlib import Path
 
 
+class ImgurDataset(Dataset):
+    def __init__(self, root: Path):
+        self.root = root
+
+        self.images = list(self.root.glob('*.png'))
+        json_path = self.root / 'words.json'
+        with open(json_path, 'r', encoding='utf-8') as json_file:
+            self.words = json.load(json_file)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+        try:
+            path = self.images[index]
+            image = cv2.imread(str(path), cv2.IMREAD_COLOR)
+            if image is None:
+                raise Exception(f'Image {path} does not exist.')
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+            text = self.words[path.stem]
+            text = ''.join([i for i in text if i in allowed_symbols])
+            if not text:
+                text = 'o'
+
+            return {'image': image, 'content': text}
+
+        except Exception as e:
+            logger.error(f'Exception at {self.style_files[index]}, {e}')
+            raise e
+
+
 class BaselineDataset(Dataset):
     def __init__(self, style_dir: Path, return_style_labels: bool = False):
         '''
@@ -25,7 +58,7 @@ class BaselineDataset(Dataset):
         json_path = style_dir / 'words.json'
         with open(json_path, 'r', encoding='utf-8') as json_file:
             self.words = json.load(json_file)
-        logger.info(f'Total Files: {len(self.style_files) }')
+        logger.info(f'Total Files: {len(self.style_files)}')
         self.transform = T.Compose([
             T.ToTensor(),
             T.Resize((64, 192)),
@@ -61,7 +94,7 @@ class BaselineDataset(Dataset):
 
             if self.return_style_labels:
                 return img_style, img_content, content, img_content_style, content_style
-            
+
             return img_style, img_content, content, img_content_style
 
         except Exception as e:
