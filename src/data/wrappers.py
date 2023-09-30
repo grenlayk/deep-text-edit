@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Tuple, List
 
 import cv2
@@ -42,6 +44,31 @@ class ChannelShuffleImage(Dataset):
         image = np.ascontiguousarray(self.augment(image=image)["image"]).copy()
         data[self.image_key] = image
 
+        return data
+
+
+class GetRandomText(Dataset):
+    def __init__(self, dataset: Dataset, root: Path, key: str):
+        self.dataset = dataset
+        self.root = root
+        self.key = key
+
+        json_path = self.root / 'words.json'
+        with open(json_path, 'r', encoding='utf-8') as json_file:
+            words = json.load(json_file)
+
+        allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+
+        self.words = [word for word in words if len(set(word) - set(allowed_symbols)) == 0]
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, item):
+        data = self.dataset[item]
+
+        i = np.random.randint(len(self.words))
+        data[self.key] = self.words[i]
         return data
 
 
