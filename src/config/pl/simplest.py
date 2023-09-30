@@ -20,7 +20,7 @@ class Config:
 
     batch_size = 32
 
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def __init__(self):
         generator = RRDBNet(6, 3, 64, 10, gc=32).to(self.device)
