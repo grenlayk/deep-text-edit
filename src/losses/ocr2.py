@@ -106,8 +106,10 @@ class OCRV2Loss(nn.Module):
         for param in self.parameters():
             param.requires_grad = False
         self.eval()
-        import pdb
-        pdb.set_trace()
+
+        for module in self.modules():
+            if isinstance(module, nn.RNNBase):
+                module.train()
 
     def forward(self, images, labels, return_recognized=False):
         preds = self.model.forward(images, is_train=False)
