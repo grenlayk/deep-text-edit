@@ -36,7 +36,7 @@ class STRFLInference(nn.Module):
     ):
         super().__init__()
 
-        self.denorm = Denormalize(mean, std)
+        self.denorm = Denormalize(torch.Tensor(mean), torch.Tensor(mean))
 
         opt = Options()
         self.opt = opt
