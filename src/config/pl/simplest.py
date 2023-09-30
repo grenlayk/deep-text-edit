@@ -1,6 +1,7 @@
 import torch
 from pathlib import Path
 import cv2
+from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
 from src.data.baseline import ImgurDataset
@@ -17,7 +18,7 @@ class Config:
     size = (192, 64)
     crops_path = Path("")
 
-    batch_size = 64
+    batch_size = 32
 
     def __init__(self):
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
@@ -48,6 +49,8 @@ class Config:
             content_key='draw_random'
         )
 
+        self.trainer = Trainer(accelerator='cuda', max_epochs=10)
+
     def get_dataset(self, root):
         dataset = ImgurDataset(root)
         dataset = ChannelShuffleImage(dataset, 'image')
@@ -62,3 +65,6 @@ class Config:
 
         dataset = NormalizeImages(dataset, ['image', 'draw_orig', 'draw_random'], self.mean, self.std)
         return dataset
+
+    def run(self):
+        self.trainer.fit(self.pipeline, self.trainloader)
