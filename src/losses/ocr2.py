@@ -56,7 +56,7 @@ class STRFLInference(nn.Module):
         batch_size = images.size(0)
         text_for_pred = torch.LongTensor(batch_size).fill_(self.opt.Converter.dict["[SOS]"]).to(images.device)
 
-        preds = self.model(self.transform(images), text_for_pred, is_train=is_train)
+        preds = self.model(images, text_for_pred, is_train=is_train)
 
         return preds
 
