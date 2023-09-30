@@ -50,19 +50,19 @@ class STRFLInference(nn.Module):
         self.criterion = torch.nn.CrossEntropyLoss(ignore_index=opt.Converter.dict["[PAD]"])
 
     def forward(self, images, is_train=False):
-        images = self.denorm(images)
-        images = self.transform(images)
+        images1 = self.denorm(images)
+        images2 = self.transform(images1)
 
-        batch_size = images.size(0)
-        text_for_pred = torch.LongTensor(batch_size).fill_(self.opt.Converter.dict["[SOS]"]).to(images.device)
+        batch_size = images2.size(0)
+        text_for_pred = torch.LongTensor(batch_size).fill_(self.opt.Converter.dict["[SOS]"]).to(images2.device)
 
-        preds = self.model(images, text_for_pred, is_train=is_train)
+        preds = self.model(images2, text_for_pred, is_train=is_train)
 
-        return preds
+        return preds, images, images1, images2
 
     def recognize(self, images):
         batch_size = images.size(0)
-        preds = self.forward(images, is_train=False)
+        preds, images, images1, images2 = self.forward(images, is_train=False)
 
         preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(images.device)
         _, preds_index = preds.max(2)
@@ -74,7 +74,7 @@ class STRFLInference(nn.Module):
             pred = pred[:pred_EOS]  # prune after "end of sentence" token ([s])
             recognized.append(pred)
 
-        return recognized
+        return recognized, images, images1, images2
 
 
 class OCRV2Loss(nn.Module):
