@@ -45,8 +45,10 @@ class Config:
             optimizer=optimizer,
             criterions=criterions,
             style_key='image',
-            original_key='draw_orig',
-            content_key='draw_random'
+            draw_orig='draw_orig',
+            text_orig='content',
+            draw_rand='draw_random',
+            text_rand='random',
         )
 
         self.trainer = Trainer(accelerator='cuda', max_epochs=10)
