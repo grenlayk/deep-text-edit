@@ -56,7 +56,7 @@ class Config:
         dataset = ChannelShuffleImage(dataset, 'image')
 
         dataset = GetRandomText(dataset, root, 'random')
-        dataset = DrawText(dataset, 'orig', 'draw_orig')
+        dataset = DrawText(dataset, 'content', 'draw_orig')
         dataset = DrawText(dataset, 'random', 'draw_random')
 
         dataset = Resize(dataset, 'image', self.size)

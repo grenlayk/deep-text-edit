@@ -12,29 +12,33 @@ class SimplestEditing(pl.LightningModule):
             optimizer: Optimizer,
             criterions: List[Dict[str, Any]],
             style_key: str = 'image',
-            original_key: str = 'draw',
-            content_key: str = 'draw',
+            draw_orig: str = 'draw_orig',
+            text_orig: str = 'content',
+            draw_rand: str = 'draw_random',
+            text_rand: str = 'random',
     ):
         super().__init__()
         self.generator = generator
         self.optimizer = optimizer
         self.criterions = criterions
         self.style_key = style_key
-        self.original_key = original_key
-        self.content_key = content_key
+        self.draw_orig = draw_orig
+        self.text_orig = text_orig
+        self.draw_rand = draw_rand
+        self.text_rand = text_rand
 
     def forward(self, style, content, postfix='base'):
         results = self.generator(style, content)
-        results = {f"{key}_{postfix}": value for key, value in results.items()}
+        results = {f"{key}{postfix}": value for key, value in results.items()}
         return results
 
     def training_step(self, batch, batch_idx):
         style = batch[self.style_key]
-        original = batch[self.original_key]
-        content = batch[self.content_key]
+        draw_orig = batch[self.draw_orig]
+        draw_rand = batch[self.draw_rand]
 
-        predictions = self.forward(style, content, 'base')
-        predictions.update(self.forward(style, original, 'original'))
+        predictions = self.forward(style, draw_rand, '_base')
+        predictions.update(self.forward(style, draw_orig, '_original'))
         predictions.update(batch)
 
         total = 0
