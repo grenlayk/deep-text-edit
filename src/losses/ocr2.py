@@ -77,7 +77,6 @@ class STRFLInference(nn.Module):
         return recognized
 
     def recognize(self, images):
-        batch_size = images.size(0)
         preds = self.forward(images, is_train=False)
 
         recognized = self.postprocess(preds)
@@ -105,11 +104,16 @@ class OCRV2Loss(nn.Module):
 
         self.model.eval()
 
-    def forward(self, images, labels):
+    def forward(self, images, labels, return_recognized=False):
         preds = self.model.forward(images, is_train=False)
 
         labels_index, labels_length = self.opt.Converter.encode(labels, batch_max_length=25)
         target = labels_index[:, 1:]  # without [SOS] Symbol
 
         loss = self.criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
+
+        if return_recognized:
+            recognized = self.postprocess(preds)
+            return loss, recognized
+
         return loss
