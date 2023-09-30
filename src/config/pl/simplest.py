@@ -21,7 +21,7 @@ class Config:
         device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
         generator = RRDBNet(6, 3, 64, 10, gc=32).to(device)
-        optimizer = torch.optim.Adam(generator.parameters(), lr=1e-3, weight_decay=1e-6)
+        optimizer = torch.optim.Adam(generator.parameters(), lr=1e-3)
 
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')

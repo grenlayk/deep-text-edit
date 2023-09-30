@@ -103,6 +103,8 @@ class OCRV2Loss(nn.Module):
         self.criterion = torch.nn.CrossEntropyLoss(ignore_index=opt.Converter.dict["[PAD]"])
 
         self.model.eval()
+        for param in self.model.parameters():
+            param.requires_grad = False
 
     def forward(self, images, labels, return_recognized=False):
         preds = self.model.forward(images, is_train=False)
