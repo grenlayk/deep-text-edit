@@ -39,9 +39,9 @@ class ChannelShuffleImage(Dataset):
         data = self.dataset[item]
 
         image = data[self.image_key]
-        image = np.ascontiguousarray(self.augment(image=image)["image"])
+        image = np.ascontiguousarray(self.augment(image=image)["image"]).copy()
         data[self.image_key] = image
-    
+
         return data
 
 
