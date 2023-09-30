@@ -41,7 +41,7 @@ class ImgurDataset(Dataset):
             return {'image': image, 'content': text}
 
         except Exception as e:
-            logger.error(f'Exception at {self.style_files[index]}, {e}')
+            logger.error(f'Exception at {self.images[index]}, {e}')
             raise e
 
 
