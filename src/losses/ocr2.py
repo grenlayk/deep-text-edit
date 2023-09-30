@@ -20,7 +20,7 @@ class resizeNormalize():
         self.interpolation = interpolation
 
     def __call__(self, batch):
-        batch = kornia.geometry.transform.resize(batch, self.size, intepolation=self.interpolation)
+        batch = kornia.geometry.transform.resize(batch, self.size, interpolation=self.interpolation)
         batch = (batch - 0.5) / 0.5
         return batch
 
