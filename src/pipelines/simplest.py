@@ -41,7 +41,7 @@ class SimplestEditing(pl.LightningModule):
         draw_rand = batch[self.draw_rand]
 
         predictions = self.forward(style, draw_rand, '_base')
-        predictions.update(self.forward(style, draw_orig, '_original'))
+        # predictions.update(self.forward(style, draw_orig, '_original'))
         predictions.update(batch)
 
         total = 0

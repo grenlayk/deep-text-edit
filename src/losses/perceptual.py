@@ -26,9 +26,6 @@ class VGGPerceptualLoss(torch.nn.Module):
             vgg.features[9:16].eval(),
             vgg.features[16:23].eval(),
         ]
-        for bl in blocks:
-            for p in bl.parameters():
-                p.requires_grad = False
 
         self.feature_layers = feature_layers
         self.style_layers = style_layers
@@ -37,6 +34,10 @@ class VGGPerceptualLoss(torch.nn.Module):
         self.resize = resize
         self.norm = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.denorm = Denormalize(torch.Tensor(mean), torch.Tensor(std))
+
+        for param in self.parameters():
+            param.requires_grad = False
+        self.eval()
 
     def forward(self, input, target, ):
         input = self.norm(self.denorm(input))
