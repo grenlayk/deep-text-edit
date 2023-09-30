@@ -36,7 +36,7 @@ class Config:
 
     def __init__(self):
         generator = SimplestGenerator().to(self.device)
-        optimizer = torch.optim.Adam(generator.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(generator.parameters(), lr=2e-4)
 
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')
