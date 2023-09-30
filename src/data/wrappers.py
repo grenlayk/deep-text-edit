@@ -6,6 +6,7 @@ from albumentations import ChannelShuffle, Normalize
 from torch.utils.data import Dataset
 
 from src.utils.draw import draw_word
+from torchvision import transforms
 
 
 class DrawText(Dataset):
@@ -69,7 +70,10 @@ class NormalizeImages(Dataset):
         self.mean = mean
         self.std = std
 
-        self.norm = Normalize(mean=mean, std=std)
+        self.norm = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(list(self.mean), list(self.std))
+        ])
 
     def __len__(self):
         return len(self.dataset)
@@ -78,7 +82,7 @@ class NormalizeImages(Dataset):
         data = self.dataset[item]
         for key in self.image_keys:
             image = data[key]
-            image = self.norm(image=image)["image"]
+            image = self.norm(image)
             data[key] = image
 
         return data
