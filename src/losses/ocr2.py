@@ -60,13 +60,11 @@ class STRFLInference(nn.Module):
 
         preds = self.model(images2, text_for_pred, is_train=is_train)
 
-        return preds, images, images1, images2
+        return preds
 
-    def recognize(self, images):
-        batch_size = images.size(0)
-        preds, images, images1, images2 = self.forward(images, is_train=False)
-
-        preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(images.device)
+    def postprocess(self, preds):
+        batch_size = preds.shape[0]
+        preds_size = torch.IntTensor([preds.size(1)] * batch_size).to(preds.device)
         _, preds_index = preds.max(2)
         preds_str = self.opt.Converter.decode(preds_index, preds_size)
 
@@ -76,7 +74,15 @@ class STRFLInference(nn.Module):
             pred = pred[:pred_EOS]  # prune after "end of sentence" token ([s])
             recognized.append(pred)
 
-        return recognized, images, images1, images2
+        return recognized
+
+    def recognize(self, images):
+        batch_size = images.size(0)
+        preds = self.forward(images, is_train=False)
+
+        recognized = self.postprocess(preds)
+
+        return recognized
 
 
 class OCRV2Loss(nn.Module):
@@ -91,23 +97,16 @@ class OCRV2Loss(nn.Module):
         super().__init__()
 
         self.model = STRFLInference(mean, std, model_local_path, img_h, img_w)
-        self.denorm = Denormalize(mean, std)
 
         opt = Options()
         self.opt = opt
-        model = nn.DataParallel(TRBA(opt))
-        model.load_state_dict(torch.load(model_local_path))
-        self.model = model.module
-
-        self.transform = resizeNormalize((img_h, img_w))
-
         self.converter = opt.Converter
         self.criterion = torch.nn.CrossEntropyLoss(ignore_index=opt.Converter.dict["[PAD]"])
 
-        self.model.train()
+        self.model.eval()
 
     def forward(self, images, labels):
-        preds = self.model.forward(images, is_train=True)
+        preds = self.model.forward(images, is_train=False)
 
         labels_index, labels_length = self.opt.Converter.encode(labels, batch_max_length=25)
         target = labels_index[:, 1:]  # without [SOS] Symbol
