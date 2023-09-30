@@ -20,10 +20,10 @@ class Config:
 
     batch_size = 32
 
-    def __init__(self):
-        device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-        generator = RRDBNet(6, 3, 64, 10, gc=32).to(device)
+    def __init__(self):
+        generator = RRDBNet(6, 3, 64, 10, gc=32).to(self.device)
         optimizer = torch.optim.Adam(generator.parameters(), lr=1e-3)
 
         trainset = self.get_dataset(self.crops_path / 'train')
@@ -32,8 +32,8 @@ class Config:
         self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
-        ocr = OCRV2Loss(self.mean, self.std).to('cuda')
-        perc = VGGPerceptualLoss(self.mean, self.std)
+        ocr = OCRV2Loss(self.mean, self.std).to(self.device)
+        perc = VGGPerceptualLoss(self.mean, self.std).to(self.device)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
@@ -51,7 +51,7 @@ class Config:
             text_rand='random',
         )
 
-        self.trainer = Trainer(accelerator='cuda', max_epochs=10)
+        self.trainer = Trainer(accelerator=self.device, max_epochs=10)
 
     def get_dataset(self, root):
         dataset = ImgurDataset(root)
