@@ -49,6 +49,8 @@ class STRFLInference(nn.Module):
         self.converter = opt.Converter
         self.criterion = torch.nn.CrossEntropyLoss(ignore_index=opt.Converter.dict["[PAD]"])
 
+        self.model.eval()
+
     def forward(self, images, is_train=False):
         images1 = self.denorm(images)
         images2 = self.transform(images1)

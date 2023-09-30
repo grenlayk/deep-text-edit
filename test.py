@@ -23,7 +23,7 @@ dataset = NormalizeImages(dataset, ['image', 'draw'], mean, std)
 
 loader = DataLoader(dataset)
 
-# ocr = STRFLInference(mean, std)
+ocr = STRFLInference(mean, std)
 
 
 for data in loader:
