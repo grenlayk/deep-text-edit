@@ -16,7 +16,7 @@ from src.pipelines.simplest import SimplestEditing
 class SimplestGenerator(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = RRDBNet(6, 3, 64, 10, gc=32).to(self.device)
+        self.backbone = RRDBNet(6, 3, 64, 10, gc=32)
 
     def forward(self, style, content):
         inputs = torch.concat([style, content])
