@@ -19,7 +19,7 @@ class SimplestGenerator(nn.Module):
         self.backbone = RRDBNet(6, 3, 64, 10, gc=32)
 
     def forward(self, style, content):
-        inputs = torch.concat([style, content])
+        inputs = torch.concat([style, content], dim=1)
         res = self.backbone(inputs)
         return res
 
