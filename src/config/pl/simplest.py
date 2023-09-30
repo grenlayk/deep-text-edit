@@ -2,6 +2,7 @@ import torch
 from pathlib import Path
 import cv2
 from pytorch_lightning import Trainer
+from torch import nn
 from torch.utils.data import DataLoader
 
 from src.data.baseline import ImgurDataset
@@ -10,6 +11,17 @@ from src.losses import VGGPerceptualLoss
 from src.losses.ocr2 import OCRV2Loss
 from src.models.rrdb import RRDB_pretrained, RRDBNet
 from src.pipelines.simplest import SimplestEditing
+
+
+class SimplestGenerator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.backbone = RRDBNet(6, 3, 64, 10, gc=32).to(self.device)
+
+    def forward(self, style, content):
+        inputs = torch.concat([style, content])
+        res = self.backbone(inputs)
+        return res
 
 
 class Config:
@@ -23,7 +35,7 @@ class Config:
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def __init__(self):
-        generator = RRDBNet(6, 3, 64, 10, gc=32).to(self.device)
+        generator = SimplestGenerator().to(self.device)
         optimizer = torch.optim.Adam(generator.parameters(), lr=1e-3)
 
         trainset = self.get_dataset(self.crops_path / 'train')
