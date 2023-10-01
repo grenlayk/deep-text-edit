@@ -28,7 +28,6 @@ class SimplestEditing(pl.LightningModule):
         self.text_rand = text_rand
 
     def forward(self, style, content, postfix='base'):
-        print('run')
         results = self.generator(style, content)
         if not isinstance(results, dict):
             results = {'pred': results}
