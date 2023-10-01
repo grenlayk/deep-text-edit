@@ -41,7 +41,7 @@ class Config:
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')
 
-        self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
+        self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True, num_workers=12)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
