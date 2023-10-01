@@ -173,7 +173,8 @@ class RFDB(nn.Module):
 def pixelshuffle_block(in_channels, out_channels, upscale_factor=2, kernel_size=3, stride=1):
     conv = conv_layer(in_channels, out_channels * (upscale_factor ** 2), kernel_size, stride)
     pixel_shuffle = nn.PixelShuffle(upscale_factor)
-    return sequential(conv, pixel_shuffle)
+    res = sequential(conv, pixel_shuffle) if upscale_factor > 1 else conv
+    return res
 
 
 class RFDN(nn.Module):
@@ -190,11 +191,8 @@ class RFDN(nn.Module):
 
         self.LR_conv = conv_layer(nf, nf, kernel_size=3)
 
-        if upscale > 1:
-            upsample_block = pixelshuffle_block
-            self.upsampler = upsample_block(nf, out_nc, upscale_factor=upscale)
-        else:
-            self.upsampler = nn.Identity()
+        upsample_block = pixelshuffle_block
+        self.upsampler = upsample_block(nf, out_nc, upscale_factor=upscale)
         self.scale_idx = 0
 
     def forward(self, input):
