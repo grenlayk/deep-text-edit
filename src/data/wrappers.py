@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Tuple, List
 
@@ -24,6 +25,34 @@ class DrawText(Dataset):
         data = self.dataset[item]
         draw = draw_word(data[self.text_key])
         data[self.draw_key] = np.array(draw)
+        return data
+
+
+class DrawTextCache(Dataset):
+    def __init__(self, dataset: Dataset, text_key: str, draw_key: str, folder: str):
+        self.dataset = dataset
+        self.text_key = text_key
+        self.draw_key = draw_key
+        self.folder = folder
+
+        os.makedirs(folder, exist_ok=True)
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, item):
+        data = self.dataset[item]
+
+        text = data[self.text_key]
+        path = os.path.join(self.folder, f"{text}.png")
+        if os.path.exists(path):
+            draw = cv2.imread(path)
+        else:
+            draw = draw_word(data[self.text_key])
+            cv2.imwrite(path, draw)
+
+        data[self.draw_key] = np.array(draw)
+
         return data
 
 
