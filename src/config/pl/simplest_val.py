@@ -93,4 +93,4 @@ class Config:
         return dataset
 
     def run(self):
-        self.trainer.fit(self.pipeline, self.trainloader)
+        self.trainer.fit(self.pipeline, self.trainloader, self.valloader)

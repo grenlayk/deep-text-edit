@@ -140,6 +140,7 @@ class SimplestEditingVal(pl.LightningModule):
         for metric_dict in self.metrics:
             res = metric_dict['metric'].compute()
             self.log(metric_dict['name'], res)
+            metric_dict['metric'].reset()
 
     def configure_optimizers(self):
         return self.optimizer
