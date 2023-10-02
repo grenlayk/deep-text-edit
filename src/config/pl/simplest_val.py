@@ -56,11 +56,11 @@ class Config:
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std)
-        lpips = torchmetrics.image.LearnedPerceptualImagePatchSimilarity('alex')
+        psnr = torchmetrics.image.PeakSignalNoiseRatio()
 
         metrics = [
             {'metric': cer, 'name': 'cer', 'pred_key': 'pred_base', 'target_key': 'random'},
-            {'metric': lpips, 'name': 'lpips', 'pred_key': 'pred_original', 'target_key': 'image'},
+            {'metric': psnr, 'name': 'psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
         self.pipeline = SimplestEditingVal(
