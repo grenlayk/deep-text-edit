@@ -55,8 +55,8 @@ class Config:
             {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
-        cer = ImageCharErrorRate(self.mean, self.std)
-        psnr = torchmetrics.image.PeakSignalNoiseRatio()
+        cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
+        psnr = torchmetrics.image.PeakSignalNoiseRatio().to(self.device)
 
         metrics = [
             {'metric': cer, 'name': 'cer', 'pred_key': 'pred_base', 'target_key': 'random'},
