@@ -4,7 +4,6 @@
 # 
 # ------------------------------------------------
 # loss function is modified to match our template
-import pdb
 
 import kornia
 import torch
@@ -116,11 +115,11 @@ class OCRV2Loss(nn.Module):
 
         labels_index, labels_length = self.opt.Converter.encode(labels, batch_max_length=25)
         target = labels_index[:, 1:]  # without [SOS] Symbol
-        pdb.set_trace()
+
         loss = self.criterion(preds.view(-1, preds.shape[-1]), target.contiguous().view(-1))
 
         if return_recognized:
-            recognized = self.postprocess(preds)
+            recognized = self.model.postprocess(preds)
             return loss, recognized
 
         return loss
