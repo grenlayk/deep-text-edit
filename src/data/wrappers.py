@@ -5,11 +5,11 @@ from typing import Tuple, List
 
 import cv2
 import numpy as np
-from albumentations import ChannelShuffle, Normalize
+from albumentations import ChannelShuffle
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 from src.utils.draw import draw_word
-from torchvision import transforms
 
 
 class DrawText(Dataset):
@@ -87,7 +87,8 @@ class GetRandomText(Dataset):
             words = json.load(json_file)
 
         allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-
+        import pdb
+        pdb.set_trace()
         self.words = [word for word in words if len(set(word) - set(allowed_symbols)) == 0]
 
     def __len__(self):
