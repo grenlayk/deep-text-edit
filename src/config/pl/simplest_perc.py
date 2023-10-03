@@ -50,7 +50,7 @@ class Config:
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
         perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(1, 2, 3), style_layers=())
-        perc = LossScaler(perc.to(self.device), 0.5)
+        perc = LossScaler(perc.to(self.device), 0.3)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
