@@ -11,6 +11,7 @@ from src.data.baseline import ImgurDataset
 from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
 from src.losses import VGGPerceptualLoss
 from src.losses.ocr2 import OCRV2Loss
+from src.losses.utils import LossScaler
 from src.metrics.ocr import ImageCharErrorRate
 from src.models.rfdn import RFDN
 from src.pipelines.simplest import SimplestEditingViz
@@ -48,11 +49,11 @@ class Config:
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
-        perc = VGGPerceptualLoss(self.mean, self.std).to(self.device)
+        perc = LossScaler(VGGPerceptualLoss(self.mean, self.std).to(self.device), 0.3)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
-            # {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
+            {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
