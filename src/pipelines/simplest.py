@@ -1,12 +1,13 @@
 from typing import List, Dict, Any, Tuple
 
 import pytorch_lightning as pl
-import torchmetrics
+import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
 from torch.optim import Optimizer
 
-from src.pipelines.utils import torch2numpy, add_text_to_image
+from src.pipelines.utils import torch2numpy
+from src.utils.draw import draw_word
 
 
 class SimplestEditing(pl.LightningModule):
@@ -205,7 +206,7 @@ class SimplestEditingViz(pl.LightningModule):
 
         return total
 
-    def visualize_image(self, name, image, text=None):
+    def visualize_image(self, name, image):
         tb_logger = None
         for logger in self.trainer.loggers:
             if isinstance(logger, TensorBoardLogger):
@@ -215,9 +216,9 @@ class SimplestEditingViz(pl.LightningModule):
         if tb_logger is None:
             raise ValueError('TensorBoard Logger not found')
 
-        draw = torch2numpy(image, self.mean, self.std)
-        if text is not None:
-            draw = add_text_to_image(draw, text, font_color=(0, 255, 0))
+        draw = image
+        if isinstance(image, torch.Tensor):
+            draw = torch2numpy(image, self.mean, self.std)
 
         tb_logger.add_image(name, draw, self.current_epoch)
 
@@ -245,10 +246,13 @@ class SimplestEditingViz(pl.LightningModule):
                                                   ['metric', 'name', 'pred_key', 'target_key']]
             metric.update(predictions[pred_key], predictions[target_key])
 
-
         if batch_idx == 0:
             for i in range(10):
-                self.visualize_image()
+                self.visualize_image('image', predictions[self.style_key])
+                self.visualize_image('pred_base', predictions['pred_base'])
+                self.visualize_image('pred_original', predictions['pred_original'])
+                self.visualize_image('text_orig', draw_word(predictions[self.text_orig]))
+                self.visualize_image('text_rand', draw_word(predictions[self.text_rand]))
 
     def validation_epoch_end(self, outputs) -> None:
         for metric_dict in self.metrics:
