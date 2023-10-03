@@ -253,15 +253,15 @@ class SimplestEditingViz(pl.LightningModule):
             for i in range(10):
                 # import pdb
                 # pdb.set_trace()
-                self.visualize_image('image', predictions[self.style_key][i])
-                self.visualize_image('pred_base', predictions['pred_base'][i])
-                self.visualize_image('pred_original', predictions['pred_original'][i])
+                self.visualize_image(f'{i}/image', predictions[self.style_key][i])
+                self.visualize_image(f'{i}/pred_base', predictions['pred_base'][i])
+                self.visualize_image(f'{i}/pred_original', predictions['pred_original'][i])
 
-                self.visualize_image('draw_orig', predictions[self.draw_orig][i])
-                self.visualize_image('draw_rand', predictions[self.draw_rand][i])
+                self.visualize_image(f'{i}/draw_orig', predictions[self.draw_orig][i])
+                self.visualize_image(f'{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image('text_orig', draw_word(predictions[self.text_orig][i]))
-                self.visualize_image('text_rand', draw_word(predictions[self.text_rand][i]))
+                self.visualize_image(f'{i}/text_orig', draw_word(predictions[self.text_orig][i]))
+                self.visualize_image(f'{i}/text_rand', draw_word(predictions[self.text_rand][i]))
 
     def validation_epoch_end(self, outputs) -> None:
         for metric_dict in self.metrics:
