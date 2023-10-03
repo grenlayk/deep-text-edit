@@ -52,7 +52,7 @@ class Config:
         perc = LossScaler(VGGPerceptualLoss(self.mean, self.std).to(self.device), 0.3)
 
         criterions = [
-            {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
+            {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
             {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 

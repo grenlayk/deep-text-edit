@@ -196,8 +196,6 @@ class SimplestEditingViz(pl.LightningModule):
 
         total = 0
         for criterion_dict in self.criterions:
-            import pdb
-            pdb.set_trace()
             criterion, name, pred_key, target_key = [criterion_dict[key] for key in
                                                      ['criterion', 'name', 'pred_key', 'target_key']]
             loss = criterion(predictions[pred_key], predictions[target_key])
@@ -253,8 +251,6 @@ class SimplestEditingViz(pl.LightningModule):
 
         if batch_idx == 0:
             for i in range(10):
-                # import pdb
-                # pdb.set_trace()
                 self.visualize_image(f'{i}/image', predictions[self.style_key][i])
                 self.visualize_image(f'{i}/pred_base', predictions['pred_base'][i])
                 self.visualize_image(f'{i}/pred_original', predictions['pred_original'][i])
