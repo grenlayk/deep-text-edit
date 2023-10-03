@@ -1,20 +1,19 @@
-import torch
 from pathlib import Path
+
 import cv2
+import torch
 import torchmetrics.image
 from pytorch_lightning import Trainer
 from torch import nn
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 from src.data.baseline import ImgurDataset
-from src.data.wrappers import DrawText, ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
+from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
 from src.losses import VGGPerceptualLoss
 from src.losses.ocr2 import OCRV2Loss
 from src.metrics.ocr import ImageCharErrorRate
 from src.models.rfdn import RFDN
-from src.models.rrdb import RRDB_pretrained, RRDBNet
-from src.pipelines.simplest import SimplestEditing, SimplestEditingVal
+from src.pipelines.simplest import SimplestEditingViz
 
 
 class SimplestGenerator(nn.Module):
@@ -64,7 +63,7 @@ class Config:
             {'metric': psnr, 'name': 'psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
-        self.pipeline = SimplestEditingVal(
+        self.pipeline = SimplestEditingViz(
             generator=generator,
             optimizer=optimizer,
             criterions=criterions,
