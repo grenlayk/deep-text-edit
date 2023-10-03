@@ -6,6 +6,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
 from torch.optim import Optimizer
 
+from src.losses.ocr2 import STRFLInference
 from src.pipelines.utils import torch2numpy
 from src.utils.draw import draw_word
 
@@ -178,6 +179,8 @@ class SimplestEditingViz(pl.LightningModule):
         self.mean = mean
         self.std = std
 
+        self.ocr = STRFLInference(mean, std)
+
     def forward(self, style, content, postfix='base'):
         results = self.generator(style, content)
         if not isinstance(results, dict):
@@ -250,6 +253,8 @@ class SimplestEditingViz(pl.LightningModule):
             metric.update(predictions[pred_key], predictions[target_key])
 
         if batch_idx == 0:
+            recogs_base = self.ocr.recognize(predictions['pred_original'])
+            recogs_rand = self.ocr.recognize(predictions['pred_base'])
             for i in range(10):
                 self.visualize_image(f'{i}/image', predictions[self.style_key][i])
                 self.visualize_image(f'{i}/pred_base', predictions['pred_base'][i])
@@ -258,8 +263,8 @@ class SimplestEditingViz(pl.LightningModule):
                 self.visualize_image(f'{i}/draw_orig', predictions[self.draw_orig][i])
                 self.visualize_image(f'{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image(f'{i}/text_orig', draw_word(predictions[self.text_orig][i]))
-                self.visualize_image(f'{i}/text_rand', draw_word(predictions[self.text_rand][i]))
+                self.visualize_image(f'{i}/recog_orig', draw_word(recogs_base[i]))
+                self.visualize_image(f'{i}/recog_rand', draw_word(recogs_rand[i]))
 
     def validation_epoch_end(self, outputs) -> None:
         for metric_dict in self.metrics:
