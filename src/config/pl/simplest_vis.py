@@ -43,16 +43,19 @@ class Config:
         optimizer = torch.optim.Adam(generator.parameters(), lr=2e-4)
 
         trainset = self.get_dataset(self.crops_path / 'train')
+        # # !!!!!!!!!!! HARDCODE
+        # trainset = Subset(trainset, range(32 * 1000))
+        # # !!!!!!!!!!! HARDCODE
         valset = self.get_dataset(self.crops_path / 'val')
 
         self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
-        perc = LossScaler(VGGPerceptualLoss(self.mean, self.std).to(self.device), 0.3)
+        perc = LossScaler(VGGPerceptualLoss(self.mean, self.std).to(self.device), 0.5)
 
         criterions = [
-            # {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
+            {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
             {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
