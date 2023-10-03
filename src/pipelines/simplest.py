@@ -251,8 +251,8 @@ class SimplestEditingViz(pl.LightningModule):
 
         if batch_idx == 0:
             for i in range(10):
-                import pdb
-                pdb.set_trace()
+                # import pdb
+                # pdb.set_trace()
                 self.visualize_image('image', predictions[self.style_key][i])
                 self.visualize_image('pred_base', predictions['pred_base'][i])
                 self.visualize_image('pred_original', predictions['pred_original'][i])
