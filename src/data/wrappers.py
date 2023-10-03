@@ -77,10 +77,11 @@ class ChannelShuffleImage(Dataset):
 
 
 class GetRandomText(Dataset):
-    def __init__(self, dataset: Dataset, root: Path, key: str):
+    def __init__(self, dataset: Dataset, root: Path, key: str, max_text_len: int = 24):
         self.dataset = dataset
         self.root = root
         self.key = key
+        self.max_text_len = max_text_len
 
         json_path = self.root / 'words.json'
         with open(json_path, 'r', encoding='utf-8') as json_file:
@@ -97,7 +98,12 @@ class GetRandomText(Dataset):
         data = self.dataset[item]
 
         i = np.random.randint(len(self.words))
-        data[self.key] = self.words[i]
+
+        text = self.words[i]
+        if len(text) > self.max_text_len:
+            text = text[:self.max_text_len]
+
+        data[self.key] = text
         return data
 
 

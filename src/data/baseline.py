@@ -13,8 +13,9 @@ from pathlib import Path
 
 
 class ImgurDataset(Dataset):
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, max_text_len: int = 24):
         self.root = root
+        self.max_text_len = max_text_len
 
         self.images = list(self.root.glob('*.png'))
         json_path = self.root / 'words.json'
@@ -35,6 +36,10 @@ class ImgurDataset(Dataset):
             allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
             text = self.words[path.stem]
             text = ''.join([i for i in text if i in allowed_symbols])
+
+            if len(text) > self.max_text_len:
+                text = text[:self.max_text_len]
+
             if not text:
                 text = 'o'
 
