@@ -53,7 +53,7 @@ class Config:
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
-            {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
+            # {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
