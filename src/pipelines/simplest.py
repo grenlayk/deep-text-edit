@@ -220,6 +220,9 @@ class SimplestEditingViz(pl.LightningModule):
         if isinstance(image, torch.Tensor):
             draw = torch2numpy(image, self.mean, self.std)
 
+        if draw.shape[2] == 3:
+            draw = draw.transpose((2, 0, 1)).copy()
+
         tb_logger.add_image(name, draw, self.current_epoch)
 
     def validation_step(self, batch, batch_idx):
