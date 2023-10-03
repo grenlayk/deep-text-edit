@@ -87,9 +87,8 @@ class GetRandomText(Dataset):
             words = json.load(json_file)
 
         allowed_symbols = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-        import pdb
-        pdb.set_trace()
-        self.words = [word for word in words if len(set(word) - set(allowed_symbols)) == 0]
+
+        self.words = [word for word in words.values() if len(set(word) - set(allowed_symbols)) == 0 and word != '.']
 
     def __len__(self):
         return len(self.dataset)
