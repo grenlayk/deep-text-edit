@@ -251,6 +251,10 @@ class SimplestEditingViz(pl.LightningModule):
                 self.visualize_image('image', predictions[self.style_key])
                 self.visualize_image('pred_base', predictions['pred_base'])
                 self.visualize_image('pred_original', predictions['pred_original'])
+
+                self.visualize_image('draw_orig', predictions[self.draw_orig])
+                self.visualize_image('draw_rand', predictions[self.draw_rand])
+
                 self.visualize_image('text_orig', draw_word(predictions[self.text_orig]))
                 self.visualize_image('text_rand', draw_word(predictions[self.text_rand]))
 
