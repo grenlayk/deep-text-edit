@@ -5,7 +5,7 @@ import torch
 import torchmetrics.image
 from pytorch_lightning import Trainer
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from src.data.baseline import ImgurDataset
 from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
@@ -43,9 +43,9 @@ class Config:
         optimizer = torch.optim.Adam(generator.parameters(), lr=2e-4)
 
         trainset = self.get_dataset(self.crops_path / 'train')
-        # # !!!!!!!!!!! HARDCODE
-        # trainset = Subset(trainset, range(32 * 1000))
-        # # !!!!!!!!!!! HARDCODE
+        # !!!!!!!!!!! HARDCODE
+        trainset = Subset(trainset, range(32 * 1000))
+        # !!!!!!!!!!! HARDCODE
         valset = self.get_dataset(self.crops_path / 'val')
 
         self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)

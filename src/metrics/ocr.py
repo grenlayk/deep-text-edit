@@ -14,5 +14,6 @@ class ImageCharErrorRate(CharErrorRate):
 
     def update(self, preds: torch.Tensor, target: Union[str, List[str]]) -> None:
         results = self.ocr.recognize(preds)
-
+        for result, target_i in zip(results, target):
+            print(result, target_i)
         super().update(results, target)
