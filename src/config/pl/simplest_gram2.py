@@ -5,7 +5,7 @@ import torch
 import torchmetrics.image
 from pytorch_lightning import Trainer
 from torch import nn
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 
 from src.data.baseline import ImgurDataset
 from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
@@ -49,7 +49,8 @@ class Config:
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
-        perc = LossScaler(VGGPerceptualLoss(self.mean, self.std).to(self.device), 0.5)
+        perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(), style_layers=(0, 1, 2, 3))
+        perc = LossScaler(perc.to(self.device), 0.001)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
