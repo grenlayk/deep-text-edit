@@ -1,6 +1,6 @@
+import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
-import numpy as np
 from kornia.enhance import denormalize
 
 
@@ -11,7 +11,7 @@ def torch2numpy(image_torch, mean, std):
         torch.tensor(std).to(image_torch.device),
     )[0]
     image_np = image_torch.permute(1, 2, 0).cpu().numpy()
-    image_np = np.rint(image_np * 255).astype(np.uint8)
+    image_np = np.rint(np.clip(image_np, 0.0, 1.0) * 255).astype(np.uint8)
     return image_np
 
 
