@@ -57,7 +57,7 @@ class Config:
         preserve = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3)).to(self.device)
 
         perc = LossScaler(perc, 0.0005)
-        preserve = LossScaler(preserve, 0.1)
+        preserve = LossScaler(preserve, 0.05)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
