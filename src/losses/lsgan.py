@@ -1,5 +1,5 @@
+import torch
 from torch import nn
-from torch.nn.functional import mse_loss
 
 
 class LSGeneratorCriterion(nn.Module):
@@ -7,7 +7,7 @@ class LSGeneratorCriterion(nn.Module):
         super().__init__()
 
     def forward(self, real, fake):
-        return mse_loss(fake, 1)
+        return torch.mean((fake - 1) ** 2)
 
 
 class LSDiscriminatorCriterion(nn.Module):
@@ -15,5 +15,7 @@ class LSDiscriminatorCriterion(nn.Module):
         super().__init__()
 
     def forward(self, real, fake):
-        loss = 0.5 * mse_loss(fake, 0) + 0.5 * mse_loss(real, 1)
+        loss_fake = torch.mean((fake - 0) ** 2)
+        loss_real = torch.mean((real - 1) ** 2)
+        loss = 0.5 * loss_fake + 0.5 * loss_real
         return loss
