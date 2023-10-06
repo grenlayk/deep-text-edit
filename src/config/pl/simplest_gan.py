@@ -66,11 +66,11 @@ class Config:
         ]
 
         g_criterions = [
-            {'criterion': LSGeneratorCriterion(), 'name': 'ocr', 'real': 'image', 'fake': 'pred_base'},
+            {'criterion': LSGeneratorCriterion(), 'name': 'gen', 'real': 'image', 'fake': 'pred_base'},
         ]
 
         d_criterions = [
-            {'criterion': LSDiscriminatorCriterion(), 'name': 'ocr', 'real': 'image', 'fake': 'pred_base'},
+            {'criterion': LSDiscriminatorCriterion(), 'name': 'disc', 'real': 'image', 'fake': 'pred_base'},
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
