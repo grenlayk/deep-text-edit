@@ -54,19 +54,20 @@ class Config:
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
         perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(), style_layers=(0, 1, 2, 3)).to(self.device)
-        preserve = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3)).to(self.device)
+        # preserve = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3)).to(self.device)
 
         perc = LossScaler(perc, 0.0005)
-        preserve = LossScaler(preserve, 0.1)
+        # preserve = LossScaler(preserve, 0.1)
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
             {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
-            {'criterion': preserve, 'name': 'preserve', 'pred_key': 'pred_original', 'target_key': 'image'},
+            # {'criterion': preserve, 'name': 'preserve', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
+        gen_l = LossScaler(LSGeneratorCriterion(), 2.0)
         g_criterions = [
-            {'criterion': LSGeneratorCriterion(), 'name': 'gen', 'real': 'image', 'fake': 'pred_base'},
+            {'criterion': gen_l, 'name': 'gen', 'real': 'image', 'fake': 'pred_base'},
         ]
 
         d_criterions = [
