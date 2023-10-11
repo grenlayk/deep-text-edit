@@ -112,6 +112,8 @@ class SimpleGAN(pl.LightningModule):
             text_orig: str = 'content',
             draw_rand: str = 'draw_random',
             text_rand: str = 'random',
+            gen_scheduler: Any = None,
+            disc_scheduler: Any = None,
             mean: Tuple[float, float, float] = (0.485, 0.456, 0.406),
             std: Tuple[float, float, float] = (0.229, 0.224, 0.225),
     ):
@@ -129,6 +131,8 @@ class SimpleGAN(pl.LightningModule):
         self.text_orig = text_orig
         self.draw_rand = draw_rand
         self.text_rand = text_rand
+        self.gen_scheduler = gen_scheduler
+        self.disc_scheduler = disc_scheduler
         self.mean = mean
         self.std = std
 
@@ -172,6 +176,7 @@ class SimpleGAN(pl.LightningModule):
 
         self.log('total', total)
 
+        self.generator_optimizer.zero_grad()
         self.manual_backward(total)
         self.untoggle_optimizer(0)
 
@@ -188,6 +193,7 @@ class SimpleGAN(pl.LightningModule):
             self.log(name, loss)
             disc = loss + disc
 
+        self.discriminator_optimizer.zero_grad()
         self.manual_backward(disc)
         self.untoggle_optimizer(1)
 
@@ -260,4 +266,11 @@ class SimpleGAN(pl.LightningModule):
             metric_dict['metric'].reset()
 
     def configure_optimizers(self):
-        return [self.generator_optimizer, self.discriminator_optimizer], []
+
+        schedulers = []
+        if self.gen_scheduler is not None:
+            gen_scheduler = {'scheduler': self.gen_scheduler, 'interval': 'step', 'frequency': 1}
+            disc_scheduler = {'scheduler': self.disc_scheduler, 'interval': 'step', 'frequency': 1}
+            schedulers = [gen_scheduler, disc_scheduler]
+
+        return [self.generator_optimizer, self.discriminator_optimizer], schedulers

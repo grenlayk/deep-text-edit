@@ -4,7 +4,10 @@ import cv2
 import torch
 import torchmetrics.image
 from pytorch_lightning import Trainer
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
+from torch.optim.lr_scheduler import CosineAnnealingLR, SequentialLR
 from torch.utils.data import DataLoader
 
 from src.data.baseline import ImgurDataset
@@ -17,6 +20,7 @@ from src.metrics.ocr import ImageCharErrorRate
 from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.rfdn import RFDN
 from src.pipelines.gan import SimpleGAN
+from src.utils.warmup import WarmupScheduler
 
 
 class SimplestGenerator(nn.Module):
@@ -60,28 +64,39 @@ class Config:
         # preserve = LossScaler(preserve, 0.1)
 
         criterions = [
-            {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
-            {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
-            # {'criterion': preserve, 'name': 'preserve', 'pred_key': 'pred_original', 'target_key': 'image'},
+            {'criterion': ocr, 'name': 'train/ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
+            # {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'image'},
+            # {'criterion': preserve, 'name': 'train/preserve', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
+        gen_l = LossScaler(LSGeneratorCriterion(), 1.0)
         g_criterions = [
-            {'criterion': LSGeneratorCriterion(), 'name': 'gen', 'real': 'image', 'fake': 'pred_base'},
-            {'criterion': LSGeneratorCriterion(), 'name': 'gen_orig', 'real': 'image', 'fake': 'pred_original'},
+            {'criterion': gen_l, 'name': 'train/gen', 'real': 'image', 'fake': 'pred_base'},
         ]
 
         d_criterions = [
-            {'criterion': LSDiscriminatorCriterion(), 'name': 'disc', 'real': 'image', 'fake': 'pred_base'},
-            {'criterion': LSDiscriminatorCriterion(), 'name': 'disc_orig', 'real': 'image', 'fake': 'pred_original'},
+            {'criterion': LSDiscriminatorCriterion(), 'name': 'train/disc', 'real': 'image', 'fake': 'pred_base'},
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
         psnr = torchmetrics.image.PeakSignalNoiseRatio().to(self.device)
 
         metrics = [
-            {'metric': cer, 'name': 'cer', 'pred_key': 'pred_base', 'target_key': 'random'},
-            {'metric': psnr, 'name': 'psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
+            {'metric': cer, 'name': 'val/cer', 'pred_key': 'pred_base', 'target_key': 'random'},
+            {'metric': psnr, 'name': 'val/psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
+
+        warmup = 5000
+        gen_sch = SequentialLR(
+            generator_optimizer,
+            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
+            [warmup]
+        )
+        disc_sch = SequentialLR(
+            generator_optimizer,
+            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
+            [warmup]
+        )
 
         self.pipeline = SimpleGAN(
             generator=generator,
@@ -97,11 +112,16 @@ class Config:
             text_orig='content',
             draw_rand='draw_random',
             text_rand='random',
+            gen_scheduler=gen_sch,
+            disc_scheduler=disc_sch,
             mean=self.mean,
             std=self.std,
         )
 
-        self.trainer = Trainer(accelerator=self.device, max_epochs=20)
+        tb_path = Path("lightning_logs/tensorboard") / Path(__file__).stem
+        logger = TensorBoardLogger(str(tb_path))
+
+        self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=20)
 
     def get_dataset(self, root):
         dataset = ImgurDataset(root)
