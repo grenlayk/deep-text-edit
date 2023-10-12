@@ -12,6 +12,6 @@ class WarmupScheduler(LambdaLR):
         self.num_steps = num_steps
         super().__init__(optimizer, lambda x: min(x / self.num_steps, 1.0), last_epoch=last_epoch)
 
-    def step(self, epoch=None) -> None:
-        print(f'\n\n\nscheduler step: {epoch} {get_lr(self.optimizer)}\n\n\n')
-        super().step(epoch)
+    # def step(self, epoch=None) -> None:
+    #     print(f'\n\n\nscheduler step: {epoch} {get_lr(self.optimizer)}\n\n\n')
+    #     super().step(epoch)
