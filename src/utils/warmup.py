@@ -1,5 +1,3 @@
-from typing import Optional
-
 from torch.optim.lr_scheduler import LambdaLR
 from torch.optim.optimizer import Optimizer
 
@@ -14,6 +12,6 @@ class WarmupScheduler(LambdaLR):
         self.num_steps = num_steps
         super().__init__(optimizer, lambda x: min(x / self.num_steps, 1.0), last_epoch=last_epoch)
 
-    def step(self, epoch: Optional[int] = ...) -> None:
-        # print(f'scheduler step: {epoch}')#, {get_lr(self.optimizer)}')
+    def step(self, epoch=None) -> None:
+        print(f'scheduler step: {epoch}')  # , {get_lr(self.optimizer)}')
         super().step(epoch)
