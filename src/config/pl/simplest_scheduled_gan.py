@@ -57,10 +57,10 @@ class Config:
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
-        perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(), style_layers=(0, 1, 2, 3)).to(self.device)
+        # perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(), style_layers=(0, 1, 2, 3)).to(self.device)
         # preserve = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3)).to(self.device)
 
-        perc = LossScaler(perc, 0.0005)
+        # perc = LossScaler(perc, 0.0005)
         # preserve = LossScaler(preserve, 0.1)
 
         criterions = [
@@ -87,16 +87,18 @@ class Config:
         ]
 
         warmup = 5000
-        gen_sch = SequentialLR(
-            generator_optimizer,
-            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
-            [warmup]
-        )
-        disc_sch = SequentialLR(
-            generator_optimizer,
-            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
-            [warmup]
-        )
+        # gen_sch = SequentialLR(
+        #     generator_optimizer,
+        #     [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
+        #     [warmup]
+        # )
+        gen_sch = WarmupScheduler(generator_optimizer, warmup)
+        # disc_sch = SequentialLR(
+        #     discriminator_optimizer,
+        #     [WarmupScheduler(discriminator_optimizer, warmup), CosineAnnealingLR(discriminator_optimizer, 100000)],
+        #     [warmup]
+        # )
+        disc_sch = WarmupScheduler(discriminator_optimizer, warmup)
 
         self.pipeline = SimpleGAN(
             generator=generator,
