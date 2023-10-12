@@ -202,6 +202,11 @@ class SimpleGAN(pl.LightningModule):
         self.discriminator_optimizer.step()
         self.discriminator_optimizer.zero_grad()
 
+        if self.gen_scheduler is not None:
+            self.gen_scheduler.step()
+        if self.disc_scheduler is not None:
+            self.disc_scheduler.step()
+
     def visualize_image(self, name, image):
         tb_logger = None
         for logger in self.trainer.loggers:
@@ -268,9 +273,9 @@ class SimpleGAN(pl.LightningModule):
     def configure_optimizers(self):
 
         schedulers = []
-        if self.gen_scheduler is not None:
-            gen_scheduler = {'scheduler': self.gen_scheduler, 'interval': 'step', 'frequency': 1}
-            disc_scheduler = {'scheduler': self.disc_scheduler, 'interval': 'step', 'frequency': 1}
-            schedulers = [gen_scheduler, disc_scheduler]
+        # if self.gen_scheduler is not None:
+        #     gen_scheduler = {'scheduler': self.gen_scheduler, 'interval': 'step', 'frequency': 1}
+        #     disc_scheduler = {'scheduler': self.disc_scheduler, 'interval': 'step', 'frequency': 1}
+        #     schedulers = [gen_scheduler, disc_scheduler]
 
         return [self.generator_optimizer, self.discriminator_optimizer], schedulers
