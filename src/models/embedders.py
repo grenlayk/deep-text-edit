@@ -1,35 +1,36 @@
 # source: https://pytorch.org/vision/0.8/_modules/torchvision/models/resnet.html
 
 import torch
+from torch import nn
 from torchvision import models
-from torchvision.models.resnet import BasicBlock
 
-class ContentResnet(models.ResNet):
-    def __init__(self):
-        # resnet18 init
-        super().__init__(BasicBlock, [2, 2, 2, 2])
+
+class ContentResnet(nn.Module):
+    def __init__(self, resnet: models.ResNet):
+        super().__init__()
+        self.internal = resnet
 
     def _forward_impl(self, x):
         # See note [TorchScript super()]
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x = self.internal.conv1(x)
+        x = self.internal.bn1(x)
+        x = self.internal.relu(x)
+        x = self.internal.maxpool(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        x = self.internal.layer1(x)
+        x = self.internal.layer2(x)
+        x = self.internal.layer3(x)
+        x = self.internal.layer4(x)
 
-        #x = self.avgpool(x)
-        #x = torch.flatten(x, 1)
-        #x = self.fc(x)
+        # x = self.avgpool(x)
+        # x = torch.flatten(x, 1)
+        # x = self.fc(x)
 
         return x
 
 
-class StyleResnet(models.ResNet):
-    def __init__(self):
-        # resnet18 init
-        super().__init__(BasicBlock, [2, 2, 2, 2])
-        self.fc = torch.nn.Identity()
+class StyleResnet(nn.Module):
+    def __init__(self, resnet: models.ResNet):
+        super().__init__()
+        self.internal = resnet
+        self.internal.fc = torch.nn.Identity()
