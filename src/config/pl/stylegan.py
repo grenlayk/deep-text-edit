@@ -63,7 +63,7 @@ class Config:
 
         criterions = [
             {'criterion': ocr, 'name': 'ocr', 'pred_key': 'pred_base', 'target_key': 'random'},
-            # {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
+            {'criterion': perc, 'name': 'perc', 'pred_key': 'pred_base', 'target_key': 'image'},
             # {'criterion': preserve, 'name': 'preserve', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
