@@ -36,4 +36,4 @@ class StyleResnet(nn.Module):
         self.internal.fc = torch.nn.Identity()
 
     def forward(self, x):
-        return super().forward(x)
+        return self.internal(x)
