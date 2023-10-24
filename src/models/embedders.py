@@ -10,7 +10,7 @@ class ContentResnet(nn.Module):
         super().__init__()
         self.internal = resnet
 
-    def _forward_impl(self, x):
+    def forward(self, x):
         # See note [TorchScript super()]
         x = self.internal.conv1(x)
         x = self.internal.bn1(x)
@@ -34,3 +34,6 @@ class StyleResnet(nn.Module):
         super().__init__()
         self.internal = resnet
         self.internal.fc = torch.nn.Identity()
+
+    def forward(self, x):
+        return super().forward(x)
