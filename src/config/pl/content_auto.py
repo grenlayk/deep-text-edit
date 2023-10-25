@@ -58,7 +58,6 @@ class Config:
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3), style_layers=()).to(self.device)
-        perc = LossScaler(perc, 0.1)
         l1 = L1Loss()
 
         criterions = [
@@ -66,7 +65,7 @@ class Config:
             {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
         ]
 
-        gen_l = LossScaler(LSGeneratorCriterion(), 1.0)
+        gen_l = LossScaler(LSGeneratorCriterion(), 0.0)
         g_criterions = [
             {'criterion': gen_l, 'name': 'train/gen', 'real': 'draw_random', 'fake': 'pred_base'},
         ]
