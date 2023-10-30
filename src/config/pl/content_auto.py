@@ -8,6 +8,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
 from torch.nn import L1Loss
+from torch.optim.lr_scheduler import SequentialLR, CosineAnnealingLR
 from torch.utils.data import DataLoader
 
 from src.data.baseline import ImgurDataset
@@ -48,8 +49,8 @@ class Config:
         generator = StypeBrush().to(self.device)
         discriminator = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3,
                                             norm_layer=(lambda x: torch.nn.Identity())).to(self.device)
-        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=5e-4, betas=(0.5, 0.99), eps=1e-8)
-        discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=1e-4, betas=(0.5, 0.99), eps=1e-8)
+        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=1e-3, weight_decay=1e-6)
+        discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=0, betas=(0.5, 0.99), eps=1e-8)
 
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')
@@ -57,11 +58,11 @@ class Config:
         self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
-        perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3), style_layers=()).to(self.device)
+        # perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3), style_layers=()).to(self.device)
         l1 = L1Loss()
 
         criterions = [
-            {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
+            # {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
             {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_base', 'target_key': 'draw_random'},
         ]
 
@@ -83,12 +84,11 @@ class Config:
         ]
 
         warmup = 5000
-        # gen_sch = SequentialLR(
-        #     generator_optimizer,
-        #     [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 100000)],
-        #     [warmup]
-        # )
-        gen_sch = WarmupScheduler(generator_optimizer, warmup)
+        gen_sch = SequentialLR(
+            generator_optimizer,
+            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 200000)],
+            [warmup]
+        )
         # disc_sch = SequentialLR(
         #     discriminator_optimizer,
         #     [WarmupScheduler(discriminator_optimizer, warmup), CosineAnnealingLR(discriminator_optimizer, 100000)],
@@ -119,7 +119,7 @@ class Config:
         tb_path = Path("lightning_logs/tensorboard") / Path(__file__).stem
         logger = TensorBoardLogger(str(tb_path))
 
-        self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=20)
+        self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=200)
 
     def get_dataset(self, root):
         dataset = ImgurDataset(root)
