@@ -49,7 +49,7 @@ class Config:
         generator = StypeBrush().to(self.device)
         discriminator = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3,
                                             norm_layer=(lambda x: torch.nn.Identity())).to(self.device)
-        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=1e-3, weight_decay=1e-6)
+        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=3e-4, weight_decay=1e-6)
         discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=0, betas=(0.5, 0.99), eps=1e-8)
 
         trainset = self.get_dataset(self.crops_path / 'train')
@@ -58,11 +58,11 @@ class Config:
         self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
-        # perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3), style_layers=()).to(self.device)
+        perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(0, 1, 2, 3), style_layers=()).to(self.device)
         l1 = L1Loss()
 
         criterions = [
-            # {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'image'},
+            {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'image'},
             {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
@@ -86,7 +86,7 @@ class Config:
         warmup = 5000
         gen_sch = SequentialLR(
             generator_optimizer,
-            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 200000)],
+            [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 400000)],
             [warmup]
         )
         # disc_sch = SequentialLR(
