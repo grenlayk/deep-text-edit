@@ -1,5 +1,5 @@
 from torch import nn
-from torchvision.models import resnet34, ResNet34_Weights
+from torchvision.models import ResNet18_Weights, resnet18
 
 from src.models.embedders import ContentResnet, StyleResnet
 from src.models.stylegan import StyleBased_Generator
@@ -8,8 +8,8 @@ from src.models.stylegan import StyleBased_Generator
 class StypeBrush(nn.Module):
     def __init__(self):
         super().__init__()
-        self.content = ContentResnet(resnet34(ResNet34_Weights.IMAGENET1K_V1))
-        self.style = StyleResnet(resnet34(ResNet34_Weights.IMAGENET1K_V1))
+        self.content = ContentResnet(resnet18(ResNet18_Weights.IMAGENET1K_V1))
+        self.style = StyleResnet(resnet18(ResNet18_Weights.IMAGENET1K_V1))
 
         self.generator = StyleBased_Generator(dim_latent=512)
 
