@@ -10,7 +10,7 @@ def torch2numpy(image_torch, mean, std):
         torch.tensor(mean).to(image_torch.device),
         torch.tensor(std).to(image_torch.device),
     )[0]
-    image_np = image_torch.permute(1, 2, 0).cpu().numpy()
+    image_np = image_torch.permute(1, 2, 0).cpu().detach().numpy()
     image_np = np.rint(np.clip(image_np, 0.0, 1.0) * 255).astype(np.uint8)
     return image_np
 
