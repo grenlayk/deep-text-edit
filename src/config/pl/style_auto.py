@@ -45,10 +45,10 @@ class Config:
 
     def __init__(self):
         generator = StypeBrush().to(self.device)
-        discriminator = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3,
-                                            norm_layer=(lambda x: torch.nn.Identity())).to(self.device)
-        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=3e-4, weight_decay=1e-6)
-        discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=0, betas=(0.5, 0.99), eps=1e-8)
+        # discriminator = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3,
+        #                                     norm_layer=(lambda x: torch.nn.Identity())).to(self.device)
+        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=2e-4, weight_decay=1e-5)
+        # discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=0, betas=(0.5, 0.99), eps=1e-8)
 
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')
@@ -60,15 +60,15 @@ class Config:
         l1 = L1Loss()
 
         criterions = [
-            {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_base', 'target_key': 'image'},
-            {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_base', 'target_key': 'image'},
+            {'criterion': perc, 'name': 'train/perc', 'pred_key': 'pred_random', 'target_key': 'image'},
+            {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_random', 'target_key': 'image'},
         ]
 
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
         psnr = torchmetrics.image.PeakSignalNoiseRatio().to(self.device)
 
         metrics = [
-            {'metric': cer, 'name': 'val/cer', 'pred_key': 'pred_base', 'target_key': 'random'},
+            {'metric': cer, 'name': 'val/cer', 'pred_key': 'pred_random', 'target_key': 'text_random'},
             {'metric': psnr, 'name': 'val/psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
         ]
 
@@ -85,8 +85,8 @@ class Config:
             criterions=criterions,
             metrics=metrics,
             style_key='image',
-            draw_orig='draw_orig',
-            text_orig='text_orig',
+            draw_orig='draw_original',
+            text_orig='text_original',
             draw_rand='draw_random',
             text_rand='text_random',
             gen_scheduler=gen_sch,
@@ -105,14 +105,14 @@ class Config:
 
         dataset = GetRandomText(dataset, root, 'text_random')
         draw_cache = "/cache/data/cache/draw"
-        dataset = DrawTextCache(dataset, 'text_orig', 'draw_orig', draw_cache)
+        dataset = DrawTextCache(dataset, 'text_original', 'draw_original', draw_cache)
         dataset = DrawTextCache(dataset, 'text_random', 'draw_random', draw_cache)
 
         dataset = Resize(dataset, 'image', self.size)
-        dataset = Resize(dataset, 'draw_orig', self.size, interpolation=cv2.INTER_NEAREST)
+        dataset = Resize(dataset, 'draw_original', self.size, interpolation=cv2.INTER_NEAREST)
         dataset = Resize(dataset, 'draw_random', self.size, interpolation=cv2.INTER_NEAREST)
 
-        dataset = NormalizeImages(dataset, ['image', 'draw_orig', 'draw_random'], self.mean, self.std)
+        dataset = NormalizeImages(dataset, ['image', 'draw_original', 'draw_random'], self.mean, self.std)
         return dataset
 
     def run(self):
