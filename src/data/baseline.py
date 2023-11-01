@@ -13,9 +13,10 @@ from pathlib import Path
 
 
 class ImgurDataset(Dataset):
-    def __init__(self, root: Path, max_text_len: int = 24):
+    def __init__(self, root: Path, max_text_len: int = 24, text_key: str = 'content'):
         self.root = root
         self.max_text_len = max_text_len
+        self.text_key = text_key
 
         self.images = list(self.root.glob('*.png'))
         json_path = self.root / 'words.json'
@@ -43,7 +44,7 @@ class ImgurDataset(Dataset):
             if not text:
                 text = 'o'
 
-            return {'image': image, 'content': text}
+            return {'image': image, self.text_key: text}
 
         except Exception as e:
             logger.error(f'Exception at {self.images[index]}, {e}')

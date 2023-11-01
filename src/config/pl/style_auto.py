@@ -14,13 +14,11 @@ from torch.utils.data import DataLoader
 from src.data.baseline import ImgurDataset
 from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
 from src.losses import VGGPerceptualLoss
-from src.losses.lsgan import LSGeneratorCriterion, LSDiscriminatorCriterion
-from src.losses.utils import LossScaler
 from src.metrics.ocr import ImageCharErrorRate
 from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.rfdn import RFDN
 from src.models.style_brush import StypeBrush
-from src.pipelines.gan import SimpleGAN
+from src.pipelines.simplest import SimplePerceptual
 from src.utils.warmup import WarmupScheduler
 
 
@@ -66,15 +64,6 @@ class Config:
             {'criterion': l1, 'name': 'train/l1', 'pred_key': 'pred_base', 'target_key': 'image'},
         ]
 
-        gen_l = LossScaler(LSGeneratorCriterion(), 0.0)
-        g_criterions = [
-            {'criterion': gen_l, 'name': 'train/gen', 'real': 'image', 'fake': 'pred_base'},
-        ]
-
-        d_criterions = [
-            {'criterion': LSDiscriminatorCriterion(), 'name': 'train/disc', 'real': 'image', 'fake': 'pred_base'},
-        ]
-
         cer = ImageCharErrorRate(self.mean, self.std).to(self.device)
         psnr = torchmetrics.image.PeakSignalNoiseRatio().to(self.device)
 
@@ -89,29 +78,18 @@ class Config:
             [WarmupScheduler(generator_optimizer, warmup), CosineAnnealingLR(generator_optimizer, 400000)],
             [warmup]
         )
-        # disc_sch = SequentialLR(
-        #     discriminator_optimizer,
-        #     [WarmupScheduler(discriminator_optimizer, warmup), CosineAnnealingLR(discriminator_optimizer, 100000)],
-        #     [warmup]
-        # )
-        disc_sch = WarmupScheduler(discriminator_optimizer, warmup)
 
-        self.pipeline = SimpleGAN(
+        self.pipeline = SimplePerceptual(
             generator=generator,
-            discriminator=discriminator,
             generator_optimizer=generator_optimizer,
-            discriminator_optimizer=discriminator_optimizer,
             criterions=criterions,
-            g_criterions=g_criterions,
-            d_criterions=d_criterions,
             metrics=metrics,
             style_key='image',
             draw_orig='draw_orig',
-            text_orig='content',
+            text_orig='text_orig',
             draw_rand='draw_random',
-            text_rand='random',
+            text_rand='text_random',
             gen_scheduler=gen_sch,
-            disc_scheduler=disc_sch,
             mean=self.mean,
             std=self.std,
         )
@@ -122,13 +100,13 @@ class Config:
         self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=200)
 
     def get_dataset(self, root):
-        dataset = ImgurDataset(root)
+        dataset = ImgurDataset(root, text_key='text_orig')
         dataset = ChannelShuffleImage(dataset, 'image')
 
-        dataset = GetRandomText(dataset, root, 'random')
+        dataset = GetRandomText(dataset, root, 'text_random')
         draw_cache = "/cache/data/cache/draw"
-        dataset = DrawTextCache(dataset, 'content', 'draw_orig', draw_cache)
-        dataset = DrawTextCache(dataset, 'random', 'draw_random', draw_cache)
+        dataset = DrawTextCache(dataset, 'text_orig', 'draw_orig', draw_cache)
+        dataset = DrawTextCache(dataset, 'text_random', 'draw_random', draw_cache)
 
         dataset = Resize(dataset, 'image', self.size)
         dataset = Resize(dataset, 'draw_orig', self.size, interpolation=cv2.INTER_NEAREST)
