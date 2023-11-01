@@ -346,15 +346,15 @@ class SimplePerceptual(pl.LightningModule):
             recogs_base = self.ocr.recognize(predictions['pred_original'])
             recogs_rand = self.ocr.recognize(predictions['pred_random'])
             for i in range(10):
-                self.visualize_image(f'val_{i}/image', predictions[self.style_key][i])
-                self.visualize_image(f'val_{i}/pred_random', predictions['pred_random'][i])
-                self.visualize_image(f'val_{i}/pred_original', predictions['pred_original'][i])
+                self.visualize_image(f'train_{i}/image', predictions[self.style_key][i])
+                self.visualize_image(f'train_{i}/pred_random', predictions['pred_random'][i])
+                self.visualize_image(f'train_{i}/pred_original', predictions['pred_original'][i])
 
-                self.visualize_image(f'val_{i}/draw_orig', predictions[self.draw_orig][i])
-                self.visualize_image(f'val_{i}/draw_rand', predictions[self.draw_rand][i])
+                self.visualize_image(f'train_{i}/draw_orig', predictions[self.draw_orig][i])
+                self.visualize_image(f'train_{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image(f'val_{i}/recog_orig', draw_word(recogs_base[i]))
-                self.visualize_image(f'val_{i}/recog_rand', draw_word(recogs_rand[i]))
+                self.visualize_image(f'train_{i}/recog_orig', draw_word(recogs_base[i]))
+                self.visualize_image(f'train_{i}/recog_rand', draw_word(recogs_rand[i]))
 
     def visualize_image(self, name, image):
         tb_logger = None
@@ -421,10 +421,10 @@ class SimplePerceptual(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        schedulers = []
+        # schedulers = []
         # if self.gen_scheduler is not None:
         #     gen_scheduler = {'scheduler': self.gen_scheduler, 'interval': 'step', 'frequency': 1}
         #     disc_scheduler = {'scheduler': self.disc_scheduler, 'interval': 'step', 'frequency': 1}
         #     schedulers = [gen_scheduler, disc_scheduler]
 
-        return [self.generator_optimizer, self.discriminator_optimizer], schedulers
+        return self.generator_optimizer
