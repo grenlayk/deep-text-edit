@@ -100,7 +100,7 @@ class Config:
         self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=200)
 
     def get_dataset(self, root):
-        dataset = ImgurDataset(root, text_key='text_orig')
+        dataset = ImgurDataset(root, text_key='text_original')
         dataset = ChannelShuffleImage(dataset, 'image')
 
         dataset = GetRandomText(dataset, root, 'text_random')
