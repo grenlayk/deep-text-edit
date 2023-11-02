@@ -47,7 +47,7 @@ class Config:
         generator = StypeBrush().to(self.device)
         # discriminator = NLayerDiscriminator(input_nc=3, ndf=64, n_layers=3,
         #                                     norm_layer=(lambda x: torch.nn.Identity())).to(self.device)
-        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=3e-4, weight_decay=1e-5)
+        generator_optimizer = torch.optim.AdamW(generator.parameters(), lr=1e-3, weight_decay=1e-5)
         # discriminator_optimizer = torch.optim.AdamW(discriminator.parameters(), lr=0, betas=(0.5, 0.99), eps=1e-8)
 
         trainset = self.get_dataset(self.crops_path / 'train')
