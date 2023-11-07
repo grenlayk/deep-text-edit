@@ -77,7 +77,7 @@ class Config:
 
         metrics = [
             {'metric': cer, 'name': 'val/cer', 'pred_key': 'pred_random', 'target_key': 'text_random'},
-            {'metric': psnr, 'name': 'val/psnr', 'pred_key': 'pred_original', 'target_key': 'image'},
+            {'metric': psnr, 'name': 'val/psnr', 'pred_key': 'pred_random', 'target_key': 'image'},
         ]
 
         warmup = 5000
