@@ -120,17 +120,20 @@ class SimpleGAN(pl.LightningModule):
             self.gen_scheduler.step()
 
         if batch_idx == 0:
-            recogs_base = self.ocr.recognize(predictions['pred_original'])
+            if self.calc_orig:
+                recogs_base = self.ocr.recognize(predictions['pred_original'])
             recogs_rand = self.ocr.recognize(predictions['pred_random'])
             for i in range(10):
                 self.visualize_image(f'train_{i}/image', predictions[self.style_key][i])
                 self.visualize_image(f'train_{i}/pred_random', predictions['pred_random'][i])
-                self.visualize_image(f'train_{i}/pred_original', predictions['pred_original'][i])
+                if self.calc_orig:
+                    self.visualize_image(f'train_{i}/pred_original', predictions['pred_original'][i])
 
                 self.visualize_image(f'train_{i}/draw_orig', predictions[self.draw_orig][i])
                 self.visualize_image(f'train_{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image(f'train_{i}/recog_orig', draw_word(recogs_base[i]))
+                if self.calc_orig:
+                    self.visualize_image(f'train_{i}/recog_orig', draw_word(recogs_base[i]))
                 self.visualize_image(f'train_{i}/recog_rand', draw_word(recogs_rand[i]))
 
     def visualize_image(self, name, image):
