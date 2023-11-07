@@ -11,91 +11,6 @@ from src.pipelines.utils import torch2numpy
 from src.utils.draw import draw_word
 
 
-#
-# class SimpleGANEditing(pl.LightningModule):
-#     def __init__(
-#             self,
-#             generator: nn.Module,
-#             discriminator: nn.Module,
-#             generator_optimizer: Optimizer,
-#             discriminator_optimizer: Optimizer,
-#             criterions: List[Dict[str, Any]],
-#             g_criterions: List[Dict[str, Any]],
-#             d_criterions: List[Dict[str, Any]],
-#             style_key: str = 'image',
-#             draw_orig: str = 'draw_orig',
-#             text_orig: str = 'content',
-#             draw_rand: str = 'draw_random',
-#             text_rand: str = 'random',
-#     ):
-#         super().__init__()
-#         self.generator = generator
-#         self.discriminator = discriminator
-#         self.generator_optimizer = generator_optimizer
-#         self.discriminator_optimizer = discriminator_optimizer
-#         self.criterions = criterions
-#         self.g_criterions = g_criterions
-#         self.d_criterions = d_criterions
-#         self.style_key = style_key
-#         self.draw_orig = draw_orig
-#         self.text_orig = text_orig
-#         self.draw_rand = draw_rand
-#         self.text_rand = text_rand
-#
-#     def forward(self, style, content, postfix='base'):
-#         results = self.generator(style, content)
-#         if not isinstance(results, dict):
-#             results = {'pred': results}
-#         results = {f"{key}{postfix}": value for key, value in results.items()}
-#         return results
-#
-#     def training_step(self, batch, batch_idx):
-#         style = batch[self.style_key]
-#         draw_orig = batch[self.draw_orig]
-#         draw_rand = batch[self.draw_rand]
-#
-#         self.toggle_optimizer(self.generator_optimizer, 0)
-#         predictions = self.forward(style, draw_rand, '_base')
-#         # predictions.update(self.forward(style, draw_orig, '_original'))
-#         predictions.update(batch)
-#
-#         total = 0
-#         for criterion_dict in self.criterions:
-#             criterion, name, pred_key, target_key = [criterion_dict[key] for key in
-#                                                      ['criterion', 'name', 'pred_key', 'target_key']]
-#             loss = criterion(predictions[pred_key], predictions[target_key])
-#             self.log(name, loss)
-#             total = loss + total
-#
-#         for criterion_dict in self.g_criterions:
-#             criterion, name, real_key, fake_key = [criterion_dict[key] for key in
-#                                                    ['criterion', 'name', 'real', 'fake']]
-#             loss = criterion(predictions[real_key], predictions[fake_key])
-#             self.log(name, loss)
-#             total = loss + total
-#
-#         self.log('total', total)
-#
-#         self.manual_backward(total)
-#         self.generator_optimizer.step()
-#         self.generator_optimizer.zero_grad()
-#         self.untoggle_optimizer(0)
-#
-#         for criterion_dict in self.d_criterions:
-#             criterion, name, real_key, fake_key = [criterion_dict[key] for key in
-#                                                    ['criterion', 'name', 'real', 'fake']]
-#             loss = criterion(predictions[real_key], predictions[fake_key])
-#             self.log(name, loss)
-#             total = loss + total
-#
-#         criterion, name, real_key, fake_key = [self.d_criterion[key] for key in ['criterion', 'name', 'real', 'fake']]
-#
-#         return total
-#
-#     def configure_optimizers(self):
-#         return [self.generator_optimizer, self.discriminator_optimizer], []
-
-
 class SimpleGAN(pl.LightningModule):
     def __init__(
             self,
@@ -109,13 +24,14 @@ class SimpleGAN(pl.LightningModule):
             metrics: List[Dict[str, Any]],
             style_key: str = 'image',
             draw_orig: str = 'draw_orig',
-            text_orig: str = 'content',
+            text_orig: str = 'text_orig',
             draw_rand: str = 'draw_random',
-            text_rand: str = 'random',
+            text_rand: str = 'text_random',
             gen_scheduler: Any = None,
             disc_scheduler: Any = None,
             mean: Tuple[float, float, float] = (0.485, 0.456, 0.406),
             std: Tuple[float, float, float] = (0.229, 0.224, 0.225),
+            calc_orig: bool = True
     ):
         super().__init__()
         self.generator = generator
@@ -135,6 +51,7 @@ class SimpleGAN(pl.LightningModule):
         self.disc_scheduler = disc_scheduler
         self.mean = mean
         self.std = std
+        self.calc_orig = calc_orig
 
         self.ocr = STRFLInference(mean, std)
         self.automatic_optimization = False
@@ -151,9 +68,9 @@ class SimpleGAN(pl.LightningModule):
         draw_orig = batch[self.draw_orig]
         draw_rand = batch[self.draw_rand]
 
-        self.toggle_optimizer(self.generator_optimizer, 0)
-        predictions = self.forward(style, draw_rand, '_base')
-        predictions.update(self.forward(style, draw_orig, '_original'))
+        predictions = self.forward(style, draw_rand, '_random')
+        if self.calc_orig:
+            predictions.update(self.forward(style, draw_orig, '_original'))
         predictions.update(batch)
 
         total = 0
@@ -176,13 +93,7 @@ class SimpleGAN(pl.LightningModule):
 
         self.log('total', total)
 
-        self.generator_optimizer.zero_grad()
-        self.manual_backward(total)
-        self.untoggle_optimizer(0)
-
-        self.toggle_optimizer(self.discriminator_optimizer, 1)
-
-        disc = 0
+        disc_loss = 0
         for criterion_dict in self.d_criterions:
             criterion, name, real_key, fake_key = [criterion_dict[key] for key in
                                                    ['criterion', 'name', 'real', 'fake']]
@@ -191,21 +102,36 @@ class SimpleGAN(pl.LightningModule):
                 self.discriminator(predictions[fake_key].detach())
             )
             self.log(name, loss)
-            disc = loss + disc
+            disc_loss = loss + disc_loss
 
-        self.discriminator_optimizer.zero_grad()
-        self.manual_backward(disc)
-        self.untoggle_optimizer(1)
-
+        self.generator_optimizer.zero_grad()
+        self.manual_backward(total)
         self.generator_optimizer.step()
         self.generator_optimizer.zero_grad()
+
+        self.discriminator_optimizer.zero_grad()
+        self.manual_backward(disc_loss)
         self.discriminator_optimizer.step()
         self.discriminator_optimizer.zero_grad()
 
-        if self.gen_scheduler is not None:
-            self.gen_scheduler.step()
         if self.disc_scheduler is not None:
             self.disc_scheduler.step()
+        if self.gen_scheduler is not None:
+            self.gen_scheduler.step()
+
+        if batch_idx == 0:
+            recogs_base = self.ocr.recognize(predictions['pred_original'])
+            recogs_rand = self.ocr.recognize(predictions['pred_random'])
+            for i in range(10):
+                self.visualize_image(f'train_{i}/image', predictions[self.style_key][i])
+                self.visualize_image(f'train_{i}/pred_random', predictions['pred_random'][i])
+                self.visualize_image(f'train_{i}/pred_original', predictions['pred_original'][i])
+
+                self.visualize_image(f'train_{i}/draw_orig', predictions[self.draw_orig][i])
+                self.visualize_image(f'train_{i}/draw_rand', predictions[self.draw_rand][i])
+
+                self.visualize_image(f'train_{i}/recog_orig', draw_word(recogs_base[i]))
+                self.visualize_image(f'train_{i}/recog_rand', draw_word(recogs_rand[i]))
 
     def visualize_image(self, name, image):
         tb_logger = None
@@ -231,19 +157,10 @@ class SimpleGAN(pl.LightningModule):
         draw_orig = batch[self.draw_orig]
         draw_rand = batch[self.draw_rand]
 
-        predictions = self.forward(style, draw_rand, '_base')
-        predictions.update(self.forward(style, draw_orig, '_original'))
+        predictions = self.forward(style, draw_rand, '_random')
+        if self.calc_orig:
+            predictions.update(self.forward(style, draw_orig, '_original'))
         predictions.update(batch)
-
-        total = 0
-        for criterion_dict in self.criterions:
-            criterion, name, pred_key, target_key = [criterion_dict[key] for key in
-                                                     ['criterion', 'name', 'pred_key', 'target_key']]
-            loss = criterion(predictions[pred_key], predictions[target_key])
-            self.log(f'val/{name}', loss)
-
-            total = loss + total
-        self.log('val/total', total)
 
         for metric_dict in self.metrics:
             metric, name, pred_key, target_key = [metric_dict[key] for key in
@@ -252,17 +169,17 @@ class SimpleGAN(pl.LightningModule):
 
         if batch_idx == 0:
             recogs_base = self.ocr.recognize(predictions['pred_original'])
-            recogs_rand = self.ocr.recognize(predictions['pred_base'])
+            recogs_rand = self.ocr.recognize(predictions['pred_random'])
             for i in range(10):
-                self.visualize_image(f'{i}/image', predictions[self.style_key][i])
-                self.visualize_image(f'{i}/pred_base', predictions['pred_base'][i])
-                self.visualize_image(f'{i}/pred_original', predictions['pred_original'][i])
+                self.visualize_image(f'val_{i}/image', predictions[self.style_key][i])
+                self.visualize_image(f'val_{i}/pred_random', predictions['pred_random'][i])
+                self.visualize_image(f'val_{i}/pred_original', predictions['pred_original'][i])
 
-                self.visualize_image(f'{i}/draw_orig', predictions[self.draw_orig][i])
-                self.visualize_image(f'{i}/draw_rand', predictions[self.draw_rand][i])
+                self.visualize_image(f'val_{i}/draw_orig', predictions[self.draw_orig][i])
+                self.visualize_image(f'val_{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image(f'{i}/recog_orig', draw_word(recogs_base[i]))
-                self.visualize_image(f'{i}/recog_rand', draw_word(recogs_rand[i]))
+                self.visualize_image(f'val_{i}/recog_orig', draw_word(recogs_base[i]))
+                self.visualize_image(f'val_{i}/recog_rand', draw_word(recogs_rand[i]))
 
     def validation_epoch_end(self, outputs) -> None:
         for metric_dict in self.metrics:
@@ -271,11 +188,4 @@ class SimpleGAN(pl.LightningModule):
             metric_dict['metric'].reset()
 
     def configure_optimizers(self):
-
-        schedulers = []
-        # if self.gen_scheduler is not None:
-        #     gen_scheduler = {'scheduler': self.gen_scheduler, 'interval': 'step', 'frequency': 1}
-        #     disc_scheduler = {'scheduler': self.disc_scheduler, 'interval': 'step', 'frequency': 1}
-        #     schedulers = [gen_scheduler, disc_scheduler]
-
-        return [self.generator_optimizer, self.discriminator_optimizer], schedulers
+        return [self.generator_optimizer, self.discriminator_optimizer]
