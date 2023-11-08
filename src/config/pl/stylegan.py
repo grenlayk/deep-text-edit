@@ -85,7 +85,7 @@ class Config:
             {'criterion': gen_loss, 'name': 'train/gen_cyc', 'real': 'image', 'fake': 'pred_cycle'},
         ]
         d_criterions = [
-            {'criterion': disc_loss, 'name': 'train/disc', 'real': 'image', 'fake': 'red_random'},
+            {'criterion': disc_loss, 'name': 'train/disc', 'real': 'image', 'fake': 'pred_random'},
             {'criterion': disc_loss, 'name': 'train/gen_orig', 'real': 'image',
              'fake': 'pred_original'},
             {'criterion': disc_loss, 'name': 'train/gen_cyc', 'real': 'image', 'fake': 'pred_cycle'},
