@@ -16,6 +16,7 @@ from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetR
 from src.losses import VGGPerceptualLoss
 from src.losses.lsgan import LSGeneratorCriterion, LSDiscriminatorCriterion
 from src.losses.ocr2 import OCRV2Loss
+from src.losses.utils import LossScaler
 from src.metrics.ocr import ImageCharErrorRate
 from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.rfdn import RFDN
@@ -60,6 +61,7 @@ class Config:
 
         perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(1, 2, 3), style_layers=()).to(self.device)
         style = VGGPerceptualLoss(self.mean, self.std, feature_layers=(), style_layers=(1, 2, 3)).to(self.device)
+        style = LossScaler(style, 0.0005)
         l1 = L1Loss()
         ocr = OCRV2Loss(self.mean, self.std).to(self.device)
 
@@ -85,10 +87,10 @@ class Config:
             {'criterion': gen_loss, 'name': 'train/gen_cyc', 'real': 'image', 'fake': 'pred_cycle'},
         ]
         d_criterions = [
-            {'criterion': disc_loss, 'name': 'train/disc', 'real': 'image', 'fake': 'pred_random'},
-            {'criterion': disc_loss, 'name': 'train/gen_orig', 'real': 'image',
+            {'criterion': disc_loss, 'name': 'train/disc_rand', 'real': 'image', 'fake': 'pred_random'},
+            {'criterion': disc_loss, 'name': 'train/disc_orig', 'real': 'image',
              'fake': 'pred_original'},
-            {'criterion': disc_loss, 'name': 'train/gen_cyc', 'real': 'image', 'fake': 'pred_cycle'},
+            {'criterion': disc_loss, 'name': 'train/disc_cyc', 'real': 'image', 'fake': 'pred_cycle'},
 
         ]
 
