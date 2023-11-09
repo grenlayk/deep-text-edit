@@ -173,17 +173,17 @@ class TextBrushPipeline(pl.LightningModule):
             recogs_rand = self.ocr.recognize(predictions['pred_random'])
             recogs_cycle = self.ocr.recognize(predictions['pred_cycle'])
             for i in range(10):
-                self.visualize_image(f'train_{i}/image', predictions[self.style_key][i])
-                self.visualize_image(f'train_{i}/pred_random', predictions['pred_random'][i])
-                self.visualize_image(f'train_{i}/pred_original', predictions['pred_original'][i])
-                self.visualize_image(f'train_{i}/pred_cycle', predictions['pred_cycle'][i])
+                self.visualize_image(f'val_{i}/image', predictions[self.style_key][i])
+                self.visualize_image(f'val_{i}/pred_random', predictions['pred_random'][i])
+                self.visualize_image(f'val_{i}/pred_original', predictions['pred_original'][i])
+                self.visualize_image(f'val_{i}/pred_cycle', predictions['pred_cycle'][i])
 
-                self.visualize_image(f'train_{i}/draw_orig', predictions[self.draw_orig][i])
-                self.visualize_image(f'train_{i}/draw_rand', predictions[self.draw_rand][i])
+                self.visualize_image(f'val_{i}/draw_orig', predictions[self.draw_orig][i])
+                self.visualize_image(f'val_{i}/draw_rand', predictions[self.draw_rand][i])
 
-                self.visualize_image(f'train_{i}/recog_orig', draw_word(recogs_base[i]))
-                self.visualize_image(f'train_{i}/recog_rand', draw_word(recogs_rand[i]))
-                self.visualize_image(f'train_{i}/recog_cycle', draw_word(recogs_cycle[i]))
+                self.visualize_image(f'val_{i}/recog_orig', draw_word(recogs_base[i]))
+                self.visualize_image(f'val_{i}/recog_rand', draw_word(recogs_rand[i]))
+                self.visualize_image(f'val_{i}/recog_cycle', draw_word(recogs_cycle[i]))
 
     def validation_epoch_end(self, outputs) -> None:
         for metric_dict in self.metrics:
