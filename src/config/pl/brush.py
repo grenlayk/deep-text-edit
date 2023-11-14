@@ -4,7 +4,7 @@ import cv2
 import torch
 import torchmetrics.image
 from pytorch_lightning import Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
 from torch.nn import L1Loss
@@ -129,9 +129,12 @@ class Config:
         )
 
         tb_path = Path("lightning_logs/tensorboard") / Path(__file__).stem
+        checkpoint_path = Path("lightning_logs/checkpoint") / Path(__file__).stem
         logger = TensorBoardLogger(str(tb_path))
+        checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path)
 
-        self.trainer = Trainer(logger=logger, callbacks=LearningRateMonitor(), accelerator=self.device, max_epochs=200)
+        self.trainer = Trainer(logger=logger, callbacks=[LearningRateMonitor(), checkpoint_callback],
+                               accelerator=self.device, max_epochs=200)
 
     def get_dataset(self, root):
         dataset = ImgurDataset(root, text_key='text_original')
