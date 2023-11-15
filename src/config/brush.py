@@ -21,7 +21,7 @@ from src.metrics.ocr import ImageCharErrorRate
 from src.models.nlayer_discriminator import NLayerDiscriminator
 from src.models.rfdn import RFDN
 from src.models.style_brush import StypeBrush
-from src.pipelines.stylegan import TextBrushPipeline
+from src.pipelines.brush import TextBrushPipeline
 from src.utils.warmup import WarmupScheduler
 
 
