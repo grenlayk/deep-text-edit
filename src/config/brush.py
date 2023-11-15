@@ -6,7 +6,6 @@ import torchmetrics.image
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from torch import nn
 from torch.nn import L1Loss
 from torch.optim.lr_scheduler import SequentialLR, CosineAnnealingLR
 from torch.utils.data import DataLoader
@@ -19,21 +18,9 @@ from src.losses.ocr2 import OCRV2Loss
 from src.losses.utils import LossScaler
 from src.metrics.ocr import ImageCharErrorRate
 from src.models.nlayer_discriminator import NLayerDiscriminator
-from src.models.rfdn import RFDN
 from src.models.style_brush import StypeBrush
 from src.pipelines.brush import TextBrushPipeline
 from src.utils.warmup import WarmupScheduler
-
-
-class SimplestGenerator(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.backbone = RFDN(6, upscale=1)
-
-    def forward(self, style, content):
-        inputs = torch.concat([style, content], dim=1)
-        res = self.backbone(inputs)
-        return res
 
 
 class Config:
