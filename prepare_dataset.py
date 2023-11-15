@@ -31,6 +31,12 @@ def crop_minAreaRect(img, xc, yc, w, h, a):
                               readable=True,
                               path_type=Path),
               default=Path('dataset_info/'))
+@click.option('-i', '--images-path',
+              type=click.Path(exists=True,
+                              file_okay=False,
+                              readable=True,
+                              path_type=Path),
+              default=Path('images/'))
 @click.option('-s', '--save_path',
               type=click.Path(file_okay=False,
                               writable=True,
@@ -39,7 +45,7 @@ def crop_minAreaRect(img, xc, yc, w, h, a):
 @click.option('--no-split', is_flag=True)
 @click.option('--reduce', type=float)
 @logger.catch
-def main(annotations_path: Path, save_path: Path, no_split: bool, reduce: float):
+def main(annotations_path: Path, images_path: Path, save_path: Path, no_split: bool, reduce: float):
     annotations: list[Path]
     outputs: list[Path]
     if no_split:
@@ -68,21 +74,29 @@ def main(annotations_path: Path, save_path: Path, no_split: bool, reduce: float)
             annotations = annotations[:int(len(annotations) * reduce)]
         for index_id, ann_ids in tqdm(annotations, leave=False):
             img_info = annotation['index_id'][index_id]
-            img = cv2.imread(img_info['image_path'])
+            img = cv2.imread(str(images_path / img_info['image_path']))
             if img is None:
                 continue
             for ann_id in ann_ids:
-                info = annotation['ann_id'][ann_id]
-                info['word'] = str(info['word'])
-                if len(info['word']) == 0:
-                    continue
+                try:
+                    info = annotation['ann_id'][ann_id]
+                    info['word'] = str(info['word'])
+                    if len(info['word']) == 0:
+                        continue
 
-                words[ann_id] = info['word']
+                    words[ann_id] = info['word']
 
-                if (output_path / f'{ann_id}.png').exists():
-                    continue
-                img_cropped = crop_minAreaRect(img, *info['bounding_box'])
-                cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
+                    if (output_path / f'{ann_id}.png').exists():
+                        continue
+
+                    box = info['bounding_box']
+                    if isinstance(box, str):
+                        box = json.loads(box)
+                    img_cropped = crop_minAreaRect(img, *box)
+                    cv2.imwrite(str(output_path / f'{ann_id}.png'), img_cropped)
+                except:
+                    print('Error')
+                    pass
         json.dump(words, (output_path / 'words.json').open('w'))
 
 

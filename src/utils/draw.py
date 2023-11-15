@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms as T
@@ -24,4 +25,5 @@ def draw_word(word: str) -> Image:
     position = ((w - text_width) / 2, (h - text_height) / 2)
 
     d.text(position, word, font=fnt, fill=0)
-    return img
+    img_np = np.array(img)
+    return img_np

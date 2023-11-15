@@ -3,18 +3,19 @@
 
 from importlib import import_module
 from pathlib import Path
-from src.disk import disk
 
 import click
 from loguru import logger
+
+from src.disk import disk
 
 
 @click.command()
 @click.argument('config_file',
                 type=click.Path(exists=True, dir_okay=False, readable=True),
-                default='./src/config/color.py')
+                default='')
 @click.option('--yadisk', '--enable_disk',
-                is_flag=True, show_default=True, default=False, help='Enable uploading checkpoints to Yandex.Disk')
+              is_flag=True, show_default=True, default=False, help='Enable uploading checkpoints to Yandex.Disk')
 @logger.catch
 def run(config_file, yadisk):
     config_file = Path(config_file)
