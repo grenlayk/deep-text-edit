@@ -7,8 +7,6 @@ from pathlib import Path
 import click
 from loguru import logger
 
-from src.disk import disk
-
 
 @click.command()
 @click.argument('config_file',
