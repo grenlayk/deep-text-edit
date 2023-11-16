@@ -12,14 +12,11 @@ from loguru import logger
 @click.argument('config_file',
                 type=click.Path(exists=True, dir_okay=False, readable=True),
                 default='')
-@click.option('--yadisk', '--enable_disk',
-              is_flag=True, show_default=True, default=False, help='Enable uploading checkpoints to Yandex.Disk')
 @logger.catch
-def run(config_file, yadisk):
+def run(config_file):
     config_file = Path(config_file)
     config_file = (config_file.parent / config_file.stem).as_posix().replace('/', '.')
     imported = import_module(config_file)
-    disk.set_disabled(not yadisk)
     config = imported.Config()
     config.run()
 
