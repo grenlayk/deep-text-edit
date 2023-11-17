@@ -118,7 +118,7 @@ class Config:
         tb_path = Path("lightning_logs/tensorboard") / Path(__file__).stem
         checkpoint_path = Path("lightning_logs/checkpoint") / Path(__file__).stem
         logger = TensorBoardLogger(str(tb_path))
-        checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path)
+        checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path, save_last=True)
 
         self.trainer = Trainer(logger=logger, callbacks=[LearningRateMonitor(), checkpoint_callback],
                                accelerator=self.device, max_epochs=200)
