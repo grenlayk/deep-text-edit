@@ -10,6 +10,7 @@ from torch.nn import L1Loss
 from torch.optim.lr_scheduler import SequentialLR, CosineAnnealingLR
 from torch.utils.data import DataLoader
 
+from src.callbacks.save import SaveLastCheckpoint
 from src.data.baseline import ImgurDataset
 from src.data.wrappers import ChannelShuffleImage, Resize, NormalizeImages, GetRandomText, DrawTextCache
 from src.losses import VGGPerceptualLoss
@@ -43,7 +44,7 @@ class Config:
         trainset = self.get_dataset(self.crops_path / 'train')
         valset = self.get_dataset(self.crops_path / 'val')
 
-        self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True)
+        self.trainloader = DataLoader(trainset, batch_size=self.batch_size, shuffle=True, drop_last=True)
         self.valloader = DataLoader(valset, batch_size=self.batch_size)
 
         perc = VGGPerceptualLoss(self.mean, self.std, feature_layers=(1, 2, 3), style_layers=()).to(self.device)
@@ -117,8 +118,9 @@ class Config:
 
         tb_path = Path("lightning_logs/tensorboard") / Path(__file__).stem
         checkpoint_path = Path("lightning_logs/checkpoint") / Path(__file__).stem
+        checkpoint_path.mkdir(parents=True, exist_ok=True)
         logger = TensorBoardLogger(str(tb_path))
-        checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path, save_last=True)
+        checkpoint_callback = SaveLastCheckpoint(dirpath=checkpoint_path, save_last=True)
 
         self.trainer = Trainer(logger=logger, callbacks=[LearningRateMonitor(), checkpoint_callback],
                                accelerator=self.device, max_epochs=200)
