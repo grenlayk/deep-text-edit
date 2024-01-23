@@ -1,4 +1,4 @@
-# Text-deep-fake
+# Deep-text-edit
 
 This project aims to implement neural network architecture, described in [Krishnan et al. (2021) -- Text Style Brush](https://arxiv.org/pdf/2106.08385.pdf). 
 
