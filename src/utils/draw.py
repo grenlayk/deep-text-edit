@@ -20,8 +20,30 @@ def draw_word(word: str) -> Image:
     img = Image.new('RGB', (w, h), color=(255, 255, 255))
     fnt = ImageFont.truetype('./data/VerilySerifMono.otf', font_size)
     d = ImageDraw.Draw(img)
-    text_width, text_height = d.textsize(word, fnt)
+    try:
+        text_width, text_height = get_text_dimensions(word, fnt)
+    except Exception as e:
+        print(e)
+        raise Exception('Font error', f'"{word}"', font_size, (w, h))
+        
     position = ((w - text_width) / 2, (h - text_height) / 2)
 
     d.text(position, word, font=fnt, fill=0)
     return img
+
+def get_text_dimensions(text_string, font):
+    # https://stackoverflow.com/a/46220683/9263761
+    ascent, descent = font.getmetrics()
+
+    # ???
+    font_mask = font.getmask(text_string)
+    bbox = font_mask.getbbox()
+    
+    try:
+        text_width = bbox[2]
+        text_height = bbox[3] + descent
+
+        return (text_width, text_height)
+    except Exception as e:
+        print(e)
+        raise Exception('Font error', font)
